@@ -474,7 +474,6 @@ export const DESIGNATIONS_ADMIN_ONLY = [
   'Ouvriers visite',
   'Frais Transit',
   'Gendarmerie',
-  'Escorte',
   'Ouvrier chargement',
   'Fédération',
   'Amende',
@@ -489,6 +488,7 @@ export const DESIGNATIONS_PUBLIC_DEFAULT = [
   'Camion',
   'Bonne de Sortie Douanes',
   'Sogetrap',
+  'Escorte',
 ];
 
 /** Désignations à frais fixes (montant plafonné côté serveur).
