@@ -21,7 +21,6 @@ import {
   Menu,
   X,
   UserCircle2,
-  ClipboardList,
   BriefcaseBusiness,
   Package,
   ArrowRightLeft,
@@ -32,11 +31,7 @@ import {
   ChevronDown,
   Download,
 } from 'lucide-react';
-import {
-  getPwaInstallPrompt,
-  clearPwaInstallPrompt,
-  onPwaInstallChange,
-} from '@/lib/pwa-install';
+import { getPwaInstallPrompt, clearPwaInstallPrompt } from '@/lib/pwa-install';
 
 interface NavItem {
   label: string;
@@ -368,19 +363,25 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const user = session?.user;
 
-  const [canInstall, setCanInstall] = useState(() => !!getPwaInstallPrompt());
-  const [isStandalone, setIsStandalone] = useState(() =>
-    typeof window !== 'undefined'
-      ? window.matchMedia('(display-mode: standalone)').matches
-      : false
-  );
+
+  const [isStandalone, setIsStandalone] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    if ((navigator as { standalone?: boolean }).standalone === true) return true;
+    try { return window.matchMedia('(display-mode: standalone)').matches; } catch { return false; }
+  });
 
   useEffect(() => {
-    const unsub = onPwaInstallChange(() => setCanInstall(!!getPwaInstallPrompt()));
-    const mq = window.matchMedia('(display-mode: standalone)');
-    const onMq = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
-    mq.addEventListener('change', onMq);
-    return () => { unsub(); mq.removeEventListener('change', onMq); };
+    const onInstalled = () => setIsStandalone(true);
+    window.addEventListener('appinstalled', onInstalled);
+    let mq: MediaQueryList | null = null;
+    try {
+      mq = window.matchMedia('(display-mode: standalone)');
+      const onMq = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
+      mq.addEventListener('change', onMq);
+      return () => { window.removeEventListener('appinstalled', onInstalled); mq!.removeEventListener('change', onMq); };
+    } catch {
+      return () => window.removeEventListener('appinstalled', onInstalled);
+    }
   }, []);
 
   const [showPwaInstructions, setShowPwaInstructions] = useState(false);
@@ -721,17 +722,44 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
           onClick={() => setShowPwaInstructions(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl space-y-3"
+            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="font-semibold text-sm">
               {t('pwa.instructionsTitle', { defaultValue: "Installer l'application" })}
             </p>
-            <ul className="text-sm text-slate-500 space-y-2 list-none">
-              <li>🤖 <strong>Android Chrome</strong> : menu ⋮ → &ldquo;Ajouter à l&rsquo;écran d&rsquo;accueil&rdquo;</li>
-              <li>🍎 <strong>iOS Safari</strong> : bouton Partager □↑ → &ldquo;Sur l&rsquo;écran d&rsquo;accueil&rdquo;</li>
-              <li>💻 <strong>Desktop Chrome</strong> : icône ⊕ dans la barre d&rsquo;adresse</li>
-            </ul>
+
+            {/* Desktop Chrome */}
+            <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-slate-700">💻 Chrome (PC / Mac)</p>
+              <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
+                <li>Clique sur le menu <strong>⋮</strong> en haut à droite</li>
+                <li>Sélectionne <strong>&ldquo;Enregistrer et partager&rdquo;</strong></li>
+                <li>Puis <strong>&ldquo;Installer la page en tant qu&rsquo;application…&rdquo;</strong></li>
+              </ol>
+              <p className="text-xs text-slate-400 italic">
+                Ou cherche l&rsquo;icône <strong>⊕</strong> dans la barre d&rsquo;adresse.
+              </p>
+            </div>
+
+            {/* Android */}
+            <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-slate-700">🤖 Android Chrome</p>
+              <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
+                <li>Clique sur le menu <strong>⋮</strong></li>
+                <li>Sélectionne <strong>&ldquo;Ajouter à l&rsquo;écran d&rsquo;accueil&rdquo;</strong></li>
+              </ol>
+            </div>
+
+            {/* iOS */}
+            <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-slate-700">🍎 Safari (iPhone / iPad)</p>
+              <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
+                <li>Clique sur le bouton Partager <strong>□↑</strong></li>
+                <li>Sélectionne <strong>&ldquo;Sur l&rsquo;écran d&rsquo;accueil&rdquo;</strong></li>
+              </ol>
+            </div>
+
             <button
               onClick={() => setShowPwaInstructions(false)}
               className="w-full rounded-lg bg-[#02389B] py-2 text-sm font-semibold text-white hover:bg-[#02389B]/90 transition-colors"

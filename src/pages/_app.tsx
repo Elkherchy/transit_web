@@ -70,32 +70,45 @@ function ServiceWorkerRegister() {
   return null;
 }
 
+function detectStandalone(): boolean {
+  if (typeof window === "undefined") return true; // SSR → hide
+  // iOS Safari uses navigator.standalone
+  if ((navigator as { standalone?: boolean }).standalone === true) return true;
+  try {
+    return window.matchMedia("(display-mode: standalone)").matches;
+  } catch {
+    return false;
+  }
+}
+
 function PwaInstallBanner() {
   const { t } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
     () => getPwaInstallPrompt() as BeforeInstallPromptEvent | null
   );
-  const [isStandalone, setIsStandalone] = useState(true);
+  // Initialise synchronously — no flash of banner on already-installed PWA
+  const [isStandalone, setIsStandalone] = useState(detectStandalone);
   const [dismissed, setDismissed] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const mq = window.matchMedia("(display-mode: standalone)");
-    setIsStandalone(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
-    mq.addEventListener("change", onChange);
-
     const unsub = onPwaInstallChange(() => {
       setDeferredPrompt(getPwaInstallPrompt() as BeforeInstallPromptEvent | null);
     });
     window.addEventListener("appinstalled", () => setIsStandalone(true));
 
-    return () => {
-      mq.removeEventListener("change", onChange);
-      unsub();
-    };
+    let mq: MediaQueryList | null = null;
+    try {
+      mq = window.matchMedia("(display-mode: standalone)");
+      const onChange = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
+      mq.addEventListener("change", onChange);
+      return () => {
+        mq!.removeEventListener("change", onChange);
+        unsub();
+      };
+    } catch {
+      return () => unsub();
+    }
   }, []);
 
   if (isStandalone || dismissed) return null;
@@ -114,8 +127,10 @@ function PwaInstallBanner() {
 
   return (
     <>
+      {/* env(safe-area-inset-bottom) keeps the banner above iOS Safari's home bar */}
       <div
-        className="fixed bottom-4 start-4 end-4 z-[9999] mx-auto max-w-md flex items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-xl"
+        className="fixed start-4 end-4 z-[9999] mx-auto max-w-md flex items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-xl"
+        style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
         role="alert"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
