@@ -53,7 +53,6 @@ function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
-    if (process.env.NODE_ENV !== "production") return;
     const onLoad = () => {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/" })
@@ -67,58 +66,105 @@ function ServiceWorkerRegister() {
 
 function PwaInstallBanner() {
   const { t } = useTranslation();
-  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isStandalone, setIsStandalone] = useState(true); // true = hide until we know
   const [dismissed, setDismissed] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Hide banner if already running as installed PWA
+    const mq = window.matchMedia("(display-mode: standalone)");
+    setIsStandalone(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
+    mq.addEventListener("change", onChange);
+
+    // Capture native install prompt when Chrome offers it
     const handler = (e: Event) => {
       e.preventDefault();
-      setPrompt(e as BeforeInstallPromptEvent);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", () => setIsStandalone(true));
+
+    return () => {
+      mq.removeEventListener("change", onChange);
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
   }, []);
 
-  if (!prompt || dismissed) return null;
+  if (isStandalone || dismissed) return null;
 
   const install = async () => {
-    await prompt.prompt();
-    const { outcome } = await prompt.userChoice;
-    if (outcome === "accepted" || outcome === "dismissed") {
-      setPrompt(null);
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+      setDismissed(true);
+    } else {
+      setShowInstructions(true);
     }
   };
 
   return (
-    <div
-      className="fixed bottom-4 start-4 end-4 z-[9999] mx-auto max-w-md flex items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-xl"
-      role="alert"
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/icon-192.png" alt="SNTS" className="h-10 w-10 rounded-lg shrink-0" />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold leading-tight">
-          {t("pwa.installTitle", { defaultValue: "Installer SNTS" })}
-        </p>
-        <p className="text-xs text-muted-foreground leading-tight">
-          {t("pwa.installSubtitle", { defaultValue: "Accès rapide depuis l'écran d'accueil" })}
-        </p>
+    <>
+      <div
+        className="fixed bottom-4 start-4 end-4 z-[9999] mx-auto max-w-md flex items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-xl"
+        role="alert"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icon-192.png" alt="SNTS" className="h-10 w-10 rounded-lg shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold leading-tight">
+            {t("pwa.installTitle", { defaultValue: "Installer SNTS" })}
+          </p>
+          <p className="text-xs text-muted-foreground leading-tight">
+            {t("pwa.installSubtitle", { defaultValue: "Accès rapide depuis l'écran d'accueil" })}
+          </p>
+        </div>
+        <button
+          onClick={() => void install()}
+          className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 transition-colors"
+        >
+          {t("pwa.installBtn", { defaultValue: "Installer" })}
+        </button>
+        <button
+          onClick={() => setDismissed(true)}
+          className="shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Fermer"
+        >
+          ✕
+        </button>
       </div>
-      <button
-        onClick={() => void install()}
-        className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 transition-colors"
-      >
-        {t("pwa.installBtn", { defaultValue: "Installer" })}
-      </button>
-      <button
-        onClick={() => setDismissed(true)}
-        className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Fermer"
-      >
-        ✕
-      </button>
-    </div>
+
+      {showInstructions && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowInstructions(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="font-semibold text-sm">
+              {t("pwa.instructionsTitle", { defaultValue: "Installer l'application" })}
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-2 list-none">
+              <li>🤖 <strong>Android Chrome</strong> : menu ⋮ → &ldquo;Ajouter à l&rsquo;écran d&rsquo;accueil&rdquo;</li>
+              <li>🍎 <strong>iOS Safari</strong> : bouton Partager □↑ → &ldquo;Sur l&rsquo;écran d&rsquo;accueil&rdquo;</li>
+              <li>💻 <strong>Desktop Chrome</strong> : icône ⊕ dans la barre d&rsquo;adresse</li>
+            </ul>
+            <button
+              onClick={() => setShowInstructions(false)}
+              className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+            >
+              {t("pwa.instructionsClose", { defaultValue: "OK" })}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
