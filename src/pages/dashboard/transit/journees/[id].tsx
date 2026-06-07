@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageHeader, PageContent, PageSkeleton } from '@/components/ui';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -45,6 +46,7 @@ interface ViewState {
 
 export default function TransitJourneeDetail() {
   const { data: session, status } = useSession();
+  const { t } = useTranslation();
   const user = session?.user;
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -81,13 +83,13 @@ export default function TransitJourneeDetail() {
         credentials: 'include',
       }).then((x) => x.json());
       if (r.success) setData(r.data);
-      else setError(r.error || 'Erreur');
+      else setError(r.error || t('common.error'));
     } catch {
-      setError('Erreur réseau');
+      setError(t('common.errorNetwork'));
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     if (isAllowed && id) void reload();
@@ -135,7 +137,7 @@ export default function TransitJourneeDetail() {
           }),
         }
       ).then((x) => x.json());
-      if (!r.success) setError(r.error || 'Erreur');
+      if (!r.success) setError(r.error || t('common.error'));
       setView(null);
       void reload();
     } finally {
@@ -151,7 +153,7 @@ export default function TransitJourneeDetail() {
         method: 'POST',
         credentials: 'include',
       }).then((x) => x.json());
-      if (!r.success) setError(r.error || 'Erreur');
+      if (!r.success) setError(r.error || t('common.error'));
       void reload();
     } finally {
       setValidating(false);
@@ -169,15 +171,13 @@ export default function TransitJourneeDetail() {
       }).then((x) => x.json());
       if (r.success) {
         const n = (r.data?.facturesCreees || []).length;
-        setSuccess(
-          `Journée validée. ${n} facture(s) client générée(s) automatiquement.`
-        );
+        setSuccess(t('dashboard.transit.journees.successValidation', { n }));
         void reload();
       } else {
-        setError(r.error || 'Erreur');
+        setError(r.error || t('common.error'));
       }
     } catch {
-      setError('Erreur réseau');
+      setError(t('common.errorNetwork'));
     } finally {
       setValidatingAdmin(false);
     }
@@ -186,17 +186,17 @@ export default function TransitJourneeDetail() {
   const designationStatusBadge = (s?: DesignationStatus) => {
     switch (s) {
       case DesignationStatus.PAYEE:
-        return <Badge variant="secondary">À valider</Badge>;
+        return <Badge variant="secondary">{t('dashboard.transit.journees.designationStatus.PAYEE')}</Badge>;
       case DesignationStatus.VALIDEE_TRANSIT:
-        return <Badge className="bg-emerald-600">Validée transit</Badge>;
+        return <Badge className="bg-emerald-600">{t('dashboard.transit.journees.designationStatus.VALIDEE_TRANSIT')}</Badge>;
       case DesignationStatus.VALIDEE_ADMIN:
-        return <Badge className="bg-green-700">Validée admin</Badge>;
+        return <Badge className="bg-green-700">{t('dashboard.transit.journees.designationStatus.VALIDEE_ADMIN')}</Badge>;
       case DesignationStatus.RESERVEE:
-        return <Badge>Réservée</Badge>;
+        return <Badge>{t('dashboard.transit.journees.designationStatus.RESERVEE')}</Badge>;
       case DesignationStatus.LIBRE:
-        return <Badge variant="outline">Libre</Badge>;
+        return <Badge variant="outline">{t('dashboard.transit.journees.designationStatus.LIBRE')}</Badge>;
       case DesignationStatus.REJETEE:
-        return <Badge variant="destructive">Rejetée</Badge>;
+        return <Badge variant="destructive">{t('dashboard.transit.journees.designationStatus.REJETEE')}</Badge>;
       default:
         return <Badge variant="outline">{s || '—'}</Badge>;
     }
@@ -205,7 +205,7 @@ export default function TransitJourneeDetail() {
   if (status === 'loading' || loading) {
     return (
       <DashboardLayout>
-        <PageHeader title="Détail journée" />
+        <PageHeader title={t('dashboard.transit.journees.detailTitle')} />
         <PageContent>
           <PageSkeleton type="list" rows={isMobile ? 5 : 10} />
         </PageContent>
@@ -218,8 +218,8 @@ export default function TransitJourneeDetail() {
   const { journee, transits, payeurs, caissier } = data;
   const canValidateJournee =
     journee.statut === JourneeCaisseStatus.CLOTUREE &&
-    transits.every((t) =>
-      t.designations.every(
+    transits.every((tr) =>
+      tr.designations.every(
         (d) => d.statutDesignation !== DesignationStatus.PAYEE
       )
     );
@@ -236,8 +236,12 @@ export default function TransitJourneeDetail() {
   return (
     <DashboardLayout>
       <PageHeader
-        title={`Journée du ${new Date(journee.date).toLocaleDateString('fr-FR')}`}
-        subtitle={`Caissier : ${caissier?.nom || journee.caissierId}`}
+        title={t('dashboard.transit.journees.detailPageTitle', {
+          date: new Date(journee.date).toLocaleDateString('fr-FR'),
+        })}
+        subtitle={t('dashboard.transit.journees.detailSubtitle', {
+          nom: caissier?.nom || journee.caissierId,
+        })}
         sticky={isMobile}
       />
       <PageContent padding={isMobile ? 'sm' : 'md'}>
@@ -256,19 +260,23 @@ export default function TransitJourneeDetail() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Rapport caisse</span>
+                <span>{t('dashboard.transit.journees.rapportCaisse')}</span>
                 <Badge variant="outline">{journee.statut}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2 text-sm">
               <div>
-                <div className="text-muted-foreground">Solde au début</div>
+                <div className="text-muted-foreground">
+                  {t('dashboard.transit.journees.soldeDebut')}
+                </div>
                 <div className="font-semibold">
                   {journee.soldeGeneralDebut.toFixed(2)} MRU
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground">Solde à la clôture</div>
+                <div className="text-muted-foreground">
+                  {t('dashboard.transit.journees.soldeFin')}
+                </div>
                 <div className="font-semibold">
                   {journee.soldeGeneralFin !== undefined &&
                   journee.soldeGeneralFin !== null
@@ -277,14 +285,16 @@ export default function TransitJourneeDetail() {
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground">Dépôts admin</div>
+                <div className="text-muted-foreground">
+                  {t('dashboard.transit.journees.depotsAdmin')}
+                </div>
                 <div className="font-semibold text-green-700">
                   +{totalDepots.toFixed(2)} MRU
                 </div>
               </div>
               <div>
                 <div className="text-muted-foreground">
-                  Alimentations payeurs
+                  {t('dashboard.transit.journees.alimentationsPayeurs')}
                 </div>
                 <div className="font-semibold text-red-700">
                   −{totalAlimentations.toFixed(2)} MRU
@@ -293,38 +303,38 @@ export default function TransitJourneeDetail() {
             </CardContent>
           </Card>
 
-          {transits.map((t) => (
-            <Card key={t._id}>
+          {transits.map((tr) => (
+            <Card key={tr._id}>
               <CardHeader>
                 <CardTitle className="text-base flex items-center justify-between">
                   <span>
-                    {t.client} — BL {t.bl}
+                    {tr.client} — BL {tr.bl}
                   </span>
-                  {t.factureClientId && (
+                  {tr.factureClientId && (
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/factures/${t.factureClientId}`}>
+                      <Link href={`/dashboard/factures/${tr.factureClientId}`}>
                         <Receipt className="mr-2 h-4 w-4" />
-                        Facture client
+                        {t('dashboard.transit.journees.factureClient')}
                       </Link>
                     </Button>
                   )}
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">{t.objet}</p>
+                <p className="text-sm text-muted-foreground">{tr.objet}</p>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left border-b">
-                        <th className="py-2 pr-3">Désignation</th>
-                        <th className="py-2 pr-3 text-right">Montant</th>
-                        <th className="py-2 pr-3">Payeur</th>
-                        <th className="py-2 pr-3">Statut</th>
-                        <th className="py-2 text-right">Action</th>
+                        <th className="py-2 pr-3">{t('dashboard.transit.journees.colDesignation')}</th>
+                        <th className="py-2 pr-3 text-right">{t('dashboard.transit.journees.colMontant')}</th>
+                        <th className="py-2 pr-3">{t('dashboard.transit.journees.colPayeur')}</th>
+                        <th className="py-2 pr-3">{t('dashboard.transit.journees.colStatut')}</th>
+                        <th className="py-2 text-right">{t('dashboard.transit.journees.colAction')}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(t.designations || []).map((d) => {
+                      {(tr.designations || []).map((d) => {
                         const payeur = d.payeurId
                           ? payeurs[String(d.payeurId)]
                           : undefined;
@@ -349,10 +359,10 @@ export default function TransitJourneeDetail() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => openView(t._id, d, payeur)}
+                                  onClick={() => void openView(tr._id, d, payeur)}
                                 >
                                   <Eye className="mr-2 h-4 w-4" />
-                                  Voir
+                                  {t('dashboard.transit.journees.btnVoir')}
                                 </Button>
                               )}
                             </td>
@@ -370,30 +380,29 @@ export default function TransitJourneeDetail() {
             <div className="flex justify-end">
               <Button
                 size="lg"
-                onClick={validerJournee}
+                onClick={() => void validerJournee()}
                 disabled={!canValidateJournee || validating}
               >
                 <FileCheck2 className="mr-2 h-4 w-4" />
                 {validating
-                  ? 'Validation…'
-                  : 'Valider toute la journée (passer à admin)'}
+                  ? t('dashboard.transit.journees.btnValidating')
+                  : t('dashboard.transit.journees.btnValiderJournee')}
               </Button>
             </div>
           )}
 
-          {/* Validation finale admin → crée les factures clients */}
           {isAdmin &&
             journee.statut === JourneeCaisseStatus.VALIDEE_TRANSIT && (
               <div className="flex justify-end">
                 <Button
                   size="lg"
-                  onClick={validerAdmin}
+                  onClick={() => void validerAdmin()}
                   disabled={validatingAdmin}
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   {validatingAdmin
-                    ? 'Validation…'
-                    : 'Valider la journée + créer factures clients'}
+                    ? t('dashboard.transit.journees.btnValidating')
+                    : t('dashboard.transit.journees.btnValiderAdmin')}
                 </Button>
               </div>
             )}
@@ -407,8 +416,10 @@ export default function TransitJourneeDetail() {
             <DialogHeader>
               <DialogTitle>{view?.designation.nom}</DialogTitle>
               <DialogDescription>
-                Payé par {view?.payeur?.nom || '—'} —{' '}
-                {Number(view?.designation.montant || 0).toFixed(2)} MRU
+                {t('dashboard.transit.journees.dialogPaidBy', {
+                  nom: view?.payeur?.nom || '—',
+                  montant: Number(view?.designation.montant || 0).toFixed(2),
+                })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -432,21 +443,23 @@ export default function TransitJourneeDetail() {
                     )
                   ) : (
                     <div className="p-6 text-center text-sm text-muted-foreground">
-                      Chargement du reçu…
+                      {t('dashboard.transit.journees.recuLoading')}
                     </div>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Aucun reçu.</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('dashboard.transit.journees.recuNone')}
+                </p>
               )}
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Commentaire (optionnel)
+                  {t('dashboard.transit.journees.commentaireLabel')}
                 </label>
                 <Textarea
                   value={commentaire}
                   onChange={(e) => setCommentaire(e.target.value)}
-                  placeholder="Remarques pour audit…"
+                  placeholder={t('dashboard.transit.journees.commentairePlaceholder')}
                   rows={2}
                 />
               </div>
@@ -458,14 +471,14 @@ export default function TransitJourneeDetail() {
                 onClick={() => void decide('rejeter')}
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                Rejeter
+                {t('dashboard.transit.journees.btnRejeter')}
               </Button>
               <Button
                 disabled={!!busy}
                 onClick={() => void decide('valider')}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                Valider
+                {t('dashboard.transit.journees.btnValider')}
               </Button>
             </DialogFooter>
           </DialogContent>

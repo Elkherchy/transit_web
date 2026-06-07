@@ -153,16 +153,16 @@ export default function CaissierCaissePage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-primary">
-                Caisses des payeurs ({payeursCaisses.length})
+                {t('dashboard.caissier.caisse.payeursTitle')} ({payeursCaisses.length})
               </h2>
               <span className="text-sm font-semibold tabular-nums text-muted-foreground">
-                Total : {fmt(totalPayeurs)} MRU
+                {t('dashboard.caissier.caisse.payeursTotal', { total: fmt(totalPayeurs) })}
               </span>
             </div>
             {payeursCaisses.length === 0 ? (
               <Card>
                 <CardContent className="py-6 text-sm text-muted-foreground">
-                  Aucun payeur trouvé.
+                  {t('dashboard.caissier.caisse.noPayeur')}
                 </CardContent>
               </Card>
             ) : (
@@ -185,7 +185,7 @@ export default function CaissierCaissePage() {
                     <CardContent className="space-y-3 pt-0">
                       <div>
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                          Solde
+                          {t('dashboard.caissier.caisse.fieldSolde')}
                         </div>
                         <div className="text-lg font-bold tabular-nums">
                           {fmt(c.solde ?? 0)} MRU
@@ -199,7 +199,7 @@ export default function CaissierCaissePage() {
                       >
                         <Link href={`/dashboard/caissier/caisse/payeur/${c._id}`}>
                           <History className="mr-2 h-4 w-4" />
-                          Historique alimentations
+                          {t('dashboard.caissier.caisse.btnHistorique')}
                         </Link>
                       </Button>
                     </CardContent>

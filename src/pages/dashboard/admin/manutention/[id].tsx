@@ -143,6 +143,50 @@ export default function AdminFactureManutentionDetail() {
   const [newMontant, setNewMontant] = useState('');
 
   const [openingDocKey, setOpeningDocKey] = useState<string | null>(null);
+
+  // Receipt viewer state
+  const [recuViewerDesignation, setRecuViewerDesignation] = useState<IDesignation | null>(null);
+  const [recuViewerUrls, setRecuViewerUrls] = useState<Array<{ url: string; name: string; key: string }>>([]);
+  const [recuViewerLoading, setRecuViewerLoading] = useState(false);
+  const [recuViewerIdx, setRecuViewerIdx] = useState(0);
+
+  const openRecuViewer = useCallback(
+    async (designation: IDesignation) => {
+      const recus = ((designation as { recus?: Array<{ key: string; name?: string }> }).recus || []);
+      const legacyUrl = (designation as { recuUrl?: string | null }).recuUrl;
+      const legacyName = (designation as { recuFilename?: string | null }).recuFilename;
+      const keys: Array<{ key: string; name: string }> =
+        recus.length > 0
+          ? recus.filter((r) => r.key).map((r) => ({ key: r.key, name: r.name || r.key.split('/').pop() || r.key }))
+          : legacyUrl
+          ? [{ key: legacyUrl, name: legacyName || legacyUrl.split('/').pop() || 'reçu' }]
+          : [];
+      if (keys.length === 0) return;
+      setRecuViewerDesignation(designation);
+      setRecuViewerUrls([]);
+      setRecuViewerLoading(true);
+      setRecuViewerIdx(0);
+      try {
+        const urls = await Promise.all(
+          keys.map(async ({ key, name }) => {
+            const res = await fetch(`/api/documents/${encodeURIComponent(key)}`, {
+              credentials: 'include',
+            });
+            const d = await res.json().catch(() => null);
+            return { url: d?.url || '', name, key };
+          })
+        );
+        setRecuViewerUrls(urls.filter((u) => u.url));
+      } catch {
+        setError(t('common.errorNetwork'));
+        setRecuViewerDesignation(null);
+      } finally {
+        setRecuViewerLoading(false);
+      }
+    },
+    [t]
+  );
+
   const openDocument = useCallback(
     async (key: string) => {
       setOpeningDocKey(key);
@@ -561,8 +605,31 @@ export default function AdminFactureManutentionDetail() {
           </span>
         ),
       },
+      {
+        id: 'recus',
+        header: t('dashboard.manutention.detail.colRecus'),
+        cell: ({ row }) => {
+          const d = row.original;
+          const recus = ((d as { recus?: Array<{ key: string }> }).recus || []);
+          const legacyUrl = (d as { recuUrl?: string | null }).recuUrl;
+          const count = recus.length > 0 ? recus.length : legacyUrl ? 1 : 0;
+          if (count === 0)
+            return <span className="text-muted-foreground text-xs">—</span>;
+          return (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs gap-1"
+              onClick={() => void openRecuViewer(d)}
+            >
+              <Eye className="h-3 w-3" />
+              {count > 1 ? `(${count})` : ''}
+            </Button>
+          );
+        },
+      },
     ],
-    [t]
+    [t, openRecuViewer]
   );
 
   if (status === 'loading' || loading) {
@@ -1179,6 +1246,90 @@ export default function AdminFactureManutentionDetail() {
           </div>
           )}
         </div>
+
+        {/* Receipt viewer dialog */}
+        <Dialog
+          open={!!recuViewerDesignation}
+          onOpenChange={(open) => {
+            if (!open) setRecuViewerDesignation(null);
+          }}
+        >
+          <DialogContent className="max-w-4xl flex flex-col" style={{ height: '85vh' }}>
+            <DialogHeader>
+              <DialogTitle>
+                {t('dashboard.manutention.detail.recuViewerTitle', {
+                  nom: recuViewerDesignation?.nom || '',
+                })}
+              </DialogTitle>
+            </DialogHeader>
+            {recuViewerLoading ? (
+              <div className="flex flex-1 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : recuViewerUrls.length === 0 ? (
+              <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+                {t('dashboard.manutention.detail.recuViewerEmpty')}
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  {recuViewerUrls.length > 1 && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={recuViewerIdx === 0}
+                        onClick={() => setRecuViewerIdx((i) => i - 1)}
+                      >
+                        {t('dashboard.manutention.detail.recuViewerPrev')}
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        {recuViewerIdx + 1} / {recuViewerUrls.length}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={recuViewerIdx === recuViewerUrls.length - 1}
+                        onClick={() => setRecuViewerIdx((i) => i + 1)}
+                      >
+                        {t('dashboard.manutention.detail.recuViewerNext')}
+                      </Button>
+                    </>
+                  )}
+                  <span className="text-sm text-muted-foreground truncate flex-1">
+                    {recuViewerUrls[recuViewerIdx]?.name}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      window.open(recuViewerUrls[recuViewerIdx]?.url, '_blank', 'noopener')
+                    }
+                  >
+                    <Eye className="mr-1 h-3 w-3" />
+                    {t('dashboard.manutention.detail.recuViewerOpenTab')}
+                  </Button>
+                </div>
+                <div className="flex-1 overflow-hidden rounded border min-h-0">
+                  {recuViewerUrls[recuViewerIdx]?.url &&
+                    (recuViewerUrls[recuViewerIdx].key.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                      <img
+                        src={recuViewerUrls[recuViewerIdx].url}
+                        alt={recuViewerUrls[recuViewerIdx].name}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <iframe
+                        src={recuViewerUrls[recuViewerIdx].url}
+                        title={recuViewerUrls[recuViewerIdx].name}
+                        className="w-full h-full border-0"
+                      />
+                    ))}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog ajout désignation */}
         <Dialog open={addOpen} onOpenChange={setAddOpen}>

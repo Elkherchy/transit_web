@@ -785,7 +785,13 @@
           "VALIDEE_TRANSIT": "Validée transit",
           "VALIDEE_ADMIN": "Validée admin",
           "REJETEE": "Rejetée"
-        }
+        },
+        "colRecus": "Reçus",
+        "recuViewerTitle": "Reçus — {{nom}}",
+        "recuViewerEmpty": "Aucun reçu disponible",
+        "recuViewerOpenTab": "Ouvrir dans un onglet",
+        "recuViewerPrev": "Précédent",
+        "recuViewerNext": "Suivant"
       },
       "create": {
         "fieldClient": "Client",
@@ -1046,6 +1052,46 @@
           "validate": "Valider",
           "iframeTitle": "Reçu PDF",
           "imgAlt": "Reçu"
+        }
+      },
+      "journees": {
+        "pageTitle": "Journées caisse à contrôler",
+        "pageSubtitle": "À valider en priorité, puis en attente admin, en cours et historique.",
+        "allJournees": "Toutes les journées",
+        "empty": "Aucune journée caisse pour le moment.",
+        "detailTitle": "Détail journée",
+        "detailPageTitle": "Journée du {{date}}",
+        "detailSubtitle": "Caissier : {{nom}}",
+        "rapportCaisse": "Rapport caisse",
+        "soldeDebut": "Solde au début",
+        "soldeFin": "Solde à la clôture",
+        "depotsAdmin": "Dépôts admin",
+        "alimentationsPayeurs": "Alimentations payeurs",
+        "factureClient": "Facture client",
+        "colDesignation": "Désignation",
+        "colMontant": "Montant",
+        "colPayeur": "Payeur",
+        "colStatut": "Statut",
+        "colAction": "Action",
+        "btnVoir": "Voir",
+        "btnValidating": "Validation…",
+        "btnValiderJournee": "Valider toute la journée (passer à admin)",
+        "btnValiderAdmin": "Valider la journée + créer factures clients",
+        "dialogPaidBy": "Payé par {{nom}} — {{montant}} MRU",
+        "recuLoading": "Chargement du reçu…",
+        "recuNone": "Aucun reçu.",
+        "commentaireLabel": "Commentaire (optionnel)",
+        "commentairePlaceholder": "Remarques pour audit…",
+        "btnRejeter": "Rejeter",
+        "btnValider": "Valider",
+        "successValidation": "Journée validée. {{n}} facture(s) client générée(s) automatiquement.",
+        "designationStatus": {
+          "PAYEE": "À valider",
+          "VALIDEE_TRANSIT": "Validée transit",
+          "VALIDEE_ADMIN": "Validée admin",
+          "RESERVEE": "Réservée",
+          "LIBRE": "Libre",
+          "REJETEE": "Rejetée"
         }
       }
     },
@@ -1310,6 +1356,41 @@
         "formBanquePlaceholder": "Sélectionner une banque",
         "formMontantLabel": "Montant (MRU) *",
         "errorFormIncomplete": "Veuillez remplir tous les champs requis"
+      },
+      "opsValider": {
+        "pageTitle": "Opérations à valider",
+        "pageSubtitle": "Paiements payeurs en attente de votre validation. Une fois validés, l'agent transit doit également valider.",
+        "refresh": "Actualiser",
+        "noOp": "Aucune opération.",
+        "colDate": "Date",
+        "colDesignation": "Désignation",
+        "colBlClient": "BL · Client",
+        "colPayeur": "Payeur",
+        "colMontant": "Montant",
+        "colActions": "Actions",
+        "btnVoir": "Voir",
+        "btnVoirCount": "Voir ({{count}})",
+        "btnValider": "Valider",
+        "btnRejeter": "Rejeter",
+        "sectionPending": "À valider par moi",
+        "sectionAgent": "En attente agent transit",
+        "sectionValidated": "Validées par l'agent transit",
+        "sectionRejected": "Rejetées",
+        "errNoRecu": "Aucun reçu joint à ce paiement.",
+        "errRecuIntrouvable": "Reçu introuvable",
+        "errNetwork": "Erreur réseau",
+        "errLoad": "Erreur de chargement",
+        "motifPrompt": "Motif du rejet (optionnel) :",
+        "successRejete": "Paiement rejeté",
+        "successValide": "Paiement validé par le caissier — en attente de validation par l'agent transit.",
+        "titleVoirRecus": "Voir {{count}} reçu(s)"
+      },
+      "caisse": {
+        "payeursTitle": "Caisses des payeurs",
+        "payeursTotal": "Total : {{total}} MRU",
+        "noPayeur": "Aucun payeur trouvé.",
+        "fieldSolde": "Solde",
+        "btnHistorique": "Historique alimentations"
       }
     },
     "factures": {

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageHeader, PageContent, PageSkeleton } from '@/components/ui';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -28,6 +29,7 @@ const STATUT_PRIORITY: Record<JourneeCaisseStatus, number> = {
 
 export default function TransitJourneesList() {
   const { data: session, status } = useSession();
+  const { t } = useTranslation();
   const user = session?.user;
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -75,7 +77,7 @@ export default function TransitJourneesList() {
   if (status === 'loading' || loading) {
     return (
       <DashboardLayout>
-        <PageHeader title="Journées caisse à contrôler" />
+        <PageHeader title={t('dashboard.transit.journees.pageTitle')} />
         <PageContent>
           <PageSkeleton type="list" rows={isMobile ? 5 : 8} />
         </PageContent>
@@ -88,19 +90,19 @@ export default function TransitJourneesList() {
   return (
     <DashboardLayout>
       <PageHeader
-        title="Journées caisse à contrôler"
-        subtitle="À valider en priorité, puis en attente admin, en cours et historique."
+        title={t('dashboard.transit.journees.pageTitle')}
+        subtitle={t('dashboard.transit.journees.pageSubtitle')}
         sticky={isMobile}
       />
       <PageContent padding={isMobile ? 'sm' : 'md'}>
         <div className="space-y-3 rounded-lg bg-white p-4 max-md:rounded-none max-md:bg-transparent max-md:px-4 max-md:py-3 border shadow-sm">
           <CardHeader className="text-xl font-bold text-primary p-0">
-            Toutes les journées ({sortedList.length})
+            {t('dashboard.transit.journees.allJournees')} ({sortedList.length})
           </CardHeader>
           <JourneesDataTable
             data={sortedList}
             detailLinkBase="/dashboard/transit/journees"
-            emptyMessage="Aucune journée caisse pour le moment."
+            emptyMessage={t('dashboard.transit.journees.empty')}
           />
         </div>
       </PageContent>

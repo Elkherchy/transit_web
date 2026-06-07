@@ -789,7 +789,13 @@
           "VALIDEE_TRANSIT": "مصادق العبور",
           "VALIDEE_ADMIN": "مصادق المدير",
           "REJETEE": "مرفوض"
-        }
+        },
+        "colRecus": "الإيصالات",
+        "recuViewerTitle": "الإيصالات — {{nom}}",
+        "recuViewerEmpty": "لا توجد إيصالات متاحة",
+        "recuViewerOpenTab": "فتح في علامة تبويب",
+        "recuViewerPrev": "السابق",
+        "recuViewerNext": "التالي"
       },
       "create": {
         "fieldClient": "العميل",
@@ -1050,6 +1056,46 @@
           "validate": "مصادقة",
           "iframeTitle": "إيصال PDF",
           "imgAlt": "الإيصال"
+        }
+      },
+      "journees": {
+        "pageTitle": "أيام الصندوق للمراجعة",
+        "pageSubtitle": "للمراجعة بالأولوية، ثم في انتظار الإدارة، قيد التنفيذ والسجل.",
+        "allJournees": "جميع الأيام",
+        "empty": "لا توجد أيام صندوق في الوقت الحالي.",
+        "detailTitle": "تفاصيل اليوم",
+        "detailPageTitle": "يوم {{date}}",
+        "detailSubtitle": "أمين الصندوق : {{nom}}",
+        "rapportCaisse": "تقرير الصندوق",
+        "soldeDebut": "الرصيد في البداية",
+        "soldeFin": "الرصيد عند الإغلاق",
+        "depotsAdmin": "إيداعات الإدارة",
+        "alimentationsPayeurs": "تغذيات الدافعين",
+        "factureClient": "فاتورة العميل",
+        "colDesignation": "التسمية",
+        "colMontant": "المبلغ",
+        "colPayeur": "الدافع",
+        "colStatut": "الحالة",
+        "colAction": "إجراء",
+        "btnVoir": "عرض",
+        "btnValidating": "جارٍ المراجعة…",
+        "btnValiderJournee": "مراجعة اليوم بالكامل (إرسال للإدارة)",
+        "btnValiderAdmin": "مراجعة اليوم + إنشاء فواتير العملاء",
+        "dialogPaidBy": "دفع بواسطة {{nom}} — {{montant}} MRU",
+        "recuLoading": "جارٍ تحميل الإيصال…",
+        "recuNone": "لا يوجد إيصال.",
+        "commentaireLabel": "تعليق (اختياري)",
+        "commentairePlaceholder": "ملاحظات للمراجعة…",
+        "btnRejeter": "رفض",
+        "btnValider": "قبول",
+        "successValidation": "تمت مراجعة اليوم. تم إنشاء {{n}} فاتورة(فواتير) عميل تلقائياً.",
+        "designationStatus": {
+          "PAYEE": "للمراجعة",
+          "VALIDEE_TRANSIT": "مراجع من النقل",
+          "VALIDEE_ADMIN": "مراجع من الإدارة",
+          "RESERVEE": "محجوز",
+          "LIBRE": "متاح",
+          "REJETEE": "مرفوض"
         }
       }
     },
@@ -1314,6 +1360,41 @@
         "formBanquePlaceholder": "اختر بنكًا",
         "formMontantLabel": "المبلغ (MRU) *",
         "errorFormIncomplete": "يرجى ملء جميع الحقول المطلوبة"
+      },
+      "opsValider": {
+        "pageTitle": "العمليات للمراجعة",
+        "pageSubtitle": "مدفوعات العملاء في انتظار مراجعتك. بعد مراجعتك، يجب على عميل النقل المراجعة أيضاً.",
+        "refresh": "تحديث",
+        "noOp": "لا توجد عمليات.",
+        "colDate": "التاريخ",
+        "colDesignation": "التسمية",
+        "colBlClient": "BL · العميل",
+        "colPayeur": "الدافع",
+        "colMontant": "المبلغ",
+        "colActions": "إجراءات",
+        "btnVoir": "عرض",
+        "btnVoirCount": "عرض ({{count}})",
+        "btnValider": "مراجعة",
+        "btnRejeter": "رفض",
+        "sectionPending": "في انتظار مراجعتي",
+        "sectionAgent": "في انتظار عميل النقل",
+        "sectionValidated": "تمت المراجعة من قِبل عميل النقل",
+        "sectionRejected": "مرفوضة",
+        "errNoRecu": "لا يوجد إيصال مرفق بهذا الدفع.",
+        "errRecuIntrouvable": "الإيصال غير موجود",
+        "errNetwork": "خطأ في الشبكة",
+        "errLoad": "خطأ في التحميل",
+        "motifPrompt": "سبب الرفض (اختياري) :",
+        "successRejete": "تم رفض الدفع",
+        "successValide": "تمت مراجعة الدفع من قِبل أمين الصندوق — في انتظار مراجعة عميل النقل.",
+        "titleVoirRecus": "عرض {{count}} إيصال"
+      },
+      "caisse": {
+        "payeursTitle": "صناديق الدافعين",
+        "payeursTotal": "المجموع : {{total}} MRU",
+        "noPayeur": "لم يُعثر على أي دافع.",
+        "fieldSolde": "الرصيد",
+        "btnHistorique": "سجل التغذيات"
       }
     },
     "factures": {
