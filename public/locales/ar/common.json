@@ -1840,5 +1840,10 @@
       "showPassword": "إظهار كلمة المرور",
       "hidePassword": "إخفاء كلمة المرور"
     }
+  },
+  "pwa": {
+    "installTitle": "تثبيت SNTS",
+    "installSubtitle": "وصول سريع من شاشة الرئيسية",
+    "installBtn": "تثبيت"
   }
 }

@@ -1836,5 +1836,10 @@
       "showPassword": "Afficher le mot de passe",
       "hidePassword": "Masquer le mot de passe"
     }
+  },
+  "pwa": {
+    "installTitle": "Installer SNTS",
+    "installSubtitle": "Accès rapide depuis l'écran d'accueil",
+    "installBtn": "Installer"
   }
 }
