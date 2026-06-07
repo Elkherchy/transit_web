@@ -1,0 +1,27 @@
+{
+  "name": "Emama Group",
+  "short_name": "Emama",
+  "description": "Gestion Transit & Logistique — Emama Group",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#02389B",
+  "theme_color": "#02389B",
+  "lang": "fr",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/emama-favorie.png",
+      "sizes": "192x192 256x256 384x384 512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/emama-favorie.png",
+      "sizes": "192x192 256x256 384x384 512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
