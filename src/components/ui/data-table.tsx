@@ -31,6 +31,8 @@ export type DataTableColumnMeta = {
   label?: string;
   /** Masquer sur la carte mobile (rare) */
   hideInMobileList?: boolean;
+  /** Afficher comme sous-titre de la carte mobile (sous le titre principal) */
+  isSubtitle?: boolean;
 };
 
 export interface DataTableProps<TData, TValue> {
@@ -191,8 +193,15 @@ export function DataTable<TData, TValue>({
         });
 
         const first = dataCells[0];
-        const restFields = first != null ? dataCells.slice(1) : dataCells;
-        const fields = restFields.map((cell) => ({
+        // Subtitle: column with meta.isSubtitle = true (excluded from fields)
+        const subtitleCell = dataCells.find((c) => {
+          const m = c.column.columnDef.meta as DataTableColumnMeta | undefined;
+          return m?.isSubtitle === true;
+        });
+        const fieldCells = (first != null ? dataCells.slice(1) : dataCells).filter(
+          (c) => c !== subtitleCell
+        );
+        const fields = fieldCells.map((cell) => ({
           label: columnHeaderLabel(cell.column),
           value: flexRender(cell.column.columnDef.cell, cell.getContext()),
         }));
@@ -202,6 +211,9 @@ export function DataTable<TData, TValue>({
             : fields.length === 0 && actionCell != null
               ? '—'
               : undefined;
+        const subtitle = subtitleCell
+          ? flexRender(subtitleCell.column.columnDef.cell, subtitleCell.getContext())
+          : undefined;
 
         return (
           <MobileEntityCard
@@ -209,6 +221,7 @@ export function DataTable<TData, TValue>({
             surface={surface}
             compact={isGrid}
             title={title}
+            subtitle={subtitle}
             fields={fields}
             actions={
               actionCell

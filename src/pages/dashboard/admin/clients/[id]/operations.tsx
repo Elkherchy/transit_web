@@ -10,15 +10,19 @@ import { PageHeader, PageContent, PageSkeleton } from '@/components/ui';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
 import { DataTable, type DataTableColumnMeta } from '@/components/ui/data-table';
 import { ClientSubNav } from '@/components/dashboard/admin/clients/ClientSubNav';
 import { useClientDetail } from '@/components/dashboard/admin/clients/useClientDetail';
 import { type ITransaction, TransactionType, UserRole } from '@/types';
 import { isAdminTransit } from '@/lib/roles';
-import { ArrowLeft, RefreshCcw, Search, X as XIcon } from 'lucide-react';
+import { ArrowLeft, Minus, RefreshCcw, Search, X as XIcon } from 'lucide-react';
 
 const fmt = (n: number) =>
   Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
@@ -44,6 +48,40 @@ export default function AdminClientOperations() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | TransactionType>('ALL');
 
+  // Debit dialog
+  const [showDebit, setShowDebit] = useState(false);
+  const [debitMontant, setDebitMontant] = useState('');
+  const [debitDesc, setDebitDesc] = useState('');
+  const [debitLoading, setDebitLoading] = useState(false);
+  const [debitError, setDebitError] = useState<string | null>(null);
+
+  const isAdminOnly = user?.role === UserRole.ADMIN || user?.role === UserRole.ADMIN_TRANSIT;
+
+  const handleDebit = async () => {
+    setDebitError(null);
+    const montant = Number(debitMontant);
+    if (!montant || montant <= 0) { setDebitError(t('dashboard.clients.operations.debitErrMontant')); return; }
+    if (!debitDesc.trim()) { setDebitError(t('dashboard.clients.operations.debitErrDesc')); return; }
+    setDebitLoading(true);
+    try {
+      const res = await fetch(`/api/admin/clients/${id}/debit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ montant, description: debitDesc.trim() }),
+      });
+      const json = await res.json() as { success: boolean; error?: string };
+      if (!json.success) { setDebitError(json.error ?? 'Erreur'); setDebitLoading(false); return; }
+      setShowDebit(false);
+      setDebitMontant('');
+      setDebitDesc('');
+      void reload();
+    } catch {
+      setDebitError(t('dashboard.clients.operations.debitErrNetwork'));
+    } finally {
+      setDebitLoading(false);
+    }
+  };
+
   const transactions = data?.transactions;
   const filtered = useMemo(() => {
     if (!transactions) return [] as ITransaction[];
@@ -60,23 +98,12 @@ export default function AdminClientOperations() {
 
   const columns = useMemo<ColumnDef<ITransaction>[]>(
     () => [
-      {
-        accessorKey: 'date',
-        header: t('dashboard.clients.operations.colDate'),
-        cell: ({ row }) => (
-          <span className="text-sm tabular-nums">
-            {new Date(row.original.date).toLocaleString('fr-FR')}
-          </span>
-        ),
-      },
+      // First col = mobile card title
       {
         accessorKey: 'description',
         header: t('dashboard.clients.operations.colDescription'),
         cell: ({ row }) => {
           const tx = row.original;
-          // Une transaction issue d'un MouvementPending validé a sa
-          // `reference` au format `pending-{id}` — on la signale par un
-          // badge vert "Mouvement" pour la distinguer d'un paiement normal.
           const isMouvement = String(tx.reference || '').startsWith('pending-');
           return (
             <div className="flex items-center gap-2">
@@ -91,15 +118,6 @@ export default function AdminClientOperations() {
         },
       },
       {
-        accessorKey: 'type',
-        header: t('dashboard.clients.operations.colType'),
-        cell: ({ row }) => (
-          <Badge variant="outline" className="text-xs">
-            {row.original.type === TransactionType.CREDIT ? t('dashboard.clients.operations.typeCredit') : t('dashboard.clients.operations.typeDebit')}
-          </Badge>
-        ),
-      },
-      {
         accessorKey: 'montant',
         meta: { align: 'right' } satisfies DataTableColumnMeta,
         header: t('dashboard.clients.operations.colMontant'),
@@ -112,8 +130,29 @@ export default function AdminClientOperations() {
             }
           >
             {row.original.type === TransactionType.CREDIT ? '+' : '−'}
-            {fmt(row.original.montant)}
+            {fmt(row.original.montant)} MRU
           </span>
+        ),
+      },
+      {
+        accessorKey: 'date',
+        header: t('dashboard.clients.operations.colDate'),
+        cell: ({ row }) => (
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {new Date(row.original.date).toLocaleString('fr-FR')}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'type',
+        meta: { hideInMobileList: true } satisfies DataTableColumnMeta,
+        header: t('dashboard.clients.operations.colType'),
+        cell: ({ row }) => (
+          <Badge variant="outline" className="text-xs">
+            {row.original.type === TransactionType.CREDIT
+              ? t('dashboard.clients.operations.typeCredit')
+              : t('dashboard.clients.operations.typeDebit')}
+          </Badge>
         ),
       },
     ],
@@ -170,15 +209,28 @@ export default function AdminClientOperations() {
           </Button>
         }
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void reload()}
-            className={isMobile ? 'h-10 px-3' : ''}
-          >
-            <RefreshCcw className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">{t('actions.refresh')}</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            {isAdminOnly && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => { setDebitError(null); setShowDebit(true); }}
+                className={isMobile ? 'h-10 px-3' : ''}
+              >
+                <Minus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('dashboard.clients.operations.debitBtn')}</span>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void reload()}
+              className={isMobile ? 'h-10 px-3' : ''}
+            >
+              <RefreshCcw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t('actions.refresh')}</span>
+            </Button>
+          </div>
         }
         sticky={isMobile}
       />
@@ -252,6 +304,68 @@ export default function AdminClientOperations() {
           </div>
         </div>
       </PageContent>
+      {/* ── Debit dialog ── */}
+      <Dialog open={showDebit} onOpenChange={(o) => { if (!debitLoading) setShowDebit(o); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Minus className="h-4 w-4 text-destructive" />
+              {t('dashboard.clients.operations.debitTitle', { name: data?.client.nom })}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="debit-montant">
+                {t('dashboard.clients.operations.debitMontantLabel')} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="debit-montant"
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder={t('dashboard.clients.operations.debitMontantPlaceholder')}
+                value={debitMontant}
+                onChange={(e) => setDebitMontant(e.target.value)}
+                className="tabular-nums"
+                disabled={debitLoading}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="debit-desc">
+                {t('dashboard.clients.operations.debitDescLabel')} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="debit-desc"
+                placeholder={t('dashboard.clients.operations.debitDescPlaceholder')}
+                value={debitDesc}
+                onChange={(e) => setDebitDesc(e.target.value)}
+                disabled={debitLoading}
+              />
+            </div>
+            {debitError && (
+              <p className="text-sm text-destructive">{debitError}</p>
+            )}
+            {data?.caisse && (
+              <p className="text-xs text-muted-foreground">
+                {t('dashboard.clients.operations.debitSoldeActuel')}{' '}
+                <span className="font-semibold tabular-nums">{fmt(data.caisse.solde)} MRU</span>
+              </p>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowDebit(false)} disabled={debitLoading}>
+              {t('dashboard.clients.operations.debitCancel')}
+            </Button>
+            <Button variant="destructive" onClick={() => void handleDebit()} disabled={debitLoading}>
+              {debitLoading
+                ? t('dashboard.clients.operations.debitLoading')
+                : t('dashboard.clients.operations.debitConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

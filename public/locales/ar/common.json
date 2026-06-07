@@ -671,7 +671,20 @@
         "colMontant": "المبلغ (MRU)",
         "typeCredit": "دائن",
         "typeDebit": "مدين",
-        "errorFallback": "تعذّر تحميل العمليات"
+        "errorFallback": "تعذّر تحميل العمليات",
+        "debitBtn": "خصم",
+        "debitTitle": "إضافة خصم — {{name}}",
+        "debitMontantLabel": "المبلغ (MRU)",
+        "debitMontantPlaceholder": "0.00",
+        "debitDescLabel": "الوصف",
+        "debitDescPlaceholder": "سبب الخصم…",
+        "debitSoldeActuel": "الرصيد الحالي:",
+        "debitCancel": "إلغاء",
+        "debitConfirm": "تأكيد الخصم",
+        "debitLoading": "جارٍ المعالجة…",
+        "debitErrMontant": "مبلغ غير صالح (يجب أن يكون > 0)",
+        "debitErrDesc": "الوصف إلزامي",
+        "debitErrNetwork": "خطأ في الشبكة"
       },
       "confirmReject": "رفض وحذف العميل « {{nom}} »؟",
       "menuTransfer": "تحويل إلى عميل آخر",
@@ -1625,10 +1638,10 @@
       "colAction": "الإجراء",
       "voir": "عرض",
       "libres": "متاحة",
-      "reserveeSuffix_one": "· {{count}} محجوزة",
-      "reserveeSuffix_other": "· {{count}} محجوزات",
-      "payeeSuffix_one": "· {{count}} مدفوعة",
-      "payeeSuffix_other": "· {{count}} مدفوعات",
+      "reserveeSuffix_one": "{{count}} محجوزة",
+      "reserveeSuffix_other": "{{count}} محجوزة",
+      "payeeSuffix_one": "{{count}} مدفوعة",
+      "payeeSuffix_other": "{{count}} مدفوعة",
       "statusLibre": "متاحة",
       "statusReservee": "محجوزة",
       "statusPayee": "مدفوعة",
@@ -1654,7 +1667,8 @@
       "apercuRecu": "معاينة الإيصال",
       "envoi": "جارٍ الإرسال…",
       "confirmerPaiement": "تأكيد الدفع",
-      "headerListe": "القائمة"
+      "headerListe": "القائمة",
+      "btnRepayer": "إعادة الدفع"
     },
     "agentTransit": {
       "title": "لوحة وكيل العبور",
@@ -1844,6 +1858,19 @@
   "pwa": {
     "installTitle": "تثبيت SNTS",
     "installSubtitle": "وصول سريع من شاشة الرئيسية",
-    "installBtn": "تثبيت"
+    "installBtn": "تثبيت",
+    "instructionsTitle": "تثبيت التطبيق",
+    "instructionsClose": "حسناً",
+    "instructionsChromePc": "Chrome (PC / Mac)",
+    "instructionsChromeStep1": "انقر على قائمة ⋮ في الزاوية العلوية اليمنى",
+    "instructionsChromeStep2": "\"حفظ ومشاركة\"",
+    "instructionsChromeStep3": "\"تثبيت الصفحة كتطبيق…\"",
+    "instructionsChromeBar": "أو أيقونة ⊕ في شريط العنوان",
+    "instructionsAndroid": "Android Chrome",
+    "instructionsAndroidStep1": "انقر على قائمة ⋮",
+    "instructionsAndroidStep2": "\"إضافة إلى الشاشة الرئيسية\"",
+    "instructionsIos": "Safari (iPhone / iPad)",
+    "instructionsIosStep1": "انقر على زر المشاركة □↑",
+    "instructionsIosStep2": "\"إضافة إلى الشاشة الرئيسية\""
   }
 }

@@ -725,38 +725,34 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
             className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="font-semibold text-sm">
-              {t('pwa.instructionsTitle', { defaultValue: "Installer l'application" })}
-            </p>
+            <p className="font-semibold text-sm">{t('pwa.instructionsTitle')}</p>
 
             {/* Desktop Chrome */}
             <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
-              <p className="text-xs font-semibold text-slate-700">💻 Chrome (PC / Mac)</p>
+              <p className="text-xs font-semibold text-slate-700">💻 {t('pwa.instructionsChromePc')}</p>
               <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
-                <li>Clique sur le menu <strong>⋮</strong> en haut à droite</li>
-                <li>Sélectionne <strong>&ldquo;Enregistrer et partager&rdquo;</strong></li>
-                <li>Puis <strong>&ldquo;Installer la page en tant qu&rsquo;application…&rdquo;</strong></li>
+                <li>{t('pwa.instructionsChromeStep1')}</li>
+                <li><strong>{t('pwa.instructionsChromeStep2')}</strong></li>
+                <li><strong>{t('pwa.instructionsChromeStep3')}</strong></li>
               </ol>
-              <p className="text-xs text-slate-400 italic">
-                Ou cherche l&rsquo;icône <strong>⊕</strong> dans la barre d&rsquo;adresse.
-              </p>
+              <p className="text-xs text-slate-400 italic">{t('pwa.instructionsChromeBar')}</p>
             </div>
 
             {/* Android */}
             <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
-              <p className="text-xs font-semibold text-slate-700">🤖 Android Chrome</p>
+              <p className="text-xs font-semibold text-slate-700">🤖 {t('pwa.instructionsAndroid')}</p>
               <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
-                <li>Clique sur le menu <strong>⋮</strong></li>
-                <li>Sélectionne <strong>&ldquo;Ajouter à l&rsquo;écran d&rsquo;accueil&rdquo;</strong></li>
+                <li>{t('pwa.instructionsAndroidStep1')}</li>
+                <li><strong>{t('pwa.instructionsAndroidStep2')}</strong></li>
               </ol>
             </div>
 
             {/* iOS */}
             <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
-              <p className="text-xs font-semibold text-slate-700">🍎 Safari (iPhone / iPad)</p>
+              <p className="text-xs font-semibold text-slate-700">🍎 {t('pwa.instructionsIos')}</p>
               <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
-                <li>Clique sur le bouton Partager <strong>□↑</strong></li>
-                <li>Sélectionne <strong>&ldquo;Sur l&rsquo;écran d&rsquo;accueil&rdquo;</strong></li>
+                <li>{t('pwa.instructionsIosStep1')}</li>
+                <li><strong>{t('pwa.instructionsIosStep2')}</strong></li>
               </ol>
             </div>
 
@@ -764,7 +760,7 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
               onClick={() => setShowPwaInstructions(false)}
               className="w-full rounded-lg bg-[#02389B] py-2 text-sm font-semibold text-white hover:bg-[#02389B]/90 transition-colors"
             >
-              {t('pwa.instructionsClose', { defaultValue: 'OK' })}
+              {t('pwa.instructionsClose')}
             </button>
           </div>
         </div>

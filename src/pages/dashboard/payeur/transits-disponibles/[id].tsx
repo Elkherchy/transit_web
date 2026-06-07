@@ -186,27 +186,33 @@ export default function PayeurTransitDetail() {
 
   const designationColumns = useMemo<ColumnDef<IDesignation>[]>(
     () => [
+      // Mobile card title: designation name
       {
         id: 'nom',
         header: t('dashboard.payeur.colDesignationName'),
         cell: ({ row }) => (
-          <span className="font-medium">{row.original.nom}</span>
+          <span className="font-semibold text-base leading-tight">
+            {row.original.nom}
+          </span>
         ),
+      },
+      // Mobile card subtitle: status badge
+      {
+        id: 'statut',
+        header: t('dashboard.payeur.colStatut'),
+        meta: { isSubtitle: true } satisfies DataTableColumnMeta,
+        cell: ({ row }) => <StatusBadge s={row.original.statutDesignation} />,
       },
       {
         accessorKey: 'montant',
         meta: { align: 'right' } satisfies DataTableColumnMeta,
         header: t('dashboard.payeur.colMontant'),
         cell: ({ row }) => (
-          <span className="tabular-nums">
-            {Number(row.original.montant || 0).toFixed(2)} MRU
+          <span className="tabular-nums font-semibold text-base">
+            {Number(row.original.montant || 0).toFixed(2)}
+            <span className="ms-1 text-xs font-normal text-muted-foreground">MRU</span>
           </span>
         ),
-      },
-      {
-        id: 'statut',
-        header: t('dashboard.payeur.colStatut'),
-        cell: ({ row }) => <StatusBadge s={row.original.statutDesignation} />,
       },
       {
         id: 'actions',
@@ -216,32 +222,28 @@ export default function PayeurTransitDetail() {
           const d = row.original;
           if (!transit) return null;
           const isMine = String(d.payeurId || '') === user?.id;
-          const canReserve =
-            d.statutDesignation === DesignationStatus.LIBRE;
-          const canPay =
-            isMine && d.statutDesignation === DesignationStatus.RESERVEE;
-          // « Repayer » : la désignation a été rejetée par le caissier mais
-          // reste à l'utilisateur — il peut soumettre un nouveau paiement.
-          const canRepay =
-            isMine && d.statutDesignation === DesignationStatus.REJETEE;
+          const canReserve = d.statutDesignation === DesignationStatus.LIBRE;
+          const canPay = isMine && d.statutDesignation === DesignationStatus.RESERVEE;
+          const canRepay = isMine && d.statutDesignation === DesignationStatus.REJETEE;
           const k = `${transit._id}:${d._id}`;
           if (canReserve) {
             return (
               <Button
                 size="sm"
                 variant="outline"
+                className="h-9 px-4"
                 disabled={busyKey === k}
                 onClick={() => void reserver(String(d._id))}
               >
-                <Lock className="mr-2 h-4 w-4" />
+                <Lock className="me-1.5 h-4 w-4" />
                 {t('dashboard.payeur.btnReserver')}
               </Button>
             );
           }
           if (canPay) {
             return (
-              <Button size="sm" onClick={() => openPay(d)}>
-                <Upload className="mr-2 h-4 w-4" />
+              <Button size="sm" className="h-9 px-4" onClick={() => openPay(d)}>
+                <Upload className="me-1.5 h-4 w-4" />
                 {t('dashboard.payeur.btnPayerRecu')}
               </Button>
             );
@@ -250,12 +252,12 @@ export default function PayeurTransitDetail() {
             return (
               <Button
                 size="sm"
-                className="bg-amber-600 hover:bg-amber-700"
+                className="h-9 px-4 bg-amber-600 hover:bg-amber-700"
                 onClick={() => openPay(d)}
                 title={d.commentaire || undefined}
               >
-                <Upload className="mr-2 h-4 w-4" />
-                Repayer
+                <Upload className="me-1.5 h-4 w-4" />
+                {t('dashboard.payeur.btnRepayer')}
               </Button>
             );
           }
@@ -471,7 +473,6 @@ export default function PayeurTransitDetail() {
             columns={designationColumns}
             data={visibleDesignations}
             emptyMessage={t('dashboard.payeur.transitDetailEmpty')}
-            mobileGridCols={2}
           />
         </div>
 

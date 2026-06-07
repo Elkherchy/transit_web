@@ -667,7 +667,20 @@
         "colMontant": "Montant (MRU)",
         "typeCredit": "Crédit",
         "typeDebit": "Débit",
-        "errorFallback": "Opérations introuvables"
+        "errorFallback": "Opérations introuvables",
+        "debitBtn": "Débit",
+        "debitTitle": "Ajouter un débit — {{name}}",
+        "debitMontantLabel": "Montant (MRU)",
+        "debitMontantPlaceholder": "0.00",
+        "debitDescLabel": "Description",
+        "debitDescPlaceholder": "Motif du débit…",
+        "debitSoldeActuel": "Solde actuel :",
+        "debitCancel": "Annuler",
+        "debitConfirm": "Confirmer le débit",
+        "debitLoading": "En cours…",
+        "debitErrMontant": "Montant invalide (doit être > 0)",
+        "debitErrDesc": "Description obligatoire",
+        "debitErrNetwork": "Erreur réseau"
       },
       "confirmReject": "Rejeter et supprimer le client « {{nom}} » ?",
       "menuTransfer": "Transférer vers autre client",
@@ -1621,10 +1634,10 @@
       "colAction": "Action",
       "voir": "Voir",
       "libres": "libres",
-      "reserveeSuffix_one": "· {{count}} réservée",
-      "reserveeSuffix_other": "· {{count}} réservées",
-      "payeeSuffix_one": "· {{count}} payée",
-      "payeeSuffix_other": "· {{count}} payées",
+      "reserveeSuffix_one": "{{count}} réservée",
+      "reserveeSuffix_other": "{{count}} réservées",
+      "payeeSuffix_one": "{{count}} payée",
+      "payeeSuffix_other": "{{count}} payées",
       "statusLibre": "Libre",
       "statusReservee": "Réservée",
       "statusPayee": "Payée",
@@ -1650,7 +1663,8 @@
       "apercuRecu": "Aperçu reçu",
       "envoi": "Envoi…",
       "confirmerPaiement": "Confirmer paiement",
-      "headerListe": "Liste"
+      "headerListe": "Liste",
+      "btnRepayer": "Repayer"
     },
     "agentTransit": {
       "title": "Dashboard agent transit",
@@ -1840,6 +1854,19 @@
   "pwa": {
     "installTitle": "Installer SNTS",
     "installSubtitle": "Accès rapide depuis l'écran d'accueil",
-    "installBtn": "Installer"
+    "installBtn": "Installer",
+    "instructionsTitle": "Installer l'application",
+    "instructionsClose": "OK",
+    "instructionsChromePc": "Chrome (PC / Mac)",
+    "instructionsChromeStep1": "Cliquer sur le menu ⋮ en haut à droite",
+    "instructionsChromeStep2": "\"Enregistrer et partager\"",
+    "instructionsChromeStep3": "\"Installer la page en tant qu'application…\"",
+    "instructionsChromeBar": "Ou icône ⊕ dans la barre d'adresse",
+    "instructionsAndroid": "Android Chrome",
+    "instructionsAndroidStep1": "Cliquer sur le menu ⋮",
+    "instructionsAndroidStep2": "\"Ajouter à l'écran d'accueil\"",
+    "instructionsIos": "Safari (iPhone / iPad)",
+    "instructionsIosStep1": "Cliquer sur le bouton Partager □↑",
+    "instructionsIosStep2": "\"Sur l'écran d'accueil\""
   }
 }

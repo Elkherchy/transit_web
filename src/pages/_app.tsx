@@ -164,22 +164,42 @@ function PwaInstallBanner() {
           onClick={() => setShowInstructions(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl space-y-3"
+            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="font-semibold text-sm">
-              {t("pwa.instructionsTitle", { defaultValue: "Installer l'application" })}
-            </p>
-            <ul className="text-sm text-muted-foreground space-y-2 list-none">
-              <li>🤖 <strong>Android Chrome</strong> : menu ⋮ → &ldquo;Ajouter à l&rsquo;écran d&rsquo;accueil&rdquo;</li>
-              <li>🍎 <strong>iOS Safari</strong> : bouton Partager □↑ → &ldquo;Sur l&rsquo;écran d&rsquo;accueil&rdquo;</li>
-              <li>💻 <strong>Desktop Chrome</strong> : icône ⊕ dans la barre d&rsquo;adresse</li>
-            </ul>
+            <p className="font-semibold text-sm">{t("pwa.instructionsTitle")}</p>
+
+            <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-slate-700">💻 {t("pwa.instructionsChromePc")}</p>
+              <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
+                <li>{t("pwa.instructionsChromeStep1")}</li>
+                <li><strong>{t("pwa.instructionsChromeStep2")}</strong></li>
+                <li><strong>{t("pwa.instructionsChromeStep3")}</strong></li>
+              </ol>
+              <p className="text-xs text-slate-400 italic">{t("pwa.instructionsChromeBar")}</p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-slate-700">🤖 {t("pwa.instructionsAndroid")}</p>
+              <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
+                <li>{t("pwa.instructionsAndroidStep1")}</li>
+                <li><strong>{t("pwa.instructionsAndroidStep2")}</strong></li>
+              </ol>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-slate-700">🍎 {t("pwa.instructionsIos")}</p>
+              <ol className="text-xs text-slate-500 space-y-1 list-decimal ps-4">
+                <li>{t("pwa.instructionsIosStep1")}</li>
+                <li><strong>{t("pwa.instructionsIosStep2")}</strong></li>
+              </ol>
+            </div>
+
             <button
               onClick={() => setShowInstructions(false)}
               className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
             >
-              {t("pwa.instructionsClose", { defaultValue: "OK" })}
+              {t("pwa.instructionsClose")}
             </button>
           </div>
         </div>

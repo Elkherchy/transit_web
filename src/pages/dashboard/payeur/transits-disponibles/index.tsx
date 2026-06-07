@@ -99,19 +99,25 @@ export default function PayeurTransitsDisponibles() {
 
   const transitColumns = useMemo<ColumnDef<ITransit>[]>(
     () => [
-      // Mobile title : client name
+      // Mobile card title: client name
       {
         accessorKey: 'client',
         header: t('dashboard.payeur.colClient'),
         cell: ({ row }) => (
-          <span className="font-medium">{row.original.client || '—'}</span>
+          <span className="font-semibold text-base leading-tight">
+            {row.original.client || '—'}
+          </span>
         ),
       },
+      // Mobile card subtitle: BL number
       {
         accessorKey: 'bl',
         header: t('dashboard.payeur.colBl'),
+        meta: { isSubtitle: true } satisfies DataTableColumnMeta,
         cell: ({ row }) => (
-          <span className="tabular-nums text-sm">{row.original.bl}</span>
+          <span className="tabular-nums font-mono text-sm text-muted-foreground">
+            {row.original.bl}
+          </span>
         ),
       },
       {
@@ -122,14 +128,14 @@ export default function PayeurTransitsDisponibles() {
           if (!c) return <span className="text-sm">—</span>;
           return (
             <span className="text-sm">
-              <span className="font-medium">{c.libre}</span>
+              <span className="font-semibold text-primary">{c.libre}</span>
               <span className="text-muted-foreground">
                 /{c.visibleTotal} {t('dashboard.payeur.libres')}
               </span>
               {(c.reservee > 0 || c.payee > 0) && (
-                <span className="ml-2 text-xs text-muted-foreground">
-                  {c.reservee > 0 && ` ${t('dashboard.payeur.reserveeSuffix', { count: c.reservee })}`}
-                  {c.payee > 0 && ` ${t('dashboard.payeur.payeeSuffix', { count: c.payee })}`}
+                <span className="ms-1.5 text-xs text-amber-600">
+                  {c.reservee > 0 && `· ${t('dashboard.payeur.reserveeSuffix', { count: c.reservee })}`}
+                  {c.payee > 0 && ` · ${t('dashboard.payeur.payeeSuffix', { count: c.payee })}`}
                 </span>
               )}
             </span>
@@ -139,7 +145,6 @@ export default function PayeurTransitsDisponibles() {
       {
         id: 'date',
         header: t('dashboard.payeur.colDate'),
-        // Hidden on mobile — shown on desktop only
         meta: { hideInMobileList: true } satisfies DataTableColumnMeta,
         cell: ({ row }) => (
           <span className="text-sm">
@@ -152,7 +157,6 @@ export default function PayeurTransitsDisponibles() {
       {
         accessorKey: 'objet',
         header: t('dashboard.payeur.colObjet'),
-        // Too verbose for compact grid cards
         meta: { hideInMobileList: true } satisfies DataTableColumnMeta,
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground line-clamp-2">
@@ -165,11 +169,9 @@ export default function PayeurTransitsDisponibles() {
         meta: { align: 'right' } satisfies DataTableColumnMeta,
         header: t('dashboard.payeur.colActions'),
         cell: ({ row }) => (
-          <Button asChild variant="outline" size="sm">
-            <Link
-              href={`/dashboard/payeur/transits-disponibles/${row.original._id}`}
-            >
-              <Eye className="mr-2 h-4 w-4" />
+          <Button asChild size="sm" className="h-9 px-4 text-sm">
+            <Link href={`/dashboard/payeur/transits-disponibles/${row.original._id}`}>
+              <Eye className="me-1.5 h-4 w-4" />
               {t('dashboard.payeur.voir')}
             </Link>
           </Button>
@@ -232,7 +234,6 @@ export default function PayeurTransitsDisponibles() {
             columns={transitColumns}
             data={transits}
             emptyMessage={t('dashboard.payeur.transitsListEmpty')}
-            mobileGridCols={2}
           />
         </div>
       </PageContent>
