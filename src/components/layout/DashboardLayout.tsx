@@ -68,6 +68,8 @@ const NAV_I18N_BY_HREF: Record<string, string> = {
   '/dashboard/transit/journees': 'nav.items.journees',
   '/dashboard/transit/depenses-categories': 'nav.items.depensesCategories',
   '/dashboard/transit/depenses-clients': 'nav.items.depensesClients',
+  '/dashboard/transit/operations-a-valider': 'nav.items.opsValider',
+  '/dashboard/caissier/operations-a-valider': 'nav.items.opsValider',
   '/dashboard/caissier/depenses': 'nav.items.depenses',
   '/dashboard/utilisateurs': 'nav.items.utilisateurs',
   '/dashboard/payeur/transits-disponibles': 'nav.items.transitsDisponibles',

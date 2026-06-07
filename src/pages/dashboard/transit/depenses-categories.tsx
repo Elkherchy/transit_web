@@ -269,9 +269,9 @@ export default function DepensesCategoriesPage() {
                         <th className="px-4 py-2.5 font-medium">
                           {t('dashboard.depensesCategories.descriptionLabel')}
                         </th>
-                        <th className="px-4 py-2.5 font-medium">Statut</th>
+                        <th className="px-4 py-2.5 font-medium">{t('dashboard.depensesCategories.colStatut')}</th>
                         <th className="px-4 py-2.5 text-right font-medium">
-                          Actions
+                          {t('dashboard.depensesCategories.colActions')}
                         </th>
                       </tr>
                     </thead>
@@ -300,7 +300,7 @@ export default function DepensesCategoriesPage() {
                                 </Badge>
                               ) : (
                                 <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 text-xs">
-                                  Validée
+                                  {t('dashboard.depensesCategories.statusValide')}
                                 </Badge>
                               )}
                             </td>

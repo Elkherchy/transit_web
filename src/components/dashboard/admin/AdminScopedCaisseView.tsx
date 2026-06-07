@@ -203,7 +203,7 @@ export default function AdminScopedCaisseView({
       return;
     }
     if (isAgentTransit && !transferFile) {
-      setTransferError('Image justificative (chèque, reçu, …) obligatoire');
+      setTransferError(t('dashboard.adminScopedCaisse.errJustificatifRequired'));
       return;
     }
     setTransferSubmitting(true);
@@ -306,7 +306,7 @@ export default function AdminScopedCaisseView({
     }
     // AGENT_TRANSIT : exige une image justificative, mouvement EN_ATTENTE.
     if (isAgentTransit && !soldeFile) {
-      setSoldeError('Image justificative (chèque, reçu, …) obligatoire');
+      setSoldeError(t('dashboard.adminScopedCaisse.errJustificatifRequired'));
       return;
     }
     setSoldeSubmitting(true);
@@ -699,7 +699,7 @@ export default function AdminScopedCaisseView({
                     onClick={() => openTransferDialog(general)}
                   >
                     <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" />
-                    Transférer
+                    {t('dashboard.adminScopedCaisse.btnTransfer')}
                   </Button>
                   <Button asChild size="sm" variant="outline">
                     <Link href={`${detailBase}/${general._id}`}>
@@ -806,7 +806,7 @@ export default function AdminScopedCaisseView({
                               onClick={() => openTransferDialog(c)}
                             >
                               <ArrowRightLeft className="mr-1 h-3 w-3" />
-                              Transférer
+                              {t('dashboard.adminScopedCaisse.btnTransfer')}
                             </Button>
                             <Button
                               asChild
@@ -1125,7 +1125,7 @@ export default function AdminScopedCaisseView({
             {isAgentTransit && (
               <div className="grid gap-2">
                 <Label htmlFor="solde-file">
-                  Image justificative (chèque, reçu, …) *
+                  {t('dashboard.adminScopedCaisse.labelJustificatif')} *
                 </Label>
                 <Input
                   id="solde-file"
@@ -1175,7 +1175,7 @@ export default function AdminScopedCaisseView({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Transférer depuis {transferSource?.nom}
+              {t('dashboard.adminScopedCaisse.transfer.dialogTitle', { nom: transferSource?.nom })}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={submitTransfer} className="space-y-3">
@@ -1185,17 +1185,17 @@ export default function AdminScopedCaisseView({
               </Alert>
             )}
             <div className="space-y-1.5">
-              <Label>Compte source</Label>
+              <Label>{t('dashboard.adminScopedCaisse.transfer.labelSource')}</Label>
               <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
                 <div className="font-medium">{transferSource?.nom}</div>
                 <div className="text-xs text-muted-foreground tabular-nums">
-                  Solde : {fmt(Number(transferSource?.solde) || 0)}{' '}
+                  {t('dashboard.adminScopedCaisse.transfer.labelSolde')} {fmt(Number(transferSource?.solde) || 0)}{' '}
                   {t('common.mru')}
                 </div>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Type destination *</Label>
+              <Label>{t('dashboard.adminScopedCaisse.transfer.labelDestType')} *</Label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -1209,7 +1209,7 @@ export default function AdminScopedCaisseView({
                   }}
                   className="flex-1"
                 >
-                  Compte bancaire
+                  {t('dashboard.adminScopedCaisse.transfer.btnBanque')}
                 </Button>
                 <Button
                   type="button"
@@ -1223,19 +1223,19 @@ export default function AdminScopedCaisseView({
                   }}
                   className="flex-1"
                 >
-                  Client
+                  {t('dashboard.adminScopedCaisse.transfer.btnClient')}
                 </Button>
               </div>
             </div>
             {transferDestKind === 'BANQUE' ? (
               <div className="space-y-1.5">
-                <Label htmlFor="transfer-dest">Compte destination *</Label>
+                <Label htmlFor="transfer-dest">{t('dashboard.adminScopedCaisse.transfer.labelDest')} *</Label>
                 <Select
                   value={transferDestId || undefined}
                   onValueChange={(v) => setTransferDestId(v)}
                 >
                   <SelectTrigger id="transfer-dest" className="w-full">
-                    <SelectValue placeholder="Sélectionner un compte" />
+                    <SelectValue placeholder={t('dashboard.adminScopedCaisse.transfer.selectAccountPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent position="popper">
                     {[
@@ -1253,18 +1253,18 @@ export default function AdminScopedCaisseView({
               </div>
             ) : (
               <div className="space-y-1.5">
-                <Label htmlFor="transfer-client">Client destination *</Label>
+                <Label htmlFor="transfer-client">{t('dashboard.adminScopedCaisse.transfer.labelClientDest')} *</Label>
                 <Select
                   value={transferClientId || undefined}
                   onValueChange={(v) => setTransferClientId(v)}
                 >
                   <SelectTrigger id="transfer-client" className="w-full">
-                    <SelectValue placeholder="Sélectionner un client validé" />
+                    <SelectValue placeholder={t('dashboard.adminScopedCaisse.transfer.selectClientPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-[60vh]">
                     {clientOptions.length === 0 ? (
                       <div className="px-3 py-2 text-xs text-muted-foreground">
-                        Aucun client validé disponible.
+                        {t('dashboard.adminScopedCaisse.transfer.noClientAvailable')}
                       </div>
                     ) : (
                       clientOptions.map((c) => (
@@ -1291,16 +1291,16 @@ export default function AdminScopedCaisseView({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="transfer-desc">Description</Label>
+              <Label htmlFor="transfer-desc">{t('dashboard.adminScopedCaisse.transfer.labelDesc')}</Label>
               <Input
                 id="transfer-desc"
                 value={transferDesc}
                 onChange={(e) => setTransferDesc(e.target.value)}
-                placeholder="Motif du transfert (optionnel)"
+                placeholder={t('dashboard.adminScopedCaisse.transfer.descPlaceholder')}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="transfer-date">Date</Label>
+              <Label htmlFor="transfer-date">{t('dashboard.adminScopedCaisse.transfer.labelDate')}</Label>
               <Input
                 id="transfer-date"
                 type="date"
@@ -1311,7 +1311,7 @@ export default function AdminScopedCaisseView({
             {isAgentTransit && (
               <div className="space-y-1.5">
                 <Label htmlFor="transfer-file">
-                  Image justificative (chèque, reçu, …) *
+                  {t('dashboard.adminScopedCaisse.transfer.labelJustificatif')} *
                 </Label>
                 <Input
                   id="transfer-file"
@@ -1345,7 +1345,7 @@ export default function AdminScopedCaisseView({
                 className="w-full sm:w-auto"
               >
                 <ArrowRightLeft className="mr-2 h-4 w-4" />
-                {transferSubmitting ? t('actions.loading') : 'Transférer'}
+                {transferSubmitting ? t('actions.loading') : t('dashboard.adminScopedCaisse.transfer.btnSubmit')}
               </Button>
             </DialogFooter>
           </form>

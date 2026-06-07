@@ -632,7 +632,7 @@ export default function AdminFactureManutentionDetail() {
                   ) : (
                     <ShieldCheck className="h-4 w-4 sm:mr-2" />
                   )}
-                  <span className="hidden sm:inline">Valider</span>
+                  <span className="hidden sm:inline">{t('dashboard.manutention.detail.btnValider')}</span>
                 </Button>
               )}
             {/* Créer facture client : visible quand la manutention est
@@ -654,8 +654,8 @@ export default function AdminFactureManutentionDetail() {
                   ) : (
                     <Receipt className="h-4 w-4 sm:mr-2" />
                   )}
-                  <span className="hidden sm:inline">Créer facture client</span>
-                  <span className="sm:hidden">Facture</span>
+                  <span className="hidden sm:inline">{t('dashboard.manutention.detail.btnCreateFacture')}</span>
+                  <span className="sm:hidden">{t('dashboard.manutention.detail.btnCreateFactureShort')}</span>
                 </Button>
               )}
             {!editMode &&
@@ -670,7 +670,7 @@ export default function AdminFactureManutentionDetail() {
                   className={isMobile ? 'h-10 px-3' : ''}
                 >
                   <Pencil className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Modifier</span>
+                  <span className="hidden sm:inline">{t('dashboard.manutention.detail.btnModifier')}</span>
                 </Button>
               )}
             {editMode && (
@@ -687,7 +687,7 @@ export default function AdminFactureManutentionDetail() {
                     <Save className="h-4 w-4 sm:mr-2" />
                   )}
                   <span className="hidden sm:inline">
-                    {saving ? 'Enregistrement…' : 'Enregistrer modifications'}
+                    {saving ? t('dashboard.manutention.detail.btnSaving') : t('dashboard.manutention.detail.btnSaveModifications')}
                   </span>
                   <span className="sm:hidden">{saving ? '…' : 'Save'}</span>
                 </Button>
@@ -702,7 +702,7 @@ export default function AdminFactureManutentionDetail() {
                   className={isMobile ? 'h-10 px-3' : ''}
                 >
                   <XIcon className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Annuler</span>
+                  <span className="hidden sm:inline">{t('actions.cancel')}</span>
                 </Button>
               </>
             )}
@@ -719,7 +719,7 @@ export default function AdminFactureManutentionDetail() {
                 ) : (
                   <FileDown className="h-4 w-4 sm:mr-2" />
                 )}
-                <span className="hidden sm:inline">Télécharger PDF</span>
+                <span className="hidden sm:inline">{t('dashboard.manutention.detail.btnTelechargerPdf')}</span>
               </Button>
             )}
             {!editMode && (
@@ -756,7 +756,7 @@ export default function AdminFactureManutentionDetail() {
                     }}
                   >
                     <SelectTrigger className="h-8">
-                      <SelectValue placeholder="Sélectionner un client" />
+                      <SelectValue placeholder={t('dashboard.manutention.detail.selectClientPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent position="popper">
                       {clientOptions.map((c) => (
@@ -826,7 +826,7 @@ export default function AdminFactureManutentionDetail() {
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-muted-foreground" />
                 <h3 className="text-sm font-semibold">
-                  Documents joints
+                  {t('dashboard.manutention.detail.documentsTitle')}
                 </h3>
                 <Badge variant="secondary" className="ml-1">
                   {facture.documents?.length || 0}
@@ -858,7 +858,7 @@ export default function AdminFactureManutentionDetail() {
                           {docName}
                           {markedForRemoval && (
                             <span className="ml-2 text-[10px] text-red-600">
-                              (sera supprimé)
+                              {t('dashboard.manutention.detail.docWillBeDeleted')}
                             </span>
                           )}
                         </div>
@@ -884,7 +884,7 @@ export default function AdminFactureManutentionDetail() {
                           ) : (
                             <Eye className="mr-1 h-3 w-3" />
                           )}
-                          Voir
+                          {t('dashboard.manutention.detail.docBtnVoir')}
                         </Button>
                         {editMode && docKey && (
                           <Button
@@ -904,12 +904,12 @@ export default function AdminFactureManutentionDetail() {
                             {markedForRemoval ? (
                               <>
                                 <XIcon className="mr-1 h-3 w-3" />
-                                Annuler
+                                {t('dashboard.manutention.detail.docBtnAnnulerSuppression')}
                               </>
                             ) : (
                               <>
                                 <Trash2 className="mr-1 h-3 w-3" />
-                                Supprimer
+                                {t('dashboard.manutention.detail.docBtnSupprimer')}
                               </>
                             )}
                           </Button>
@@ -923,7 +923,7 @@ export default function AdminFactureManutentionDetail() {
               {editMode && (
                 <div className="border-t pt-3 space-y-2">
                   <div className="text-xs font-semibold text-muted-foreground">
-                    Ajouter un nouveau document
+                    {t('dashboard.manutention.detail.docAddTitle')}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Input
@@ -944,13 +944,11 @@ export default function AdminFactureManutentionDetail() {
                       ) : (
                         <Plus className="mr-1 h-3 w-3" />
                       )}
-                      {uploadingDoc ? 'Upload…' : 'Téléverser'}
+                      {uploadingDoc ? t('dashboard.manutention.detail.docBtnUploading') : t('dashboard.manutention.detail.docBtnUpload')}
                     </Button>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    L&apos;upload est immédiat — le fichier va direct au bucket S3.
-                    Pour supprimer un document existant, utilise le bouton
-                    « Supprimer » puis enregistre.
+                    {t('dashboard.manutention.detail.docUploadHint')}
                   </p>
                 </div>
               )}
@@ -972,7 +970,7 @@ export default function AdminFactureManutentionDetail() {
                     onClick={() => setAddOpen(true)}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Ajouter
+                    {t('dashboard.manutention.detail.editBtnAdd')}
                   </Button>
                   <Button
                     size="sm"
@@ -984,7 +982,7 @@ export default function AdminFactureManutentionDetail() {
                     disabled={saving}
                   >
                     <XIcon className="mr-2 h-4 w-4" />
-                    Annuler
+                    {t('actions.cancel')}
                   </Button>
                   <Button
                     size="sm"
@@ -996,7 +994,7 @@ export default function AdminFactureManutentionDetail() {
                     ) : (
                       <Save className="mr-2 h-4 w-4" />
                     )}
-                    Enregistrer
+                    {t('dashboard.manutention.detail.editBtnSave')}
                   </Button>
                 </div>
               )}
@@ -1016,16 +1014,16 @@ export default function AdminFactureManutentionDetail() {
               <div className="space-y-2">
                 {editDesignations.length === 0 ? (
                   <p className="rounded border border-dashed bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
-                    Aucune désignation. Cliquez sur « Ajouter ».
+                    {t('dashboard.manutention.detail.editEmpty')}
                   </p>
                 ) : (
                   <div className="overflow-hidden rounded border">
                     <table className="w-full text-sm">
                       <thead className="border-b bg-slate-50 text-left text-xs uppercase text-muted-foreground">
                         <tr>
-                          <th className="px-3 py-2 font-medium">Désignation</th>
+                          <th className="px-3 py-2 font-medium">{t('dashboard.manutention.detail.editColDesignation')}</th>
                           <th className="px-3 py-2 text-right font-medium">
-                            Montant (MRU)
+                            {t('dashboard.manutention.detail.editColMontant')}
                           </th>
                           <th className="px-3 py-2 w-10"></th>
                         </tr>
@@ -1073,7 +1071,7 @@ export default function AdminFactureManutentionDetail() {
                                     onClick={() =>
                                       handleRemoveDesignation(idx)
                                     }
-                                    aria-label="Supprimer la ligne"
+                                    aria-label={t('dashboard.manutention.detail.editAriaDeleteLine')}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
@@ -1086,7 +1084,7 @@ export default function AdminFactureManutentionDetail() {
                       <tfoot className="border-t bg-slate-50">
                         <tr>
                           <td className="px-3 py-2 font-semibold">
-                            Total opérations
+                            {t('dashboard.manutention.detail.editTotalOps')}
                           </td>
                           <td className="px-3 py-2 text-right font-semibold tabular-nums">
                             {fmt(
@@ -1102,7 +1100,7 @@ export default function AdminFactureManutentionDetail() {
                         <tr className="border-t">
                           <td className="px-3 py-2 font-semibold">
                             <Label htmlFor="edit-interet" className="text-sm">
-                              Intérêt
+                              {t('dashboard.manutention.detail.editInteret')}
                             </Label>
                           </td>
                           <td className="px-3 py-2 text-right">
@@ -1119,7 +1117,7 @@ export default function AdminFactureManutentionDetail() {
                           <td />
                         </tr>
                         <tr className="border-t bg-emerald-50">
-                          <td className="px-3 py-2 font-bold">Total final</td>
+                          <td className="px-3 py-2 font-bold">{t('dashboard.manutention.detail.editTotalFinal')}</td>
                           <td className="px-3 py-2 text-right font-bold tabular-nums text-emerald-700">
                             {fmt(
                               editDesignations.reduce(
@@ -1137,8 +1135,7 @@ export default function AdminFactureManutentionDetail() {
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  À l&apos;enregistrement, le total de la facture client liée
-                  est automatiquement recalculé.
+                  {t('dashboard.manutention.detail.editHint')}
                 </p>
               </div>
             ) : (
@@ -1156,7 +1153,7 @@ export default function AdminFactureManutentionDetail() {
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Ajouter une désignation</DialogTitle>
+              <DialogTitle>{t('dashboard.manutention.detail.dialogAddTitle')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {(() => {
@@ -1169,7 +1166,7 @@ export default function AdminFactureManutentionDetail() {
                 if (available.length === 0) return null;
                 return (
                   <div className="space-y-2">
-                    <Label>Désignations optionnelles</Label>
+                    <Label>{t('dashboard.manutention.detail.dialogOptionalLabel')}</Label>
                     <div className="flex flex-wrap gap-2">
                       {available.map((nom) => (
                         <Button
@@ -1191,16 +1188,16 @@ export default function AdminFactureManutentionDetail() {
                 );
               })()}
               <div className="space-y-2">
-                <Label htmlFor="new-name">Nom de la désignation</Label>
+                <Label htmlFor="new-name">{t('dashboard.manutention.detail.dialogNomLabel')}</Label>
                 <Input
                   id="new-name"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="ex. Ouvriers visite"
+                  placeholder={t('dashboard.manutention.detail.dialogNomPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="new-montant">Montant (MRU)</Label>
+                <Label htmlFor="new-montant">{t('dashboard.manutention.detail.dialogMontantLabel')}</Label>
                 <Input
                   id="new-montant"
                   type="number"
@@ -1221,14 +1218,14 @@ export default function AdminFactureManutentionDetail() {
                   setNewMontant('');
                 }}
               >
-                Annuler
+                {t('actions.cancel')}
               </Button>
               <Button
                 onClick={handleAddDesignation}
                 disabled={!newName.trim()}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Ajouter
+                {t('dashboard.manutention.detail.editBtnAdd')}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -189,7 +189,7 @@ function buildColumns(
 ): ColumnDef<Row>[] {
   const validationCol: ColumnDef<Row> = {
     id: 'validation',
-    header: 'Validation',
+    header: t('dashboard.caissier.cloturer.validationCol'),
     meta: { align: 'right' } satisfies DataTableColumnMeta,
     cell: ({ row }) => {
       const r = row.original;
@@ -201,21 +201,21 @@ function buildColumns(
       if (sent === 'EN_ATTENTE_AGENT' || sent === 'EN_ATTENTE_ADMIN') {
         return (
           <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-[10px]">
-            En attente agent
+            {t('dashboard.caissier.cloturer.statusPendingAgent')}
           </Badge>
         );
       }
       if (sent === 'VALIDEE_ADMIN' || sent === 'VALIDEE_AGENT') {
         return (
           <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 text-[10px]">
-            Validée agent
+            {t('dashboard.caissier.cloturer.statusValideeAgent')}
           </Badge>
         );
       }
       if (sent === 'REJETEE') {
         return (
           <Badge variant="destructive" className="text-[10px]">
-            Rejetée
+            {t('dashboard.caissier.cloturer.statusRejetee')}
           </Badge>
         );
       }
@@ -226,7 +226,7 @@ function buildColumns(
           <Checkbox
             checked={checked}
             onCheckedChange={() => ctx.onToggle(ref.key)}
-            aria-label="Sélectionner pour envoi à l'agent"
+            aria-label={t('dashboard.caissier.cloturer.ariaSelect')}
           />
           <Button
             size="sm"
@@ -234,14 +234,14 @@ function buildColumns(
             className="h-7 px-2 text-xs"
             disabled={acting}
             onClick={() => ctx.onValiderOne(r)}
-            title="Valider et envoyer à l'agent transit"
+            title={t('dashboard.caissier.cloturer.titleValider')}
           >
             {acting ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               <ShieldCheck className="h-3 w-3 sm:mr-1" />
             )}
-            <span className="hidden sm:inline">Valider</span>
+            <span className="hidden sm:inline">{t('dashboard.caissier.cloturer.valider')}</span>
           </Button>
         </div>
       );

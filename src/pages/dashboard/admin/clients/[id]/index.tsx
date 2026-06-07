@@ -156,7 +156,7 @@ export default function AdminClientDetails() {
               className={isMobile ? 'h-10 px-3' : ''}
             >
               <FileDown className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Imprimer</span>
+              <span className="hidden sm:inline">{t('dashboard.clients.btnImprimer')}</span>
             </Button>
             <Button asChild size="sm" className={isMobile ? 'h-10 px-3' : ''}>
               <Link href={`/dashboard/admin/clients/${id}/modifier`}>
@@ -223,16 +223,15 @@ export default function AdminClientDetails() {
       <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Imprimer le relevé d&apos;opérations</DialogTitle>
+            <DialogTitle>{t('dashboard.clients.printDialog.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Sélectionne une période (optionnel). Laisse vide pour imprimer
-              toutes les opérations du client.
+              {t('dashboard.clients.printDialog.hint')}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="pdf-debut">Date début</Label>
+                <Label htmlFor="pdf-debut">{t('dashboard.clients.printDialog.labelDateDebut')}</Label>
                 <Input
                   id="pdf-debut"
                   type="date"
@@ -241,7 +240,7 @@ export default function AdminClientDetails() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="pdf-fin">Date fin</Label>
+                <Label htmlFor="pdf-fin">{t('dashboard.clients.printDialog.labelDateFin')}</Label>
                 <Input
                   id="pdf-fin"
                   type="date"
@@ -257,7 +256,7 @@ export default function AdminClientDetails() {
               disabled={pdfLoading}
               onClick={() => setPdfDialogOpen(false)}
             >
-              Annuler
+              {t('actions.cancel')}
             </Button>
             <Button
               disabled={pdfLoading}
@@ -268,7 +267,7 @@ export default function AdminClientDetails() {
               ) : (
                 <FileDown className="mr-2 h-4 w-4" />
               )}
-              Imprimer
+              {t('dashboard.clients.btnImprimer')}
             </Button>
           </DialogFooter>
         </DialogContent>

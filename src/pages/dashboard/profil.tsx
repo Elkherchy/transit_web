@@ -95,13 +95,13 @@ function PasswordField({
           onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
           disabled={disabled}
-          className="h-11 pr-12 font-mono text-sm tracking-wide"
+          className="h-11 pe-12 font-mono text-sm tracking-wide"
         />
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          className="absolute end-1 top-1/2 h-9 w-9 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           onClick={onToggleShow}
           aria-label={show ? t('dashboard.login.hidePassword') : t('dashboard.login.showPassword')}
         >
@@ -432,7 +432,7 @@ export default function ProfilPage() {
               <aside
                 className={cn(
                   'border-b border-border/60 bg-muted/30',
-                  'lg:w-[320px] lg:shrink-0 lg:border-b-0 lg:border-r'
+                  'lg:w-[320px] lg:shrink-0 lg:border-b-0 lg:border-e'
                 )}
               >
                 <ProfileInfoCard profile={profile} loading={loading} />

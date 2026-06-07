@@ -117,8 +117,8 @@ export default function Login() {
       {/* Formulaire — plein écran sur mobile, colonne droite sur lg+ */}
       <main className="flex min-h-dvh w-full flex-1 flex-col justify-center px-6 py-10 sm:px-10 lg:min-h-0 lg:w-[40%] lg:min-w-0 lg:shrink-0 lg:px-12 xl:w-[38%] xl:px-16">
         <div className="mx-auto w-full max-w-md">
-          <div className="mb-8 space-y-2 text-center lg:space-y-1 lg:text-left">
-            <div className="flex justify-center lg:justify-start">
+          <div className="mb-8 space-y-2 text-center lg:space-y-1 lg:text-start">
+            <div className="flex justify-center lg:justify-start rtl:lg:justify-end">
               <div className="relative h-14 w-36 shrink-0 sm:h-12 sm:w-32 lg:h-11 lg:w-28">
                 <Image
                   src="/emama-favorie.png"

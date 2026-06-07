@@ -88,7 +88,7 @@ export default function AdminClientsList() {
   };
 
   const handleRejeter = async (id: string, nom: string) => {
-    if (!window.confirm(`Rejeter et supprimer le client « ${nom} » ?`)) return;
+    if (!window.confirm(t('dashboard.clients.confirmReject', { nom }))) return;
     try {
       const r = await fetch(`/api/admin/clients/${id}/rejeter`, {
         method: 'POST',
@@ -154,11 +154,11 @@ export default function AdminClientsList() {
     if (!transferSource) return;
     setTransferError(null);
     if (!transferDestId) {
-      setTransferError('Sélectionnez un client destination');
+      setTransferError(t('dashboard.clients.transfer.errorNoDest'));
       return;
     }
     if (transferDestId === transferSource._id) {
-      setTransferError('Source et destination doivent être différents');
+      setTransferError(t('dashboard.clients.transfer.errorSameDest'));
       return;
     }
     const m = parseFloat(transferMontant.replace(',', '.'));
@@ -167,7 +167,7 @@ export default function AdminClientsList() {
       return;
     }
     if (!transferDesc.trim()) {
-      setTransferError('Description obligatoire');
+      setTransferError(t('dashboard.clients.transfer.errorNoDesc'));
       return;
     }
     setTransferSubmitting(true);
@@ -193,7 +193,7 @@ export default function AdminClientsList() {
         const data = await r.json().catch(() => null);
         if (r.ok && data?.success) {
           setTransferSuccess(
-            'Transfert créé — en attente de validation admin transit'
+            t('dashboard.clients.transfer.successPending')
           );
           setTransferSource(null);
         } else {
@@ -213,14 +213,14 @@ export default function AdminClientsList() {
         });
         const data = await r.json().catch(() => null);
         if (r.ok && data?.success) {
-          setTransferSuccess('Transfert effectué');
+          setTransferSuccess(t('dashboard.clients.transfer.successDone'));
           setTransferSource(null);
         } else {
           setTransferError(data?.error || `Erreur ${r.status}`);
         }
       }
     } catch {
-      setTransferError('Erreur réseau');
+      setTransferError(t('common.errorNetwork'));
     } finally {
       setTransferSubmitting(false);
     }
@@ -426,7 +426,7 @@ export default function AdminClientsList() {
                       }}
                     >
                       <ArrowRightLeft className="mr-2 h-4 w-4 text-blue-600" />
-                      Transférer vers autre client
+                      {t('dashboard.clients.menuTransfer')}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -568,7 +568,7 @@ export default function AdminClientsList() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Transférer un montant entre clients</DialogTitle>
+            <DialogTitle>{t('dashboard.clients.transfer.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             {transferError && (
@@ -582,19 +582,19 @@ export default function AdminClientsList() {
               </Alert>
             )}
             <div className="space-y-1.5">
-              <Label>Client source</Label>
+              <Label>{t('dashboard.clients.transfer.labelSource')}</Label>
               <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm font-medium">
                 {transferSource?.nom}
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="t-dest">Client destination *</Label>
+              <Label htmlFor="t-dest">{t('dashboard.clients.transfer.labelDest')}</Label>
               <Select
                 value={transferDestId || undefined}
                 onValueChange={setTransferDestId}
               >
                 <SelectTrigger id="t-dest" className="w-full">
-                  <SelectValue placeholder="Sélectionner un client validé" />
+                  <SelectValue placeholder={t('dashboard.clients.transfer.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-[60vh]">
                   {validatedClients
@@ -608,14 +608,14 @@ export default function AdminClientsList() {
                     (c) => c._id !== transferSource?._id
                   ).length === 0 && (
                     <div className="px-3 py-2 text-xs text-muted-foreground">
-                      Aucun autre client validé disponible.
+                      {t('dashboard.clients.transfer.noClientsAvailable')}
                     </div>
                   )}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="t-mont">Montant (MRU) *</Label>
+              <Label htmlFor="t-mont">{t('dashboard.clients.transfer.labelMontant')}</Label>
               <Input
                 id="t-mont"
                 type="number"
@@ -627,19 +627,18 @@ export default function AdminClientsList() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="t-desc">Description *</Label>
+              <Label htmlFor="t-desc">{t('dashboard.clients.transfer.labelDesc')}</Label>
               <Input
                 id="t-desc"
                 value={transferDesc}
                 onChange={(e) => setTransferDesc(e.target.value)}
-                placeholder="Motif du transfert"
+                placeholder={t('dashboard.clients.transfer.descPlaceholder')}
                 required
               />
             </div>
             {isAgentTransit && (
               <p className="text-[11px] text-muted-foreground">
-                Le transfert sera créé en attente, à valider par
-                l&apos;admin transit.
+                {t('dashboard.clients.transfer.agentHint')}
               </p>
             )}
           </div>
@@ -649,7 +648,7 @@ export default function AdminClientsList() {
               disabled={transferSubmitting}
               onClick={() => setTransferSource(null)}
             >
-              Annuler
+              {t('actions.cancel')}
             </Button>
             <Button
               disabled={
@@ -665,7 +664,7 @@ export default function AdminClientsList() {
               ) : (
                 <ArrowRightLeft className="mr-2 h-4 w-4" />
               )}
-              {isAgentTransit ? 'Soumettre' : 'Transférer'}
+              {isAgentTransit ? t('dashboard.clients.transfer.btnSubmit') : t('dashboard.clients.transfer.btnTransfer')}
             </Button>
           </DialogFooter>
         </DialogContent>

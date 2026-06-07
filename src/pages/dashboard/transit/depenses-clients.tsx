@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageHeader, PageContent, PageSkeleton } from '@/components/ui';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -44,6 +45,7 @@ export default function ClientsDepensePage() {
   const user = session?.user;
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   const canAccess =
     user?.role === UserRole.ADMIN ||
@@ -78,13 +80,13 @@ export default function ClientsDepensePage() {
         credentials: 'include',
       }).then((x) => x.json());
       if (r.success) setRows((r.data || []) as ClientDepenseRow[]);
-      else setError(r.error || 'Erreur');
+      else setError(r.error || t('common.error'));
     } catch {
-      setError('Erreur réseau');
+      setError(t('common.errorNetwork'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (canAccess) void reload();
@@ -92,7 +94,7 @@ export default function ClientsDepensePage() {
 
   const submitCreate = async () => {
     if (!formNom.trim()) {
-      setError('Le nom est requis');
+      setError(t('dashboard.depensesClients.errNomRequired'));
       return;
     }
     setSubmitting(true);
@@ -110,7 +112,7 @@ export default function ClientsDepensePage() {
         }),
       }).then((x) => x.json());
       if (r.success) {
-        setSuccess(r.message || 'Client dépense créé');
+        setSuccess(r.message || t('dashboard.depensesClients.successCreate'));
         setCreateOpen(false);
         setFormNom('');
         setFormTel('');
@@ -118,10 +120,10 @@ export default function ClientsDepensePage() {
         setFormDesc('');
         void reload();
       } else {
-        setError(r.error || 'Erreur');
+        setError(r.error || t('common.error'));
       }
     } catch {
-      setError('Erreur réseau');
+      setError(t('common.errorNetwork'));
     } finally {
       setSubmitting(false);
     }
@@ -134,17 +136,17 @@ export default function ClientsDepensePage() {
         credentials: 'include',
       }).then((x) => x.json());
       if (r.success) {
-        setSuccess('Client dépense validé');
+        setSuccess(t('dashboard.depensesClients.successValide'));
         void reload();
-      } else setError(r.error || 'Erreur');
+      } else setError(r.error || t('common.error'));
     } catch {
-      setError('Erreur réseau');
+      setError(t('common.errorNetwork'));
     }
   };
 
   const rejeter = async (id: string, nom: string) => {
     if (
-      !window.confirm(`Rejeter et supprimer le client dépense « ${nom} » ?`)
+      !window.confirm(t('dashboard.depensesClients.confirmRejet', { nom }))
     )
       return;
     try {
@@ -153,11 +155,11 @@ export default function ClientsDepensePage() {
         credentials: 'include',
       }).then((x) => x.json());
       if (r.success) {
-        setSuccess('Client dépense supprimé');
+        setSuccess(t('dashboard.depensesClients.successDelete'));
         void reload();
-      } else setError(r.error || 'Erreur');
+      } else setError(r.error || t('common.error'));
     } catch {
-      setError('Erreur réseau');
+      setError(t('common.errorNetwork'));
     }
   };
 
@@ -172,7 +174,7 @@ export default function ClientsDepensePage() {
   if (status === 'loading' || loading) {
     return (
       <DashboardLayout>
-        <PageHeader title="Clients dépense" />
+        <PageHeader title={t('dashboard.depensesClients.title')} />
         <PageContent>
           <PageSkeleton type="list" rows={isMobile ? 5 : 10} />
         </PageContent>
@@ -185,8 +187,8 @@ export default function ClientsDepensePage() {
   return (
     <DashboardLayout>
       <PageHeader
-        title="Clients dépense"
-        subtitle="Bénéficiaires des dépenses (fournisseurs, prestataires, etc.)"
+        title={t('dashboard.depensesClients.title')}
+        subtitle={t('dashboard.depensesClients.subtitle')}
         actions={
           <div className="flex gap-2">
             <Button
@@ -196,7 +198,7 @@ export default function ClientsDepensePage() {
               className={isMobile ? 'h-10 px-3' : ''}
             >
               <RefreshCcw className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Actualiser</span>
+              <span className="hidden sm:inline">{t('dashboard.depensesClients.refresh')}</span>
             </Button>
             <Button
               size="sm"
@@ -210,7 +212,7 @@ export default function ClientsDepensePage() {
               className={isMobile ? 'h-10 px-3' : ''}
             >
               <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Nouveau client</span>
+              <span className="hidden sm:inline">{t('dashboard.depensesClients.newBtn')}</span>
             </Button>
           </div>
         }
@@ -234,13 +236,13 @@ export default function ClientsDepensePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <UserRound className="h-4 w-4 text-muted-foreground" />
-                Clients dépense{' '}
+                {t('dashboard.depensesClients.title')}{' '}
                 <Badge variant="secondary" className="ml-1">
                   {rows.length}
                 </Badge>
                 {pending.length > 0 && (
                   <Badge className="bg-amber-500 text-white hover:bg-amber-500">
-                    {pending.length} en attente
+                    {t('dashboard.depensesClients.badgePending', { count: pending.length })}
                   </Badge>
                 )}
               </CardTitle>
@@ -248,20 +250,20 @@ export default function ClientsDepensePage() {
             <CardContent className="px-0 sm:px-6">
               {rows.length === 0 ? (
                 <p className="px-4 text-sm text-muted-foreground">
-                  Aucun client dépense.
+                  {t('dashboard.depensesClients.empty')}
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="border-b bg-slate-50 text-left text-xs uppercase text-muted-foreground">
                       <tr>
-                        <th className="px-4 py-2.5 font-medium">Nom</th>
-                        <th className="px-4 py-2.5 font-medium">Téléphone</th>
-                        <th className="px-4 py-2.5 font-medium">Email</th>
-                        <th className="px-4 py-2.5 font-medium">Description</th>
-                        <th className="px-4 py-2.5 font-medium">Statut</th>
+                        <th className="px-4 py-2.5 font-medium">{t('dashboard.depensesClients.colNom')}</th>
+                        <th className="px-4 py-2.5 font-medium">{t('dashboard.depensesClients.colTelephone')}</th>
+                        <th className="px-4 py-2.5 font-medium">{t('dashboard.depensesClients.colEmail')}</th>
+                        <th className="px-4 py-2.5 font-medium">{t('dashboard.depensesClients.colDescription')}</th>
+                        <th className="px-4 py-2.5 font-medium">{t('dashboard.depensesClients.colStatut')}</th>
                         <th className="px-4 py-2.5 text-right font-medium">
-                          Actions
+                          {t('dashboard.depensesClients.colActions')}
                         </th>
                       </tr>
                     </thead>
@@ -292,11 +294,11 @@ export default function ClientsDepensePage() {
                             <td className="px-4 py-2.5">
                               {isPending ? (
                                 <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-xs">
-                                  En attente
+                                  {t('dashboard.depensesClients.statusPending')}
                                 </Badge>
                               ) : (
                                 <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 text-xs">
-                                  Validé
+                                  {t('dashboard.depensesClients.statusValide')}
                                 </Badge>
                               )}
                             </td>
@@ -309,7 +311,7 @@ export default function ClientsDepensePage() {
                                     onClick={() => void valider(c._id)}
                                   >
                                     <ShieldCheck className="mr-1 h-3 w-3" />
-                                    Valider
+                                    {t('dashboard.depensesClients.btnValider')}
                                   </Button>
                                   <Button
                                     size="sm"
@@ -318,13 +320,13 @@ export default function ClientsDepensePage() {
                                     onClick={() => void rejeter(c._id, c.nom)}
                                   >
                                     <XCircle className="mr-1 h-3 w-3" />
-                                    Rejeter
+                                    {t('dashboard.depensesClients.btnRejeter')}
                                   </Button>
                                 </div>
                               )}
                               {isPending && !isAdmin && (
                                 <Badge variant="outline" className="text-[10px]">
-                                  En attente admin
+                                  {t('dashboard.depensesClients.statusPendingAdmin')}
                                 </Badge>
                               )}
                             </td>
@@ -342,20 +344,20 @@ export default function ClientsDepensePage() {
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Nouveau client dépense</DialogTitle>
+              <DialogTitle>{t('dashboard.depensesClients.dialogTitle')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="cd-nom">Nom *</Label>
+                <Label htmlFor="cd-nom">{t('dashboard.depensesClients.labelNom')} *</Label>
                 <Input
                   id="cd-nom"
                   value={formNom}
                   onChange={(e) => setFormNom(e.target.value)}
-                  placeholder="ex. Fournisseur ABC"
+                  placeholder={t('dashboard.depensesClients.nomPlaceholder')}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="cd-tel">Téléphone</Label>
+                <Label htmlFor="cd-tel">{t('dashboard.depensesClients.labelTelephone')}</Label>
                 <Input
                   id="cd-tel"
                   value={formTel}
@@ -364,7 +366,7 @@ export default function ClientsDepensePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="cd-email">Email</Label>
+                <Label htmlFor="cd-email">{t('dashboard.depensesClients.labelEmail')}</Label>
                 <Input
                   id="cd-email"
                   type="email"
@@ -373,20 +375,19 @@ export default function ClientsDepensePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="cd-desc">Description</Label>
+                <Label htmlFor="cd-desc">{t('dashboard.depensesClients.labelDescription')}</Label>
                 <Textarea
                   id="cd-desc"
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
                   rows={2}
-                  placeholder="Optionnel"
+                  placeholder={t('dashboard.depensesClients.descPlaceholder')}
                 />
               </div>
               {!isAdmin && (
                 <Alert>
                   <AlertDescription className="text-xs">
-                    Votre client dépense sera créé en attente de validation par
-                    l&apos;admin transit.
+                    {t('dashboard.depensesClients.noticePending')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -397,14 +398,14 @@ export default function ClientsDepensePage() {
                 disabled={submitting}
                 onClick={() => setCreateOpen(false)}
               >
-                Annuler
+                {t('actions.cancel')}
               </Button>
               <Button
                 disabled={submitting || !formNom.trim()}
                 onClick={() => void submitCreate()}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Créer
+                {t('dashboard.depensesClients.btnCreate')}
               </Button>
             </DialogFooter>
           </DialogContent>
