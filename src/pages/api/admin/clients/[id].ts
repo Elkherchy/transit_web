@@ -1,7 +1,7 @@
 import type { NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
-import { Client, Facture, Transaction, Caisse } from '@/models';
+import { Client, Facture, Transaction, Caisse, Transit } from '@/models';
 import {
   ApiResponse,
   IFacture,
@@ -77,7 +77,7 @@ async function getClient(
       allClientCaisses[0] ||
       null;
 
-    const [factures, transactions] = await Promise.all([
+    const [facturesRaw, transactions] = await Promise.all([
       Facture.find({ clientId: id })
         .sort({ createdAt: -1 })
         .limit(100)
@@ -92,6 +92,23 @@ async function getClient(
         .limit(100)
         .lean(),
     ]);
+
+    // Populate transitObjet from Transit for each facture
+    const transitIds = facturesRaw
+      .map((f) => f.transitId)
+      .filter(Boolean);
+    const transits = transitIds.length
+      ? await Transit.find({ _id: { $in: transitIds } })
+          .select('_id objet')
+          .lean()
+      : [];
+    const transitObjMap = new Map(
+      transits.map((t) => [String(t._id), (t as { objet?: string }).objet || ''])
+    );
+    const factures = facturesRaw.map((f) => ({
+      ...f,
+      transitObjet: transitObjMap.get(String(f.transitId)) || undefined,
+    }));
 
     return res.status(200).json({
       success: true,

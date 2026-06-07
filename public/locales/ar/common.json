@@ -593,7 +593,11 @@
       "detailTitle": "التفاصيل — {{name}}",
       "detailSubtitle": "تفاصيل العميل",
       "facturesTitle": "الفواتير — {{name}}",
+      "facturesCount_zero": "لا توجد فواتير",
       "facturesCount_one": "فاتورة واحدة",
+      "facturesCount_two": "فاتورتان",
+      "facturesCount_few": "{{count}} فواتير",
+      "facturesCount_many": "{{count}} فاتورة",
       "facturesCount_other": "{{count}} فواتير",
       "facturesEmpty": "لا توجد فواتير لهذا العميل.",
       "operationsTitle": "العمليات — {{name}}",
@@ -655,7 +659,10 @@
         "statusEmise": "صادرة",
         "statusEnValidation": "قيد المصادقة",
         "statusPaiementPartiel": "دفع جزئي",
-        "statusPayee": "مدفوعة"
+        "statusPayee": "مدفوعة",
+        "printTitle": "معاينة قبل الطباعة",
+        "printColObjet": "موضوع الملف",
+        "printColTotal": "المبلغ الإجمالي للملف"
       },
       "operations": {
         "title": "العمليات",

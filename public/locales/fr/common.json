@@ -651,7 +651,10 @@
         "statusEmise": "Émise",
         "statusEnValidation": "En validation",
         "statusPaiementPartiel": "Paiement partiel",
-        "statusPayee": "Payée"
+        "statusPayee": "Payée",
+        "printTitle": "Aperçu avant impression",
+        "printColObjet": "Objet du dossier",
+        "printColTotal": "Montant total du dossier"
       },
       "operations": {
         "title": "Opérations",

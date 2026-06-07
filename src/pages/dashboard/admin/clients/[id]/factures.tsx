@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -12,12 +12,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
 import { DataTable, type DataTableColumnMeta } from '@/components/ui/data-table';
 import { ClientSubNav } from '@/components/dashboard/admin/clients/ClientSubNav';
 import { useClientDetail } from '@/components/dashboard/admin/clients/useClientDetail';
 import { type IFacture, FactureStatus, UserRole } from '@/types';
 import { isAdminTransit } from '@/lib/roles';
-import { ArrowLeft, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Printer, RefreshCcw } from 'lucide-react';
 
 const fmt = (n: number) =>
   Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
@@ -51,6 +54,30 @@ export default function AdminClientFactures() {
   }, [status, user, isAdmin, router]);
 
   const { data, loading, error, reload } = useClientDetail(id, isAdmin);
+
+  const [printFacture, setPrintFacture] = useState<IFacture | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = () => {
+    if (!printRef.current) return;
+    const w = window.open('', '_blank', 'width=600,height=500');
+    if (!w) return;
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Facture</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 40px; color: #000; }
+        h2 { font-size: 18px; margin-bottom: 24px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        td, th { border: 1px solid #000; padding: 10px 14px; font-size: 14px; }
+        th { background: #f0f0f0; font-weight: bold; }
+        .total { font-size: 16px; font-weight: bold; }
+        @media print { body { padding: 20px; } }
+      </style></head><body>`);
+    w.document.write(printRef.current.innerHTML);
+    w.document.write('</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(() => { w.print(); }, 300);
+  };
 
   const columns = useMemo<ColumnDef<IFacture>[]>(
     () => [
@@ -88,12 +115,29 @@ export default function AdminClientFactures() {
       {
         id: 'date',
         header: t('dashboard.clients.factures.colEmission'),
+        meta: { hideInMobileList: true } satisfies DataTableColumnMeta,
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
             {row.original.dateEmission
               ? new Date(row.original.dateEmission).toLocaleDateString('fr-FR')
               : '—'}
           </span>
+        ),
+      },
+      {
+        id: 'actions',
+        meta: { align: 'right' } satisfies DataTableColumnMeta,
+        header: '',
+        cell: ({ row }) => (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 px-3 text-xs"
+            onClick={() => setPrintFacture(row.original)}
+          >
+            <Printer className="me-1.5 h-3.5 w-3.5" />
+            {t('actions.print')}
+          </Button>
         ),
       },
     ],
@@ -178,6 +222,76 @@ export default function AdminClientFactures() {
           </div>
         </div>
       </PageContent>
+      {/* ── Print dialog ── */}
+      <Dialog open={!!printFacture} onOpenChange={(o) => { if (!o) setPrintFacture(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Printer className="h-4 w-4" />
+              {t('dashboard.clients.factures.printTitle')}
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Hidden printable content */}
+          <div ref={printRef} className="hidden">
+            <h2>
+              {data?.client.nom} — {t('dashboard.clients.factures.printTitle')}
+            </h2>
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>
+                    {t('dashboard.clients.factures.printColObjet')}
+                  </th>
+                  <th style={{ textAlign: 'right' }}>
+                    {t('dashboard.clients.factures.printColTotal')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    {printFacture?.transitObjet || printFacture?.bl || '—'}
+                  </td>
+                  <td className="total" style={{ textAlign: 'right' }}>
+                    {fmt(printFacture?.totalFinal ?? 0)} MRU
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Preview */}
+          <div className="space-y-3 rounded-lg border border-slate-200 p-4 text-sm">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">
+                {t('dashboard.clients.factures.printColObjet')}
+              </p>
+              <p className="font-semibold text-base">
+                {printFacture?.transitObjet || printFacture?.bl || '—'}
+              </p>
+            </div>
+            <div className="border-t border-slate-100 pt-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">
+                {t('dashboard.clients.factures.printColTotal')}
+              </p>
+              <p className="font-bold text-xl tabular-nums text-primary">
+                {fmt(printFacture?.totalFinal ?? 0)} MRU
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPrintFacture(null)}>
+              {t('actions.cancel')}
+            </Button>
+            <Button onClick={handlePrint}>
+              <Printer className="me-2 h-4 w-4" />
+              {t('actions.print')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
