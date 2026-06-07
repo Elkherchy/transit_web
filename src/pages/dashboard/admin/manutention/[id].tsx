@@ -635,12 +635,14 @@ export default function AdminFactureManutentionDetail() {
                   <span className="hidden sm:inline">{t('dashboard.manutention.detail.btnValider')}</span>
                 </Button>
               )}
-            {/* Créer facture client : visible quand la manutention est
-                clôturée (toutes désignations VALIDEE_ADMIN) ET qu'aucune
-                facture n'a encore été créée. */}
+            {/* Créer facture client : visible quand toutes les désignations
+                sont VALIDEE_ADMIN (CLOTURE) ou que le paiement est reçu et
+                en attente de validation finale (PAYE_EN_ATTENTE_VALIDATION). */}
             {!editMode &&
               canValiderManutention &&
-              facture.statut === FactureManutentionStatus.CLOTURE &&
+              (facture.statut === FactureManutentionStatus.CLOTURE ||
+                facture.statut ===
+                  FactureManutentionStatus.PAYE_EN_ATTENTE_VALIDATION) &&
               transit &&
               !transit.factureClientId && (
                 <Button
@@ -660,6 +662,9 @@ export default function AdminFactureManutentionDetail() {
               )}
             {!editMode &&
               (transit ||
+                (canValiderManutention &&
+                  facture.statut ===
+                    FactureManutentionStatus.PAYE_EN_ATTENTE_VALIDATION) ||
                 (isAgentOnly &&
                   facture.statut ===
                     FactureManutentionStatus.EN_ATTENTE_VALIDATION)) && (
@@ -1139,11 +1144,37 @@ export default function AdminFactureManutentionDetail() {
                 </p>
               </div>
             ) : (
-              <DataTable
-                columns={designationColumns}
-                data={transit.designations || []}
-                emptyMessage={t('dashboard.manutention.noDesignations')}
-              />
+              <>
+                <DataTable
+                  columns={designationColumns}
+                  data={transit.designations || []}
+                  emptyMessage={t('dashboard.manutention.noDesignations')}
+                />
+                {(() => {
+                  const totalOps = (transit.designations || []).reduce(
+                    (s, d) => s + (Number(d.montant) || 0),
+                    0
+                  );
+                  const interet = Number(transit.interet) || 0;
+                  if (totalOps === 0 && interet === 0) return null;
+                  return (
+                    <div className="border-t pt-3 space-y-1.5 text-sm">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>{t('dashboard.manutention.detail.editTotalOps')}</span>
+                        <span className="tabular-nums font-medium">{fmt(totalOps)} MRU</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>{t('dashboard.manutention.detail.editInteret')}</span>
+                        <span className="tabular-nums">{fmt(interet)} MRU</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-emerald-700 pt-1 border-t">
+                        <span>{t('dashboard.manutention.detail.editTotalFinal')}</span>
+                        <span className="tabular-nums">{fmt(totalOps + interet)} MRU</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>
             )}
           </div>
           )}

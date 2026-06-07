@@ -61,9 +61,6 @@ const NAV_I18N_BY_HREF: Record<string, string> = {
   '/dashboard/admin/transit/mouvement-general': 'nav.items.mouvementTransit',
   '/dashboard/caisses/mine': 'nav.items.maCaisse',
   '/dashboard/caissier/caisse': 'nav.items.maCaisse',
-  '/dashboard/paie': 'nav.items.paie',
-  '/dashboard/paie/salaries': 'nav.items.salaries',
-  '/dashboard/paie/bulletins': 'nav.items.bulletins',
   '/dashboard/admin/manutention': 'nav.items.manutention',
   '/dashboard/transit/journees': 'nav.items.journees',
   '/dashboard/transit/depenses-categories': 'nav.items.depensesCategories',
@@ -83,7 +80,6 @@ const SECTION_I18N_BY_TITLE: Record<string, string> = {
   Navigation: 'nav.sections.navigation',
   Principal: 'nav.sections.principal',
   Transit: 'nav.sections.transit',
-  'Ressources & Paie': 'nav.sections.ressourcesPaie',
   Administration: 'nav.sections.administration',
   Compte: 'nav.sections.compte',
 };
@@ -148,26 +144,6 @@ const navItemsFlat: NavItem[] = [
     href: '/dashboard/transit/bls/non-valides',
     Icon: FileText,
     roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.AGENT_TRANSIT],
-  },
-  {
-    label: 'Paie',
-    href: '/dashboard/paie',
-    Icon: BriefcaseBusiness,
-    roles: [UserRole.ADMIN, UserRole.COMPTABLE],
-  },
-  {
-    label: 'Salariés',
-    href: '/dashboard/paie/salaries',
-    Icon: Users,
-    roles: [UserRole.ADMIN, UserRole.COMPTABLE],
-    parentHref: '/dashboard/paie',
-  },
-  {
-    label: 'Bulletins',
-    href: '/dashboard/paie/bulletins',
-    Icon: FileText,
-    roles: [UserRole.ADMIN, UserRole.COMPTABLE],
-    parentHref: '/dashboard/paie',
   },
   {
     label: 'Manutention',
@@ -317,10 +293,6 @@ function buildNavSections(items: NavItem[]): NavSection[] {
     '/dashboard/caissier/depenses',
     '/dashboard/transit/operations-a-valider',
   ];
-  const paieGroupHrefs = [
-    '/dashboard/paie',
-    ...items.filter((i) => i.parentHref === '/dashboard/paie').map((i) => i.href),
-  ];
   const administrationHrefs = ['/dashboard/utilisateurs'];
 
   const indexOf = (hrefs: string[]) => (h: string) => {
@@ -338,7 +310,6 @@ function buildNavSections(items: NavItem[]): NavSection[] {
       items: items.filter((i) => ['/dashboard', '/dashboard/caisses'].includes(i.href)),
     },
     { title: 'Transit', items: ordered(transitGroupHrefs) },
-    { title: 'Ressources & Paie', items: ordered(paieGroupHrefs) },
     { title: 'Administration', items: ordered(administrationHrefs) },
   ].filter((s) => s.items.length > 0);
 
