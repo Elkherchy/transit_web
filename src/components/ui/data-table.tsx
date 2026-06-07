@@ -4,8 +4,10 @@ import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Table,
@@ -25,7 +27,7 @@ import { DataListTableSurface, useDataListSurface } from '@/components/ui/data-l
 export type DataTableColumnMeta = {
   /** Aligne en-tête et cellule (ex. colonne Action / Actions) */
   align?: 'right';
-  /** Libellé mobile si `header` n’est pas une chaîne */
+  /** Libellé mobile si `header` n'est pas une chaîne */
   label?: string;
   /** Masquer sur la carte mobile (rare) */
   hideInMobileList?: boolean;
@@ -40,6 +42,8 @@ export interface DataTableProps<TData, TValue> {
   className?: string;
   /** Surcharge locale du style tableau / cartes mobile (@see DataListSurface) */
   surface?: DataListSurface;
+  /** Nombre de lignes par page (default 10, 0 = pas de pagination) */
+  pageSize?: number;
 }
 
 function isActionsColumn<TData>(column: Column<TData, unknown>): boolean {
@@ -68,14 +72,35 @@ export function DataTable<TData, TValue>({
   withContainer = true,
   className,
   surface: surfaceProp,
+  pageSize = 10,
 }: DataTableProps<TData, TValue>) {
   const ctxSurface = useDataListSurface();
   const surface = surfaceProp ?? ctxSurface;
+
+  const paginated = pageSize > 0;
+
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: paginated ? pageSize : data.length || 1,
+  });
+
+  // Reset to first page when data changes (filter, reload)
+  const prevDataLenRef = React.useRef(data.length);
+  if (data.length !== prevDataLenRef.current) {
+    prevDataLenRef.current = data.length;
+    if (pagination.pageIndex !== 0) {
+      setPagination((p) => ({ ...p, pageIndex: 0 }));
+    }
+  }
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination },
+    onPaginationChange: setPagination,
+    manualPagination: false,
   });
 
   const tableInner = (
@@ -146,11 +171,13 @@ export function DataTable<TData, TValue>({
     </DataListTableSurface>
   );
 
+  const mobileRows = table.getRowModel().rows;
+
   const mobileList =
-    table.getRowModel().rows.length === 0 ? (
+    mobileRows.length === 0 ? (
       <div className={mobileListEmptyBoxClass}>{emptyMessage}</div>
     ) : (
-      table.getRowModel().rows.map((row) => {
+      mobileRows.map((row) => {
         const cells = row.getVisibleCells();
         const actionCell = cells.find((c) => isActionsColumn(c.column));
         const dataCells = cells.filter((c) => {
@@ -191,9 +218,84 @@ export function DataTable<TData, TValue>({
       })
     );
 
+  const pageCount = table.getPageCount();
+  const currentPage = pagination.pageIndex + 1;
+
+  const paginationBar = paginated && pageCount > 1 ? (
+    <div className="flex items-center justify-between border-t border-slate-200 px-3 py-2 text-xs text-slate-500">
+      <span>
+        {currentPage} / {pageCount}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40"
+          aria-label="Page précédente"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </button>
+
+        {Array.from({ length: pageCount }, (_, i) => i).map((i) => {
+          const page = i + 1;
+          const isCurrent = i === pagination.pageIndex;
+          // Always show first, last, current ±1
+          const show =
+            i === 0 ||
+            i === pageCount - 1 ||
+            Math.abs(i - pagination.pageIndex) <= 1;
+          // Show ellipsis slot
+          const showEllipsisBefore =
+            i === pagination.pageIndex - 2 && i > 1;
+          const showEllipsisAfter =
+            i === pagination.pageIndex + 2 && i < pageCount - 2;
+
+          if (showEllipsisBefore || showEllipsisAfter) {
+            return (
+              <span key={`ellipsis-${i}`} className="px-1 text-slate-400">
+                …
+              </span>
+            );
+          }
+          if (!show) return null;
+
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => table.setPageIndex(i)}
+              className={cn(
+                'flex h-7 min-w-[28px] items-center justify-center rounded-md border px-1.5 text-xs font-medium transition-colors',
+                isCurrent
+                  ? 'border-[#02389B] bg-[#02389B] text-white'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+              )}
+            >
+              {page}
+            </button>
+          );
+        })}
+
+        <button
+          type="button"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40"
+          aria-label="Page suivante"
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   const responsive = (
     <>
-      <div className="hidden min-w-0 md:block">{tableInner}</div>
+      <div className="hidden min-w-0 md:block">
+        {tableInner}
+        {paginationBar}
+      </div>
       <div className="md:hidden">
         <div
           className={cn(
@@ -203,6 +305,7 @@ export function DataTable<TData, TValue>({
         >
           {mobileList}
         </div>
+        {paginationBar}
       </div>
     </>
   );

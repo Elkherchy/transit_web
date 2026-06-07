@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+import "@/lib/pwa-install"; // register beforeinstallprompt listener at startup
 import type { AppProps } from "next/app";
 import { SessionProvider } from "next-auth/react";
 import { Poppins } from "next/font/google";
@@ -11,19 +12,15 @@ import i18n, {
   getServerLang,
   type SupportedLang,
 } from "@/lib/i18n";
+import {
+  getPwaInstallPrompt,
+  clearPwaInstallPrompt,
+  onPwaInstallChange,
+} from "@/lib/pwa-install";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-// Capture beforeinstallprompt at module level — fires before React mounts.
-let _pwaPrompt: BeforeInstallPromptEvent | null = null;
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    _pwaPrompt = e as BeforeInstallPromptEvent;
-  });
 }
 
 const poppins = Poppins({
@@ -75,32 +72,29 @@ function ServiceWorkerRegister() {
 
 function PwaInstallBanner() {
   const { t } = useTranslation();
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => _pwaPrompt);
-  const [isStandalone, setIsStandalone] = useState(true); // true = hide until we know
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
+    () => getPwaInstallPrompt() as BeforeInstallPromptEvent | null
+  );
+  const [isStandalone, setIsStandalone] = useState(true);
   const [dismissed, setDismissed] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Hide banner if already running as installed PWA
     const mq = window.matchMedia("(display-mode: standalone)");
     setIsStandalone(mq.matches);
     const onChange = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
     mq.addEventListener("change", onChange);
 
-    // Capture native install prompt if it fires after mount
-    const handler = (e: Event) => {
-      e.preventDefault();
-      _pwaPrompt = e as BeforeInstallPromptEvent;
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
+    const unsub = onPwaInstallChange(() => {
+      setDeferredPrompt(getPwaInstallPrompt() as BeforeInstallPromptEvent | null);
+    });
     window.addEventListener("appinstalled", () => setIsStandalone(true));
 
     return () => {
       mq.removeEventListener("change", onChange);
-      window.removeEventListener("beforeinstallprompt", handler);
+      unsub();
     };
   }, []);
 
@@ -110,6 +104,7 @@ function PwaInstallBanner() {
     if (deferredPrompt) {
       await deferredPrompt.prompt();
       await deferredPrompt.userChoice;
+      clearPwaInstallPrompt();
       setDeferredPrompt(null);
       setDismissed(true);
     } else {

@@ -30,7 +30,13 @@ import {
   ClipboardCheck,
   ShieldCheck,
   ChevronDown,
+  Download,
 } from 'lucide-react';
+import {
+  getPwaInstallPrompt,
+  clearPwaInstallPrompt,
+  onPwaInstallChange,
+} from '@/lib/pwa-install';
 
 interface NavItem {
   label: string;
@@ -362,6 +368,34 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const user = session?.user;
 
+  const [canInstall, setCanInstall] = useState(() => !!getPwaInstallPrompt());
+  const [isStandalone, setIsStandalone] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(display-mode: standalone)').matches
+      : false
+  );
+
+  useEffect(() => {
+    const unsub = onPwaInstallChange(() => setCanInstall(!!getPwaInstallPrompt()));
+    const mq = window.matchMedia('(display-mode: standalone)');
+    const onMq = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
+    mq.addEventListener('change', onMq);
+    return () => { unsub(); mq.removeEventListener('change', onMq); };
+  }, []);
+
+  const [showPwaInstructions, setShowPwaInstructions] = useState(false);
+
+  const handlePwaInstall = useCallback(async () => {
+    const prompt = getPwaInstallPrompt();
+    if (prompt) {
+      await prompt.prompt();
+      await prompt.userChoice;
+      clearPwaInstallPrompt();
+    } else {
+      setShowPwaInstructions(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       void router.replace('/login');
@@ -571,6 +605,16 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
           <LogOut className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.75} aria-hidden />
           <span>{t('nav.logout', { defaultValue: 'Déconnexion' })}</span>
         </button>
+        {!isStandalone && (
+          <button
+            type="button"
+            onClick={() => void handlePwaInstall()}
+            className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#02389B]/40"
+          >
+            <Download className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.75} aria-hidden />
+            <span>{t('pwa.installBtn', { defaultValue: "Installer l'app" })}</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -669,6 +713,34 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
           {sidebarContent}
         </aside>
       </div>
+
+      {/* ── PWA install instructions dialog ── */}
+      {showPwaInstructions && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowPwaInstructions(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="font-semibold text-sm">
+              {t('pwa.instructionsTitle', { defaultValue: "Installer l'application" })}
+            </p>
+            <ul className="text-sm text-slate-500 space-y-2 list-none">
+              <li>🤖 <strong>Android Chrome</strong> : menu ⋮ → &ldquo;Ajouter à l&rsquo;écran d&rsquo;accueil&rdquo;</li>
+              <li>🍎 <strong>iOS Safari</strong> : bouton Partager □↑ → &ldquo;Sur l&rsquo;écran d&rsquo;accueil&rdquo;</li>
+              <li>💻 <strong>Desktop Chrome</strong> : icône ⊕ dans la barre d&rsquo;adresse</li>
+            </ul>
+            <button
+              onClick={() => setShowPwaInstructions(false)}
+              className="w-full rounded-lg bg-[#02389B] py-2 text-sm font-semibold text-white hover:bg-[#02389B]/90 transition-colors"
+            >
+              {t('pwa.instructionsClose', { defaultValue: 'OK' })}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
