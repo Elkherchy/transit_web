@@ -28,7 +28,7 @@ import { AlertCircle, RefreshCcw, Users } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 
 export interface DebiteurRow {
-  /** Identifiant logique (clientId pour transit, nom pour logistique). */
+  /** Identifiant logique (clientId pour transit). */
   key: string;
   clientNom: string;
   totalFacture: number;
@@ -92,7 +92,7 @@ export default function DebiteursView({
       const r = await fetch(url, { credentials: 'include' });
       const data = await r.json();
       if (data.success) {
-        // Normalise les 2 formes (transit vs logistique) en DebiteurRow.
+        // Normalise en DebiteurRow.
         const raw = (data.data || []) as Array<Record<string, unknown>>;
         const normalized: DebiteurRow[] = raw.map((d) => ({
           key:
@@ -224,7 +224,7 @@ export default function DebiteursView({
           >
             <RefreshCcw className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">
-              {t('dashboard.logistique.actions.refresh')}
+              {t('actions.refresh')}
             </span>
           </Button>
         }

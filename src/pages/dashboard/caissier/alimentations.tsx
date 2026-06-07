@@ -327,17 +327,11 @@ export default function CaissierAlimentations() {
                   <SelectValue placeholder={t('dashboard.caissier.alimentations.selectPayeur')} />
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  {payeurs.map((p) => {
-                    const roleLabel =
-                      p.role === UserRole.AGENT_RECEPTION_LOGISTIQUE
-                        ? 'Agent réception'
-                        : 'Payeur';
-                    return (
-                      <SelectItem key={p._id} value={p._id}>
-                        {p.nom} · {roleLabel}
-                      </SelectItem>
-                    );
-                  })}
+                  {payeurs.map((p) => (
+                    <SelectItem key={p._id} value={p._id}>
+                      {p.nom}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

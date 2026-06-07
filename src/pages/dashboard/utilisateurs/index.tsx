@@ -39,7 +39,6 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  ADMIN_LOGISTIQUE_CREATABLE_ROLES,
   ADMIN_TRANSIT_CREATABLE_ROLES,
   CaisseKind,
   CaisseType,
@@ -67,8 +66,7 @@ export default function UtilisateursPage() {
   // est restreinte côté API.
   const isAdmin =
     user?.role === UserRole.ADMIN ||
-    user?.role === UserRole.ADMIN_TRANSIT ||
-    user?.role === UserRole.ADMIN_LOGISTIQUE;
+    user?.role === UserRole.ADMIN_TRANSIT;
   const isMobile = useIsMobile();
 
   // Liste des rôles que l'admin courant peut créer/éditer (mirroir de
@@ -76,7 +74,6 @@ export default function UtilisateursPage() {
   const creatableRoles = useMemo<readonly UserRole[]>(() => {
     if (user?.role === UserRole.ADMIN) return Object.values(UserRole);
     if (user?.role === UserRole.ADMIN_TRANSIT) return ADMIN_TRANSIT_CREATABLE_ROLES;
-    if (user?.role === UserRole.ADMIN_LOGISTIQUE) return ADMIN_LOGISTIQUE_CREATABLE_ROLES;
     return [];
   }, [user?.role]);
 
@@ -98,8 +95,8 @@ export default function UtilisateursPage() {
   const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState<UserRole>(UserRole.AGENT_TRANSIT);
   // Réaligne le rôle par défaut sur le périmètre du créateur quand on
-  // ouvre une création (sinon ADMIN_LOGISTIQUE verrait AGENT_TRANSIT
-  // pré-sélectionné, alors qu'il ne peut pas le créer).
+  // ouvre une création (sinon l'admin verrait un rôle hors périmètre
+  // pré-sélectionné).
   useEffect(() => {
     if (!editing && creatableRoles.length > 0 && !creatableRoles.includes(formRole)) {
       setFormRole(creatableRoles[0]);
@@ -684,7 +681,6 @@ export default function UtilisateursPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={CaisseType.TRANSIT}>{t('dashboard.utilisateurs.caisseTransit')}</SelectItem>
-                    <SelectItem value={CaisseType.LOGISTIQUE}>{t('dashboard.utilisateurs.caisseLogistique')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

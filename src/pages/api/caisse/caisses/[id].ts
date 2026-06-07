@@ -67,15 +67,12 @@ async function getOne(req: AuthenticatedRequest, res: NextApiResponse<ApiRespons
         return res.status(403).json({ success: false, error: 'Accès refusé' });
       }
     }
-    if (
-      u.role === UserRole.USER_PAYEUR ||
-      u.role === UserRole.AGENT_RECEPTION_LOGISTIQUE
-    ) {
+    if (u.role === UserRole.USER_PAYEUR) {
       if (c.kind !== CaisseKind.USER || c.payeurId !== u.userId) {
         return res.status(403).json({ success: false, error: 'Accès refusé' });
       }
     }
-    // Admin scopés et AGENT_TRANSIT : la caisse doit appartenir au domaine.
+    // Admin scopé et AGENT_TRANSIT : la caisse doit appartenir au domaine transit.
     if (
       (u.role === UserRole.ADMIN_TRANSIT ||
         u.role === UserRole.AGENT_TRANSIT) &&
@@ -84,15 +81,6 @@ async function getOne(req: AuthenticatedRequest, res: NextApiResponse<ApiRespons
       return res.status(403).json({
         success: false,
         error: 'Caisse hors du domaine Transit',
-      });
-    }
-    if (
-      u.role === UserRole.ADMIN_LOGISTIQUE &&
-      c.caisseType !== CaisseType.LOGISTIQUE
-    ) {
-      return res.status(403).json({
-        success: false,
-        error: 'Caisse hors du domaine Logistique',
       });
     }
 

@@ -1,6 +1,5 @@
 /**
- * Types communs pour l'application Emama Group
- * Transit · Logistique
+ * Types communs pour l'application Emama Group — Transit
  */
 
 // ============================================
@@ -8,19 +7,14 @@
 // ============================================
 
 export enum UserRole {
-  /** Super-admin : voit et gère les deux domaines. */
+  /** Super-admin */
   ADMIN = 'ADMIN',
   /** Admin scopé transit : gère AGENT_TRANSIT, CAISSIER, USER_PAYEUR. */
   ADMIN_TRANSIT = 'ADMIN_TRANSIT',
-  /** Admin scopé logistique : gère CHAUFFEUR, AGENT_RECEPTION_LOGISTIQUE. */
-  ADMIN_LOGISTIQUE = 'ADMIN_LOGISTIQUE',
   AGENT_TRANSIT = 'AGENT_TRANSIT',
   USER_PAYEUR = 'USER_PAYEUR',
-  CHAUFFEUR = 'CHAUFFEUR',
   COMPTABLE = 'COMPTABLE',
   CAISSIER = 'CAISSIER',
-  /** Agent réception logistique — crée les fichiers logistique + voyages. */
-  AGENT_RECEPTION_LOGISTIQUE = 'AGENT_RECEPTION_LOGISTIQUE',
 }
 
 /**
@@ -35,30 +29,20 @@ export const ADMIN_TRANSIT_CREATABLE_ROLES: readonly UserRole[] = [
   UserRole.USER_PAYEUR,
 ] as const;
 
-export const ADMIN_LOGISTIQUE_CREATABLE_ROLES: readonly UserRole[] = [
-  UserRole.CHAUFFEUR,
-  UserRole.AGENT_RECEPTION_LOGISTIQUE,
-] as const;
-
 export enum CaisseType {
   TRANSIT = 'TRANSIT',
-  LOGISTIQUE = 'LOGISTIQUE',
 }
 
 /**
  * Registre des caisses :
- * - GENERAL   : caisse générale de la société
- * - USER      : caisse propre à un payeur (kind=USER, payeurId)
- * - CLIENT    : caisse client (kind=CLIENT, clientId)
- * - CHAUFFEUR : caisse propre à un chauffeur (commission accumulée)
- * - VEHICULE  : caisse propre à un véhicule (par matricule, revenus voyages)
+ * - GENERAL : caisse générale de la société
+ * - USER    : caisse propre à un payeur (kind=USER, payeurId)
+ * - CLIENT  : caisse client (kind=CLIENT, clientId)
  */
 export enum CaisseKind {
   GENERAL = 'GENERAL',
   USER = 'USER',
   CLIENT = 'CLIENT',
-  CHAUFFEUR = 'CHAUFFEUR',
-  VEHICULE = 'VEHICULE',
 }
 
 /** Type de compte : Caisse physique ou Banque */
@@ -411,18 +395,14 @@ export interface ICaisse {
   payeurId?: string;
   /** Si kind CLIENT — id du Client propriétaire */
   clientId?: string;
-  /** Si kind CHAUFFEUR — id du User CHAUFFEUR propriétaire */
-  chauffeurId?: string;
-  /** Si kind VEHICULE — matricule du véhicule (clé naturelle) */
-  vehiculeMatricule?: string;
   /** Si kind USER — id du CAISSIER propriétaire */
   caissierUserId?: string;
   actif: boolean;
   /** Caisse générale qui reçoit le reflet des opérations des caisses payeur */
   isDefaultGeneral: boolean;
-  /** Banque par défaut du domaine (Banque_Transit / Banque_Logistique). */
+  /** Banque par défaut du domaine. */
   isDefaultBanque?: boolean;
-  /** Domaine fonctionnel (Transit ou Logistique) — depuis Phase 1 séparation. */
+  /** Domaine fonctionnel. */
   caisseType?: CaisseType;
   /** Solde du compte */
   solde: number;
@@ -590,331 +570,6 @@ export interface JWTPayload {
 }
 
 // ============================================
-// LOGISTIQUE
-// ============================================
-
-/** Clients logistique pré-déclarés (utilisé pour la sélection rapide
- *  dans la création de bons de commande). Les autres clients sont gérés
- *  via le model `LogistiqueClientConfig`. */
-export enum LogistiqueClient {
-  ANAZAHA = 'ANAZAHA',
-  ELGHOTOB = 'ELGHOTOB',
-}
-
-export enum VehiculeCategorie {
-  INTERNE = 'INTERNE',
-  CLIENT = 'CLIENT',
-}
-
-export interface IVehicule {
-  _id: string;
-  matricule: string;
-  categorie: VehiculeCategorie;
-  chauffeurId?: string;
-  clientNom?: string;
-  chauffeurNom?: string;
-  /** Niveau carburant courant (litres) */
-  carburant?: number;
-  actif: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface IVehiculeCreate {
-  matricule: string;
-  categorie?: VehiculeCategorie;
-  chauffeurId?: string;
-  clientNom?: string;
-  carburant?: number;
-  actif?: boolean;
-}
-
-export interface IVehiculeResponse {
-  _id: string;
-  matricule: string;
-  categorie: VehiculeCategorie;
-  chauffeurId?: string;
-  clientNom?: string;
-  chauffeurNom?: string;
-  carburant?: number;
-  actif: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export enum LocationType {
-  VEHICULE_INTERNE = 'VEHICULE_INTERNE',
-  VEHICULE_CLIENT = 'VEHICULE_CLIENT',
-  CONTENEUR = 'CONTENEUR',
-}
-
-export enum LocationStatut {
-  BROUILLON = 'BROUILLON',
-  ACTIVE = 'ACTIVE',
-  TERMINEE = 'TERMINEE',
-  ANNULEE = 'ANNULEE',
-}
-
-export interface ILocation {
-  _id: string;
-  reference: string;
-  type: LocationType;
-  clientNom: string;
-  vehiculeInterneId?: string;
-  vehiculeInterneMatricule?: string;
-  vehiculeClientId?: string;
-  vehiculeClientMatricule?: string;
-  conteneurNumero?: string;
-  dateDebut: Date;
-  dateFin?: Date;
-  montantJournalier: number;
-  totalEstime: number;
-  statut: LocationStatut;
-  note?: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface ILocationResponse {
-  _id: string;
-  reference: string;
-  type: LocationType;
-  clientNom: string;
-  vehiculeInterneId?: string;
-  vehiculeInterneMatricule?: string;
-  vehiculeClientId?: string;
-  vehiculeClientMatricule?: string;
-  conteneurNumero?: string;
-  dateDebut: Date;
-  dateFin?: Date;
-  montantJournalier: number;
-  totalEstime: number;
-  statut: LocationStatut;
-  note?: string;
-  createdBy: string;
-  createdByNom?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export enum CarburantHistoriqueType {
-  AJOUT = 'AJOUT',
-  DEDUCTION = 'DEDUCTION',
-}
-
-export enum CarburantHistoriqueSource {
-  MANUEL = 'MANUEL',
-  AJUSTEMENT = 'AJUSTEMENT',
-  LISTE_VOYAGE = 'LISTE_VOYAGE',
-  CREATION = 'CREATION',
-}
-
-export interface ICarburantHistorique {
-  _id: string;
-  vehiculeId: string;
-  matricule: string;
-  type: CarburantHistoriqueType;
-  source: CarburantHistoriqueSource;
-  fuelDate?: Date;
-  quantite: number;
-  before: number;
-  after: number;
-  compteurPrecedentKm?: number;
-  compteurActuelKm?: number;
-  nombreTrajets?: number;
-  rendementCarburantParTrajet?: number;
-  rendementCompteurParTrajet?: number;
-  distanceKm?: number;
-  consommationL100?: number;
-  batchKey?: string;
-  voyageId?: string;
-  note?: string;
-  createdBy?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface ICarburantHistoriqueResponse {
-  _id: string;
-  vehiculeId: string;
-  matricule: string;
-  type: CarburantHistoriqueType;
-  source: CarburantHistoriqueSource;
-  fuelDate?: Date;
-  quantite: number;
-  before: number;
-  after: number;
-  compteurPrecedentKm?: number;
-  compteurActuelKm?: number;
-  nombreTrajets?: number;
-  rendementCarburantParTrajet?: number;
-  rendementCompteurParTrajet?: number;
-  distanceKm?: number;
-  consommationL100?: number;
-  batchKey?: string;
-  voyageId?: string;
-  note?: string;
-  createdBy?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-/**
- * Cycle de vie d'un voyage dans le **nouveau workflow logistique** :
- *   CREE       → créé par l'agent réception (sans matricule, sans chauffeur)
- *   RESERVE    → un chauffeur a réservé le voyage (matricule saisi)
- *   EN_COURS   → scan départ effectué (chauffeur en route)
- *   RETOURNE   → scan retour effectué (commission +300 créditée en attente)
- *   VALIDE     → validation transit (vehicule +6000 ; commission validée)
- */
-export enum VoyageStatus {
-  CREE = 'CREE',
-  RESERVE = 'RESERVE',
-  EN_COURS = 'EN_COURS',
-  RETOURNE = 'RETOURNE',
-  VALIDE = 'VALIDE',
-}
-
-export interface IVoyage {
-  _id: string;
-  date: Date;
-  /** Matricule — saisi par le chauffeur lors de la réservation. */
-  matricule?: string;
-  telephone?: string;
-  clientSource?: string;
-  societe?: string;
-  tp?: string;
-  /** @deprecated NTC unique — utiliser `ntcs[]` (un BL peut avoir plusieurs NTC). */
-  ntc?: string;
-  /** Liste des NTC associés à ce voyage (1+ par BL). */
-  ntcs?: string[];
-  bl?: string;
-  magasinage?: Date;
-  surestaries?: Date;
-  note?: string;
-
-  // === Workflow nouveau ============================================
-  /** Dossier (FichierLogistique) auquel ce voyage appartient. */
-  fichierLogistiqueId?: string;
-  /** Référence du fichier parent (enrichi côté API pour affichage). */
-  fichierReference?: string;
-  statutVoyage?: VoyageStatus;
-  /** Chauffeur ayant réservé ce voyage (User._id, role=CHAUFFEUR). */
-  chauffeurId?: string;
-  /**
-   * Client logistique associé au voyage (LogistiqueClient._id). Peut différer
-   * d'un voyage à l'autre dans un même fichier.
-   */
-  clientId?: string;
-  /** Prix transport (revenu véhicule) — saisi par admin/agent réception. */
-  prixTransport?: number;
-  /** Commission chauffeur — saisi par admin/agent réception. */
-  commissionChauffeur?: number;
-  scanDepartAt?: Date;
-  /** Clé S3 de la photo prise lors du départ (preuve scan). */
-  scanDepartPhotoUrl?: string;
-  scanDepartPhotoName?: string;
-  scanRetourAt?: Date;
-  /** Clé S3 de la photo prise lors du retour (preuve scan). */
-  scanRetourPhotoUrl?: string;
-  scanRetourPhotoName?: string;
-  /** Validation transit (date + auteur). */
-  valideTransitBy?: string;
-  valideTransitAt?: Date;
-  /** Date de paiement réel de la commission au chauffeur (fin de semaine). */
-  commissionPaidAt?: Date;
-
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// ============================================
-// LOGISTIQUE — Bon de commande
-// ============================================
-
-export enum BonCommandeStatut {
-  BROUILLON = 'BROUILLON',
-  CONFIRME = 'CONFIRME',
-  PAYE = 'PAYE',
-}
-
-export interface IBonCommandeLigne {
-  voyageId: string;
-  /** Description synthétique de la ligne (matricule + BL ou date) */
-  description: string;
-  montant: number;
-}
-
-export interface IBonCommande {
-  _id: string;
-  reference: string;
-  /** Numéro séquentiel saisi en mode facture simple (001, 002, …). */
-  numero?: string;
-  client: LogistiqueClient | string;
-  /** Date du jour couvert par ce bon (YYYY-MM-DD) */
-  date?: string;
-  lignes: IBonCommandeLigne[];
-  total: number;
-  statut: BonCommandeStatut;
-  /** Caisse débitée lors du paiement */
-  caisseId?: string;
-  caisseNom?: string;
-  /** Transaction liée au paiement */
-  transactionId?: string;
-  paidAt?: Date;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface IBonCommandeCreate {
-  client: LogistiqueClient;
-  lignes: { voyageId: string; description: string; montant: number }[];
-}
-
-export interface IBonCommandeResponse extends IBonCommande {
-  createdByNom?: string;
-}
-
-// ============================================
-// LOGISTIQUE — Chauffeurs (charges/factures)
-// ============================================
-
-export enum ChauffeurFactureStatut {
-  BROUILLON = 'BROUILLON',
-  CONFIRME = 'CONFIRME',
-  PAYE = 'PAYE',
-}
-
-export interface IChauffeurChargeRow {
-  chauffeurId: string;
-  chauffeurNom: string;
-  vehicules: { _id: string; matricule: string }[];
-  nombreCharges: number;
-}
-
-export interface IChauffeurFacture {
-  _id: string;
-  reference: string;
-  chauffeurId: string;
-  chauffeurNom?: string;
-  weekStart: string;
-  weekEnd: string;
-  nombreCharges: number;
-  montantCharge: number;
-  total: number;
-  statut: ChauffeurFactureStatut;
-  caisseId?: string;
-  caisseNom?: string;
-  transactionId?: string;
-  paidAt?: Date;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// ============================================
 // PAIE — Salariés & Bulletins de salaire
 // ============================================
 
@@ -999,58 +654,6 @@ export interface IBulletinSalaireResponse extends IBulletinSalaire {
   salariePoste?: string;
   payeParNom?: string;
   caisseNom?: string;
-}
-
-// ============================================
-// LOGISTIQUE — Fichier (dossier groupant des voyages)
-// ============================================
-
-/**
- * Cycle de vie d'un fichier logistique :
- *   OUVERT          : créé par agent réception, voyages en cours/réservation
- *   PRET_VALIDATION : tous les voyages sont au statut RETOURNE
- *   VALIDE          : validation transit appliquée → caisses crédités
- */
-export enum FichierLogistiqueStatus {
-  OUVERT = 'OUVERT',
-  PRET_VALIDATION = 'PRET_VALIDATION',
-  VALIDE = 'VALIDE',
-}
-
-export interface IFichierLogistique {
-  _id: string;
-  /** Référence (ex. dossier 2026-W18-1) — auto-générée. */
-  reference: string;
-  /** Date du dossier (jour de réception). */
-  date: Date;
-  /** Note libre saisie par l'agent réception. */
-  note?: string;
-  statut: FichierLogistiqueStatus;
-  /** User AGENT_RECEPTION_LOGISTIQUE qui a créé le dossier. */
-  createdBy: string;
-  /** Validation transit. */
-  valideTransitBy?: string;
-  valideTransitAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/** Client utilisé exclusivement par le domaine Logistique (séparé du Client transit). */
-export interface ILogistiqueClient {
-  _id: string;
-  nom: string;
-  numero?: string;
-  societe?: string;
-  actif: boolean;
-  createdBy?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/** Configuration logistique (tarifs par défaut) — modifiable par admin. */
-export interface ILogistiqueDefaults {
-  prixTransport: number;
-  commissionChauffeur: number;
 }
 
 // ============================================

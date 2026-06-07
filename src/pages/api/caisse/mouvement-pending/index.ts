@@ -67,8 +67,6 @@ async function listPending(
     };
     if (role === UserRole.ADMIN_TRANSIT) {
       applyTransitFilter();
-    } else if (role === UserRole.ADMIN_LOGISTIQUE) {
-      filter.caisseType = CaisseType.LOGISTIQUE;
     } else if (
       caisseType === CaisseType.TRANSIT ||
       caisseType === 'TRANSIT'
@@ -377,7 +375,6 @@ export default function handler(
       return withAuth(listPending, [
         UserRole.ADMIN,
         UserRole.ADMIN_TRANSIT,
-        UserRole.ADMIN_LOGISTIQUE,
         UserRole.AGENT_TRANSIT,
         UserRole.COMPTABLE,
       ])(req, res);

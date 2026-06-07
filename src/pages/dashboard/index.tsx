@@ -18,8 +18,7 @@ export default function Dashboard() {
     switch (user.role) {
       case UserRole.ADMIN:
       case UserRole.ADMIN_TRANSIT:
-      case UserRole.ADMIN_LOGISTIQUE:
-        // Les 3 admins atterrissent sur le même tableau de bord ;
+        // Les admins atterrissent sur le même tableau de bord ;
         // la sidebar et les modules visibles s'adaptent au rôle.
         void router.replace('/dashboard/admin');
         return;
@@ -34,12 +33,6 @@ export default function Dashboard() {
         return;
       case UserRole.USER_PAYEUR:
         void router.replace('/dashboard/payeur');
-        return;
-      case UserRole.CHAUFFEUR:
-        void router.replace('/dashboard/chauffeur');
-        return;
-      case UserRole.AGENT_RECEPTION_LOGISTIQUE:
-        void router.replace('/dashboard/agent-reception-logistique');
         return;
       default:
         return;

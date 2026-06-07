@@ -49,13 +49,8 @@ async function handler(
 
     const payeur = await User.findById(payeurId).select('_id nom role actif').lean();
     // Le caissier peut alimenter la caisse d'un USER_PAYEUR (paiement
-    // designations transit) ou d'un AGENT_RECEPTION_LOGISTIQUE (frais
-    // opérationnels logistique).
-    const ALIMENTABLE_ROLES = [
-      UserRole.USER_PAYEUR,
-      UserRole.AGENT_RECEPTION_LOGISTIQUE,
-    ];
-    if (!payeur || !ALIMENTABLE_ROLES.includes(payeur.role as UserRole)) {
+    // désignations transit).
+    if (!payeur || payeur.role !== UserRole.USER_PAYEUR) {
       return res
         .status(404)
         .json({ success: false, error: 'Utilisateur introuvable ou rôle non éligible' });

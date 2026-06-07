@@ -2,7 +2,6 @@ import type { NextApiResponse } from 'next';
 import connectDB from '@/lib/db';
 import { Caisse, User } from '@/models';
 import {
-  ADMIN_LOGISTIQUE_CREATABLE_ROLES,
   ADMIN_TRANSIT_CREATABLE_ROLES,
   ApiResponse,
   IUserResponse,
@@ -17,7 +16,6 @@ import mongoose from 'mongoose';
 function manageableRolesFor(creatorRole: UserRole | undefined): readonly UserRole[] {
   if (creatorRole === UserRole.ADMIN) return Object.values(UserRole);
   if (creatorRole === UserRole.ADMIN_TRANSIT) return ADMIN_TRANSIT_CREATABLE_ROLES;
-  if (creatorRole === UserRole.ADMIN_LOGISTIQUE) return ADMIN_LOGISTIQUE_CREATABLE_ROLES;
   return [];
 }
 
@@ -146,7 +144,7 @@ async function updateUser(
     if (user.role === UserRole.COMPTABLE && !user.caisse) {
       return res.status(400).json({
         success: false,
-        error: 'Une caisse (Transit ou Logistique) est requise pour ce rôle',
+        error: 'Une caisse est requise pour ce rôle',
       });
     }
 

@@ -1,24 +1,13 @@
 /**
- * Calcul "Mouvement Compte Général" pour un domaine (Transit / Logistique).
- *
- * Modèle métier (cf. schéma papier Emama) :
- *   - Solde       : capital disponible sur les comptes du domaine
- *                   (General + Banque + autres GENERAL/BANQUE du domaine)
- *   - Charges     : somme des DEBITs (sorties) sur les comptes du domaine
- *                   sur la période, hors miroirs (`mirrorSourceId`).
- *   - Bénéfices   : CREDITs − DEBITs nets (hors miroirs) sur la période.
- *   - Crédit client : montant dû par les clients (factures impayées côté
- *                     transit, bons-commande non payés côté logistique).
+ * Calcul "Mouvement Compte Général" pour le domaine Transit.
  */
 import mongoose from 'mongoose';
 import {
-  BonCommande,
   Caisse,
   Facture,
   Transaction,
 } from '@/models';
 import {
-  BonCommandeStatut,
   CaisseType,
   CompteType,
   TransactionType,
@@ -136,10 +125,9 @@ export async function computeMouvementGeneral(
   const charges = Math.round(debits * 100) / 100;
   const benefices = Math.round((credits - debits) * 100) / 100;
 
-  // 4. Crédit client (montant dû) — varie selon domaine.
+  // 4. Crédit client : factures transit non soldées.
   let creditClient = 0;
   if (caisseType === CaisseType.TRANSIT) {
-    // Factures transit non soldées : Σ totalFinal − Σ montantPaye, clientId présent.
     const fAgg = await Facture.aggregate<{
       totalFacture: number;
       totalPaye: number;
@@ -158,20 +146,6 @@ export async function computeMouvementGeneral(
       0,
       Math.round((totals.totalFacture - totals.totalPaye) * 100) / 100
     );
-  } else {
-    // Bons de commande CONFIRMÉS mais non PAYÉS.
-    const bAgg = await BonCommande.aggregate<{
-      totalNonPaye: number;
-    }>([
-      { $match: { statut: BonCommandeStatut.CONFIRME } },
-      {
-        $group: {
-          _id: null,
-          totalNonPaye: { $sum: { $ifNull: ['$total', 0] } },
-        },
-      },
-    ]);
-    creditClient = Math.round(((bAgg[0]?.totalNonPaye || 0)) * 100) / 100;
   }
 
   return {

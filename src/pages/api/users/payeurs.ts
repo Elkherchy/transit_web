@@ -13,12 +13,9 @@ async function listPayeurs(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
     await connectDB();
     console.log('[API /users/payeurs] DB connectée, recherche des payeurs...');
 
-    // Inclut USER_PAYEUR (paiement transit) ET AGENT_RECEPTION_LOGISTIQUE
-    // (frais opérationnels) — tous deux peuvent être alimentés par le caissier.
+    // Inclut uniquement USER_PAYEUR (paiement transit).
     const users = await User.find({
-      role: {
-        $in: [UserRole.USER_PAYEUR, UserRole.AGENT_RECEPTION_LOGISTIQUE],
-      },
+      role: UserRole.USER_PAYEUR,
       actif: true,
     })
       .select('nom email role telephone caisse actif')

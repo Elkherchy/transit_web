@@ -63,26 +63,15 @@ export function withAuth(handler: NextApiHandler, allowedRoles?: UserRole[]) {
   };
 }
 
-/**
- * Toute action admin générique (vue, listing, création, suppression non-scoped).
- * Le super-ADMIN voit tout ; ADMIN_TRANSIT et ADMIN_LOGISTIQUE voient leurs domaines.
- * Pour des actions purement transverses (paie globale, indicateurs cross-domaines),
- * utiliser explicitement `[UserRole.ADMIN]`.
- */
 export const withAdmin = (handler: NextApiHandler) =>
   withAuth(handler, [
     UserRole.ADMIN,
     UserRole.ADMIN_TRANSIT,
-    UserRole.ADMIN_LOGISTIQUE,
   ]);
 
 /** Action restreinte aux admins du domaine transit (super-admin inclus). */
 export const withAdminTransit = (handler: NextApiHandler) =>
   withAuth(handler, [UserRole.ADMIN, UserRole.ADMIN_TRANSIT]);
-
-/** Action restreinte aux admins du domaine logistique (super-admin inclus). */
-export const withAdminLogistique = (handler: NextApiHandler) =>
-  withAuth(handler, [UserRole.ADMIN, UserRole.ADMIN_LOGISTIQUE]);
 
 export const withAgentTransit = (handler: NextApiHandler) =>
   withAuth(handler, [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.AGENT_TRANSIT]);
@@ -92,20 +81,6 @@ export const withUserPayeur = (handler: NextApiHandler) =>
 
 export const withComptable = (handler: NextApiHandler) =>
   withAuth(handler, [UserRole.ADMIN, UserRole.COMPTABLE]);
-
-/**
- * Endpoint logistique : super-ADMIN, ADMIN_LOGISTIQUE, AGENT_TRANSIT (lecture
- * cross-domaine bons-commande/véhicules/paiements chauffeurs) et COMPTABLE.
- * Les autres rôles (chauffeur, agent réception) restent gérés par leurs
- * helpers spécifiques (withAuth liste explicite).
- */
-export const withLogistique = (handler: NextApiHandler) =>
-  withAuth(handler, [
-    UserRole.ADMIN,
-    UserRole.ADMIN_LOGISTIQUE,
-    UserRole.AGENT_TRANSIT,
-    UserRole.COMPTABLE,
-  ]);
 
 export const withCaissier = (handler: NextApiHandler) =>
   withAuth(handler, [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.CAISSIER]);

@@ -4,24 +4,16 @@ import { CaisseKind, CaisseType, CompteType, TransactionType, UserRole } from '@
 
 const GENERAL_NOM_PAR_TYPE: Record<CaisseType, string> = {
   [CaisseType.TRANSIT]: 'General_Transit',
-  [CaisseType.LOGISTIQUE]: 'General_Logistique',
 };
 
 const BANQUE_NOM_PAR_TYPE: Record<CaisseType, string> = {
   [CaisseType.TRANSIT]: 'Banque_Transit',
-  [CaisseType.LOGISTIQUE]: 'Banque_Logistique',
 };
 
 /**
  * Récupère (et crée si besoin) la caisse GENERAL du domaine demandé.
  *
- * - Transit  → "General_Transit"
- * - Logistique → "General_Logistique"
- *
- * Chaque domaine a sa propre caisse générale par défaut, garantie unique par
- * un index partiel `(caisseType, isDefaultGeneral=true)`. Le paramètre est
- * optionnel pour la rétro-compatibilité ; Phase 3 fera passer chaque appel
- * existant en mode explicite.
+ * Garantie unique par un index partiel `(caisseType, isDefaultGeneral=true)`.
  */
 export async function ensureDefaultGeneralCaisse(
   caisseType: CaisseType = CaisseType.TRANSIT
@@ -69,10 +61,7 @@ export async function ensureDefaultGeneralCaisse(
 /**
  * Récupère (et crée si besoin) le compte BANQUE par défaut du domaine demandé.
  *
- * - Transit    → "Banque_Transit"   (toutes les recettes factures transit)
- * - Logistique → "Banque_Logistique" (toutes les recettes logistique)
- *
- * Garanti unique par domaine via index partiel `(caisseType, isDefaultBanque=true)`.
+ * Garanti unique via index partiel `(caisseType, isDefaultBanque=true)`.
  */
 export async function ensureBanqueCaisse(caisseType: CaisseType) {
   const def = await Caisse.findOne({
@@ -181,74 +170,6 @@ export async function ensureClientCaisse(
 }
 
 /**
- * Caisse CHAUFFEUR liée au User chauffeur — crédit des commissions par voyage,
- * débitée lors du paiement effectif (fin de semaine).
- */
-export async function ensureChauffeurCaisse(
-  chauffeurUserId: string,
-  chauffeurNom?: string
-): Promise<mongoose.Types.ObjectId> {
-  const existing = await Caisse.findOne({
-    kind: CaisseKind.CHAUFFEUR,
-    chauffeurId: String(chauffeurUserId),
-    actif: true,
-  });
-  if (existing) {
-    return existing._id as mongoose.Types.ObjectId;
-  }
-
-  let nom = chauffeurNom;
-  if (!nom) {
-    const u = await User.findById(chauffeurUserId).select('nom role').lean();
-    if (!u || u.role !== UserRole.CHAUFFEUR) {
-      throw new Error('Chauffeur introuvable ou compte non chauffeur');
-    }
-    nom = u.nom;
-  }
-
-  const doc = await Caisse.create({
-    nom: `Chauffeur — ${nom}`,
-    type: CompteType.CAISSE,
-    kind: CaisseKind.CHAUFFEUR,
-    chauffeurId: String(chauffeurUserId),
-    actif: true,
-    isDefaultGeneral: false,
-  });
-  return doc._id as mongoose.Types.ObjectId;
-}
-
-/**
- * Caisse VEHICULE liée à un matricule — crédit des prix de transport par voyage.
- * La caisse est créée à la demande sur le matricule (clé naturelle, normalisée
- * en upper-case).
- */
-export async function ensureVehiculeCaisse(
-  matricule: string
-): Promise<mongoose.Types.ObjectId> {
-  const norm = String(matricule || '').trim().toUpperCase();
-  if (!norm) {
-    throw new Error('Matricule véhicule requis');
-  }
-  const existing = await Caisse.findOne({
-    kind: CaisseKind.VEHICULE,
-    vehiculeMatricule: norm,
-    actif: true,
-  });
-  if (existing) {
-    return existing._id as mongoose.Types.ObjectId;
-  }
-  const doc = await Caisse.create({
-    nom: `Véhicule — ${norm}`,
-    type: CompteType.CAISSE,
-    kind: CaisseKind.VEHICULE,
-    vehiculeMatricule: norm,
-    actif: true,
-    isDefaultGeneral: false,
-  });
-  return doc._id as mongoose.Types.ObjectId;
-}
-
-/**
  * Caisse USER liée au payeur ; la crée si besoin (validation paiement).
  */
 export async function ensurePayeurUserCaisse(
@@ -264,29 +185,15 @@ export async function ensurePayeurUserCaisse(
   }
 
   const user = await User.findById(payeurId);
-  // Une caisse USER est attachée à un USER_PAYEUR ou à un
-  // AGENT_RECEPTION_LOGISTIQUE — tous deux peuvent être alimentés par le
-  // caissier (avances de frais, dépôts opérationnels).
-  if (
-    !user ||
-    (user.role !== UserRole.USER_PAYEUR &&
-      user.role !== UserRole.AGENT_RECEPTION_LOGISTIQUE)
-  ) {
+  if (!user || user.role !== UserRole.USER_PAYEUR) {
     throw new Error('Utilisateur introuvable ou rôle non éligible');
   }
 
-  // Domaine de la caisse selon le rôle : payeur → TRANSIT,
-  // agent réception → LOGISTIQUE. Permet de retrouver les opérations
-  // payeur dans la caisse générale du bon domaine.
-  const caisseType =
-    user.role === UserRole.AGENT_RECEPTION_LOGISTIQUE
-      ? CaisseType.LOGISTIQUE
-      : CaisseType.TRANSIT;
   const doc = await Caisse.create({
     nom: `Caisse — ${user.nom}`,
     type: CompteType.CAISSE,
     kind: CaisseKind.USER,
-    caisseType,
+    caisseType: CaisseType.TRANSIT,
     payeurId: String(payeurId),
     actif: true,
     isDefaultGeneral: false,

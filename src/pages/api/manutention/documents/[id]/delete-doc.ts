@@ -17,7 +17,7 @@ import { removeTransitStoredFiles } from '@/lib/transitDocumentStorage';
  *  - Retire aussi du transit lié pour rester cohérent
  *
  * Accessible aux mêmes rôles que l'upload (ADMIN, ADMIN_TRANSIT,
- * ADMIN_LOGISTIQUE, AGENT_TRANSIT, CAISSIER, COMPTABLE).
+ * AGENT_TRANSIT, CAISSIER, COMPTABLE).
  */
 async function handler(
   req: AuthenticatedRequest,
@@ -90,7 +90,6 @@ async function handler(
 export default withAuth(handler, [
   UserRole.ADMIN,
   UserRole.ADMIN_TRANSIT,
-  UserRole.ADMIN_LOGISTIQUE,
   UserRole.AGENT_TRANSIT,
   UserRole.CAISSIER,
   UserRole.COMPTABLE,

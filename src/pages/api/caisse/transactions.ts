@@ -46,12 +46,11 @@ function assertCanAccessCaisse(
     caisseType?: CaisseType;
     payeurId?: string;
     caissierUserId?: string;
-    chauffeurId?: string;
     isDefaultGeneral?: boolean;
   }
 ): boolean {
   if (role === UserRole.ADMIN || role === UserRole.COMPTABLE) return true;
-  // Admin scopés : accès aux transactions des caisses de leur domaine.
+  // Admin scopé : accès aux transactions des caisses de son domaine.
   if (role === UserRole.ADMIN_TRANSIT) {
     return caisseDoc.caisseType === CaisseType.TRANSIT;
   }
@@ -60,9 +59,6 @@ function assertCanAccessCaisse(
     // banques, payeurs) — utile pour consulter l'historique avant de soumettre
     // un mouvement à validation.
     return caisseDoc.caisseType === CaisseType.TRANSIT;
-  }
-  if (role === UserRole.ADMIN_LOGISTIQUE) {
-    return caisseDoc.caisseType === CaisseType.LOGISTIQUE;
   }
   if (role === UserRole.CAISSIER) {
     // Le caissier voit sa propre caisse, la caisse générale, et les caisses
@@ -73,17 +69,8 @@ function assertCanAccessCaisse(
       caisseDoc.kind === CaisseKind.USER
     );
   }
-  if (
-    role === UserRole.USER_PAYEUR ||
-    role === UserRole.AGENT_RECEPTION_LOGISTIQUE
-  ) {
+  if (role === UserRole.USER_PAYEUR) {
     return caisseDoc.kind === CaisseKind.USER && caisseDoc.payeurId === userId;
-  }
-  if (role === UserRole.CHAUFFEUR) {
-    return (
-      caisseDoc.kind === CaisseKind.CHAUFFEUR &&
-      String(caisseDoc.chauffeurId || '') === userId
-    );
   }
   return false;
 }

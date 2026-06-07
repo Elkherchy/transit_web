@@ -9,7 +9,6 @@
     "lint": "eslint",
     "seed:admin": "tsx src/scripts/createAdmin.ts",
     "test:security": "tsx src/scripts/securityTest.ts",
-    "migrate:logistique": "node --env-file=.env --import tsx src/scripts/migrateLogistiqueWorkflow.ts",
     "migrate:role-separation": "node --env-file=.env --import tsx src/scripts/migrateRoleSeparation.ts"
   },
   "dependencies": {

@@ -39,17 +39,13 @@ import {
 
 
 function roleColor(role: UserRole): string {
-  const colors: Record<UserRole, string> = {
+  const colors: Partial<Record<UserRole, string>> = {
     [UserRole.ADMIN]: 'bg-purple-100 text-purple-800 border-purple-200',
     [UserRole.ADMIN_TRANSIT]: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-    [UserRole.ADMIN_LOGISTIQUE]: 'bg-teal-100 text-teal-800 border-teal-200',
     [UserRole.AGENT_TRANSIT]: 'bg-blue-100 text-blue-800 border-blue-200',
     [UserRole.COMPTABLE]: 'bg-green-100 text-green-800 border-green-200',
-    [UserRole.CHAUFFEUR]: 'bg-orange-100 text-orange-800 border-orange-200',
     [UserRole.USER_PAYEUR]: 'bg-pink-100 text-pink-800 border-pink-200',
     [UserRole.CAISSIER]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    [UserRole.AGENT_RECEPTION_LOGISTIQUE]:
-      'bg-cyan-100 text-cyan-800 border-cyan-200',
   };
   return colors[role] || 'bg-gray-100 text-gray-800 border-gray-200';
 }
@@ -129,9 +125,7 @@ function ProfileInfoCard({
   const caisseTrans =
     profile?.caisse === CaisseType.TRANSIT
       ? t('dashboard.profil.caisseLabel.TRANSIT')
-      : profile?.caisse === CaisseType.LOGISTIQUE
-        ? t('dashboard.profil.caisseLabel.LOGISTIQUE')
-        : null;
+      : null;
   if (loading || !profile) {
     return (
       <div className="flex flex-col items-center gap-4 p-6">

@@ -15,15 +15,6 @@ export { default as DesignationConfig } from './DesignationConfig';
 export { default as FactureManutention } from './FactureManutention';
 export { default as ManutentionPaiement } from './ManutentionPaiement';
 export { default as JourneeCaisse } from './JourneeCaisse';
-export { default as FichierLogistique } from './FichierLogistique';
-export { default as Vehicule } from './Vehicule';
-export { default as CarburantHistorique } from './CarburantHistorique';
-export { default as Voyage } from './Voyage';
-export { default as BonCommande } from './BonCommande';
-export { default as ChauffeurFacture } from './ChauffeurFacture';
-export { default as LogistiqueClientConfig } from './LogistiqueClientConfig';
-export { default as LogistiqueClient } from './LogistiqueClient';
-export { default as Location } from './Location';
 export { default as Salarie } from './Salarie';
 export { default as BulletinSalaire } from './BulletinSalaire';
 

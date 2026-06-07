@@ -1,23 +1,18 @@
 /**
- * Migration : séparation des domaines Transit / Logistique.
+ * Migration : domaine Transit.
  *
- * Ce script prépare la base pour la nouvelle architecture admin scopée :
+ * Ce script prépare la base pour l'architecture admin scopée transit :
  *
  *   1. La caisse GENERAL existante (`isDefaultGeneral=true`, sans `caisseType`)
  *      est renommée en "General_Transit" et taggée `caisseType=TRANSIT`.
- *   2. Crée la caisse "General_Logistique" si absente
- *      (kind=GENERAL, type=GENERAL, caisseType=LOGISTIQUE, isDefaultGeneral=true).
- *   3. Crée le compte bancaire "Banque_Transit" si absent
+ *   2. Crée le compte bancaire "Banque_Transit" si absent
  *      (kind=GENERAL, type=BANQUE, caisseType=TRANSIT, isDefaultBanque=true).
- *   4. Crée le compte bancaire "Banque_Logistique" si absent
- *      (kind=GENERAL, type=BANQUE, caisseType=LOGISTIQUE, isDefaultBanque=true).
- *   5. Backfill `caisseType` sur les caisses existantes selon une heuristique :
+ *   3. Backfill `caisseType` sur les caisses existantes selon une heuristique :
  *      - kind=USER, kind=CLIENT  → TRANSIT  (payeurs et clients sont transit)
- *      - kind=CHAUFFEUR, kind=VEHICULE → LOGISTIQUE
  *      - GENERAL/BANQUE non-défault sans caisseType : TRANSIT par défaut
- *   6. Les utilisateurs ADMIN existants restent en super-ADMIN (pas de
+ *   4. Les utilisateurs ADMIN existants restent en super-ADMIN (pas de
  *      conversion automatique). Le super-admin peut ensuite créer/promouvoir
- *      des ADMIN_TRANSIT et ADMIN_LOGISTIQUE via /dashboard/utilisateurs.
+ *      des ADMIN_TRANSIT via /dashboard/utilisateurs.
  *
  * Idempotent : peut être relancé sans dommage. Les caisses déjà nommées et
  * taggées ne sont pas re-créées ; seul le backfill et la promotion par défaut
@@ -98,7 +93,7 @@ async function dropLegacyIndexes() {
 }
 
 async function main() {
-  console.log('--- Migration : séparation Transit / Logistique ---');
+  console.log('--- Migration : domaine Transit ---');
   await dbConnect();
   console.log('Connecté à MongoDB.');
 
@@ -124,17 +119,7 @@ async function main() {
     console.log('1) Pas de caisse GENERAL legacy trouvée (ok si déjà migrée)');
   }
 
-  // 2. General_Logistique
-  const genLog = await ensureSingletonCaisse({
-    nom: 'General_Logistique',
-    type: CompteType.GENERAL,
-    kind: CaisseKind.GENERAL,
-    caisseType: CaisseType.LOGISTIQUE,
-    isDefaultGeneral: true,
-  });
-  console.log(`2) General_Logistique : ${String(genLog._id)}`);
-
-  // 3. Banque_Transit
+  // 2. Banque_Transit
   const banqueTransit = await ensureSingletonCaisse({
     nom: 'Banque_Transit',
     type: CompteType.BANQUE,
@@ -142,35 +127,18 @@ async function main() {
     caisseType: CaisseType.TRANSIT,
     isDefaultBanque: true,
   });
-  console.log(`3) Banque_Transit : ${String(banqueTransit._id)}`);
+  console.log(`2) Banque_Transit : ${String(banqueTransit._id)}`);
 
-  // 4. Banque_Logistique
-  const banqueLog = await ensureSingletonCaisse({
-    nom: 'Banque_Logistique',
-    type: CompteType.BANQUE,
-    kind: CaisseKind.GENERAL,
-    caisseType: CaisseType.LOGISTIQUE,
-    isDefaultBanque: true,
-  });
-  console.log(`4) Banque_Logistique : ${String(banqueLog._id)}`);
-
-  // 5. Backfill caisseType sur les caisses existantes sans tag.
+  // 3. Backfill caisseType sur les caisses existantes sans tag.
   const transitKinds = [CaisseKind.USER, CaisseKind.CLIENT];
-  const logKinds = [CaisseKind.CHAUFFEUR, CaisseKind.VEHICULE];
 
   const r1 = await Caisse.updateMany(
     { kind: { $in: transitKinds }, caisseType: { $exists: false } },
     { $set: { caisseType: CaisseType.TRANSIT } }
   );
-  console.log(`5a) Caisses payeur/client → TRANSIT : ${r1.modifiedCount} mises à jour`);
+  console.log(`3a) Caisses payeur/client → TRANSIT : ${r1.modifiedCount} mises à jour`);
 
   const r2 = await Caisse.updateMany(
-    { kind: { $in: logKinds }, caisseType: { $exists: false } },
-    { $set: { caisseType: CaisseType.LOGISTIQUE } }
-  );
-  console.log(`5b) Caisses chauffeur/véhicule → LOGISTIQUE : ${r2.modifiedCount} mises à jour`);
-
-  const r3 = await Caisse.updateMany(
     {
       kind: CaisseKind.GENERAL,
       caisseType: { $exists: false },
@@ -179,11 +147,10 @@ async function main() {
     },
     { $set: { caisseType: CaisseType.TRANSIT } }
   );
-  console.log(`5c) Autres caisses GENERAL non-default → TRANSIT : ${r3.modifiedCount} mises à jour`);
+  console.log(`3b) Autres caisses GENERAL non-default → TRANSIT : ${r2.modifiedCount} mises à jour`);
 
   console.log('--- Migration terminée. ---');
-  console.log('  • Vous pouvez maintenant créer des ADMIN_TRANSIT et');
-  console.log('    ADMIN_LOGISTIQUE via /dashboard/utilisateurs.');
+  console.log('  • Vous pouvez maintenant créer des ADMIN_TRANSIT via /dashboard/utilisateurs.');
 
   await mongoose.disconnect();
   process.exit(0);

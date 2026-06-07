@@ -367,7 +367,7 @@ export default function EditFactureManutention() {
     : !isCaissier
       ? t('dashboard.transit.subtitleRedirect')
       : facture?.bl
-        ? `${t('dashboard.logistique.fichier.voyageBl')} ${facture.bl}`
+        ? `BL ${facture.bl}`
         : undefined;
 
   const headerActions =

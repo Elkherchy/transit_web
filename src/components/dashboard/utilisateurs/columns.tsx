@@ -14,16 +14,13 @@ import {
 import { CaisseType, IUserResponse, UserRole } from '@/types';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
-export const ROLE_LABELS: Record<UserRole, string> = {
+export const ROLE_LABELS: Partial<Record<UserRole, string>> = {
   [UserRole.ADMIN]: 'Administrateur',
   [UserRole.ADMIN_TRANSIT]: 'Admin transit',
-  [UserRole.ADMIN_LOGISTIQUE]: 'Admin logistique',
   [UserRole.AGENT_TRANSIT]: 'Agent transit',
   [UserRole.USER_PAYEUR]: 'Payeur',
-  [UserRole.CHAUFFEUR]: 'Chauffeur',
   [UserRole.COMPTABLE]: 'Comptable',
   [UserRole.CAISSIER]: 'Caissier',
-  [UserRole.AGENT_RECEPTION_LOGISTIQUE]: 'Agent réception logistique',
 };
 
 export interface UtilisateursTableActions {
@@ -70,9 +67,7 @@ export function createUtilisateursColumns(
               : '—'
             : row.original.caisse === CaisseType.TRANSIT
             ? t('dashboard.utilisateurs.columns.transit')
-            : row.original.caisse === CaisseType.LOGISTIQUE
-              ? t('dashboard.utilisateurs.columns.logistique')
-              : '—'}
+            : '—'}
         </span>
       ),
     },

@@ -19,7 +19,6 @@ async function listPaieUsers(
           UserRole.AGENT_TRANSIT,
           UserRole.COMPTABLE,
           UserRole.CAISSIER,
-          UserRole.CHAUFFEUR,
         ],
       },
     };

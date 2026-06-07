@@ -85,14 +85,13 @@ export default function AdminScopedCaisseView({
   const isAgentTransit = user?.role === UserRole.AGENT_TRANSIT;
   const isAdminTransitOrSuper =
     user?.role === UserRole.ADMIN ||
-    user?.role === UserRole.ADMIN_TRANSIT ||
-    user?.role === UserRole.ADMIN_LOGISTIQUE;
+    user?.role === UserRole.ADMIN_TRANSIT;
 
   /** Préfixe URL pour les pages détail caisse (scopées par domaine). */
   const detailBase =
     caisseType === CaisseType.TRANSIT
       ? '/dashboard/admin/transit/caisse'
-      : '/dashboard/admin/logistique/caisse';
+      : '/dashboard/admin/transit/caisse';
 
   const [rows, setRows] = useState<ICaisseListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -373,7 +372,7 @@ export default function AdminScopedCaisseView({
     setLoading(true);
     setError(null);
     try {
-      // includeUser=true pour récupérer aussi les caisses des payeurs/chauffeurs.
+      // includeUser=true pour récupérer aussi les caisses des payeurs.
       // Le backend filtre automatiquement par caisseType pour les admins scopés ;
       // on passe quand même le query param pour le super-ADMIN qui consulte
       // cette page.
@@ -555,7 +554,7 @@ export default function AdminScopedCaisseView({
       ),
     [rows]
   );
-  /** Tous les comptes bancaires du domaine (Banque_Transit/Banque_Logistique
+  /** Tous les comptes bancaires du domaine (Banque_Transit
    *  + BMP, BMI, BMCI, etc. créés par l'admin). */
   const banques = useMemo(
     () => rows.filter((c) => c.type === CompteType.BANQUE),
@@ -563,13 +562,8 @@ export default function AdminScopedCaisseView({
   );
 
   const userCaisses = useMemo(
-    () =>
-      rows.filter((c) =>
-        caisseType === CaisseType.TRANSIT
-          ? c.kind === CaisseKind.USER
-          : c.kind === CaisseKind.CHAUFFEUR || c.kind === CaisseKind.VEHICULE
-      ),
-    [rows, caisseType]
+    () => rows.filter((c) => c.kind === CaisseKind.USER),
+    [rows]
   );
 
   const userCaisseColumns = useMemo<ColumnDef<ICaisseListItem>[]>(
@@ -622,14 +616,8 @@ export default function AdminScopedCaisseView({
     [t]
   );
 
-  const titleKey =
-    caisseType === CaisseType.TRANSIT
-      ? 'dashboard.adminScopedCaisse.titleTransit'
-      : 'dashboard.adminScopedCaisse.titleLogistique';
-  const subtitleKey =
-    caisseType === CaisseType.TRANSIT
-      ? 'dashboard.adminScopedCaisse.subtitleTransit'
-      : 'dashboard.adminScopedCaisse.subtitleLogistique';
+  const titleKey = 'dashboard.adminScopedCaisse.titleTransit';
+  const subtitleKey = 'dashboard.adminScopedCaisse.subtitleTransit';
 
   if (status === 'loading' || loading) {
     return (
@@ -955,9 +943,7 @@ export default function AdminScopedCaisseView({
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Wallet className="h-4 w-4 text-muted-foreground" />
-              {caisseType === CaisseType.TRANSIT
-                ? t('dashboard.adminScopedCaisse.userCaissesTransit')
-                : t('dashboard.adminScopedCaisse.userCaissesLogistique')}
+              {t('dashboard.adminScopedCaisse.userCaissesTransit')}
               <Badge variant="secondary" className="ml-1">
                 {userCaisses.length}
               </Badge>
@@ -1039,10 +1025,7 @@ export default function AdminScopedCaisseView({
               />
               <p className="text-xs text-muted-foreground">
                 {t('dashboard.adminScopedCaisse.bankCreateHint', {
-                  domaine:
-                    caisseType === CaisseType.TRANSIT
-                      ? 'Transit'
-                      : 'Logistique',
+                  domaine: 'Transit',
                 })}
               </p>
             </div>

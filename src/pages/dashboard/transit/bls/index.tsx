@@ -355,7 +355,7 @@ export default function BLsTransitListPage({
           >
             <RefreshCcw className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">
-              {t('dashboard.logistique.actions.refresh')}
+              {t('actions.refresh')}
             </span>
           </Button>
         }

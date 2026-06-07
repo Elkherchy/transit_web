@@ -36,7 +36,7 @@ const PUBLIC_AUTH_API_PREFIXES: ReadonlyArray<string> = [
 const ROOT_PATH = '/';
 
 /**
- * Routes (page ou API) accessibles aux 3 rôles admin (super + scopés).
+ * Routes (page ou API) accessibles aux 2 rôles admin (super + scopé transit).
  * Le filtrage métier fin (un ADMIN_TRANSIT ne crée que ses rôles) est appliqué
  * dans les handlers. Ce middleware se contente de bloquer les non-admins.
  */
@@ -47,7 +47,6 @@ const ADMIN_ONLY_PREFIXES: ReadonlyArray<string> = [
 const ADMIN_ROLES: ReadonlySet<string> = new Set([
   'ADMIN',
   'ADMIN_TRANSIT',
-  'ADMIN_LOGISTIQUE',
 ]);
 
 /** /api/users/payeurs : liste accessible aux rôles non-admin (caissier/comptable). */

@@ -21,8 +21,7 @@ export default function MonComptePayeurPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status !== 'loading' && user && user.role !== UserRole.USER_PAYEUR &&
-      user.role !== UserRole.AGENT_RECEPTION_LOGISTIQUE) {
+    if (status !== 'loading' && user && user.role !== UserRole.USER_PAYEUR) {
       void router.replace('/dashboard');
     }
   }, [status, user, router]);
@@ -30,8 +29,7 @@ export default function MonComptePayeurPage() {
   useEffect(() => {
     if (
       status !== 'authenticated' ||
-      (user?.role !== UserRole.USER_PAYEUR &&
-        user?.role !== UserRole.AGENT_RECEPTION_LOGISTIQUE)
+      user?.role !== UserRole.USER_PAYEUR
     )
       return;
     let cancelled = false;
@@ -70,8 +68,7 @@ export default function MonComptePayeurPage() {
     );
   }
 
-  if (user.role !== UserRole.USER_PAYEUR &&
-      user.role !== UserRole.AGENT_RECEPTION_LOGISTIQUE) {
+  if (user.role !== UserRole.USER_PAYEUR) {
     return (
       <DashboardLayout>
         <PageHeader title={t('dashboard.caisseMine.title')} />

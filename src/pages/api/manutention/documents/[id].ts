@@ -12,13 +12,11 @@ import { storeTransitDocument } from '@/lib/transitDocumentStorage';
  * - ADMIN, ADMIN_TRANSIT : admins transit (création directe)
  * - AGENT_TRANSIT        : crée des manutentions EN_ATTENTE_VALIDATION
  * - CAISSIER             : peut ajouter un justificatif a posteriori
- * - ADMIN_LOGISTIQUE     : super-cas — admin scopé large
  * - COMPTABLE            : vérification comptable
  */
 const ALLOWED_UPLOAD_ROLES = [
   UserRole.ADMIN,
   UserRole.ADMIN_TRANSIT,
-  UserRole.ADMIN_LOGISTIQUE,
   UserRole.AGENT_TRANSIT,
   UserRole.CAISSIER,
   UserRole.COMPTABLE,

@@ -83,24 +83,13 @@ async function listCaisses(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
 
     if (mine) {
       // Renvoie la caisse personnelle de l'utilisateur :
-      //   - USER_PAYEUR              → caisse kind=USER liée à son payeurId
-      //   - AGENT_RECEPTION_LOGISTIQUE → caisse kind=USER liée à son userId
-      //   - CHAUFFEUR                → caisse kind=CHAUFFEUR liée à son userId
-      //   - autres rôles             → tableau vide
+      //   - USER_PAYEUR → caisse kind=USER liée à son payeurId
+      //   - autres rôles → tableau vide
       let own = null;
-      if (
-        u.role === UserRole.USER_PAYEUR ||
-        u.role === UserRole.AGENT_RECEPTION_LOGISTIQUE
-      ) {
+      if (u.role === UserRole.USER_PAYEUR) {
         own = await Caisse.findOne({
           kind: CaisseKind.USER,
           payeurId: u.userId,
-          actif: true,
-        }).lean();
-      } else if (u.role === UserRole.CHAUFFEUR) {
-        own = await Caisse.findOne({
-          kind: CaisseKind.CHAUFFEUR,
-          chauffeurId: u.userId,
           actif: true,
         }).lean();
       } else {
@@ -230,7 +219,6 @@ async function listCaisses(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
     if (
       u.role !== UserRole.ADMIN &&
       u.role !== UserRole.ADMIN_TRANSIT &&
-      u.role !== UserRole.ADMIN_LOGISTIQUE &&
       u.role !== UserRole.AGENT_TRANSIT &&
       u.role !== UserRole.COMPTABLE
     ) {
@@ -245,13 +233,11 @@ async function listCaisses(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
       ? {}
       : { kind: { $ne: CaisseKind.USER } };
 
-    // Scope par domaine (Transit/Logistique) :
-    // - admin scopés → caisseType automatique selon leur rôle
+    // Scope par domaine (Transit) :
+    // - ADMIN_TRANSIT → caisseType forcé TRANSIT
     // - super-ADMIN ou COMPTABLE → respect du paramètre `caisseType` si fourni
     if (u.role === UserRole.ADMIN_TRANSIT) {
       baseFilter.caisseType = CaisseType.TRANSIT;
-    } else if (u.role === UserRole.ADMIN_LOGISTIQUE) {
-      baseFilter.caisseType = CaisseType.LOGISTIQUE;
     } else if (
       typeof req.query.caisseType === 'string' &&
       Object.values(CaisseType).includes(req.query.caisseType as CaisseType)
@@ -260,13 +246,12 @@ async function listCaisses(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
     }
 
     // Visibilité des comptes EN_ATTENTE :
-    //   - ADMIN / ADMIN_TRANSIT / ADMIN_LOGISTIQUE : voient tout
+    //   - ADMIN / ADMIN_TRANSIT : voient tout
     //   - AGENT_TRANSIT : voit ses propres comptes en attente
     //   - autres rôles (COMPTABLE) : masquage des EN_ATTENTE
     if (
       u.role !== UserRole.ADMIN &&
-      u.role !== UserRole.ADMIN_TRANSIT &&
-      u.role !== UserRole.ADMIN_LOGISTIQUE
+      u.role !== UserRole.ADMIN_TRANSIT
     ) {
       if (u.role === UserRole.AGENT_TRANSIT) {
         baseFilter.$or = [
@@ -339,13 +324,11 @@ async function createCaisse(req: AuthenticatedRequest, res: NextApiResponse<ApiR
     }
 
     // Détermination du caisseType :
-    // - admin scopé → forcé sur son domaine (impossible de créer hors-scope)
+    // - ADMIN_TRANSIT → forcé TRANSIT (impossible de créer hors-scope)
     // - super-ADMIN/COMPTABLE → respecte le body, défaut TRANSIT
     let resolvedCaisseType: CaisseType | undefined;
     if (req.user?.role === UserRole.ADMIN_TRANSIT) {
       resolvedCaisseType = CaisseType.TRANSIT;
-    } else if (req.user?.role === UserRole.ADMIN_LOGISTIQUE) {
-      resolvedCaisseType = CaisseType.LOGISTIQUE;
     } else if (
       bodyCaisseType &&
       Object.values(CaisseType).includes(bodyCaisseType as CaisseType)
@@ -353,13 +336,12 @@ async function createCaisse(req: AuthenticatedRequest, res: NextApiResponse<ApiR
       resolvedCaisseType = bodyCaisseType as CaisseType;
     }
 
-    // Garde-fou : un admin scopé ne peut pas créer une caisse GENERAL
+    // Garde-fou : ADMIN_TRANSIT ne peut pas créer une caisse GENERAL
     // (il y en a déjà une par domaine, créée par la migration).
     if (
       kind === CaisseKind.GENERAL &&
       compteType === CompteType.GENERAL &&
-      (req.user?.role === UserRole.ADMIN_TRANSIT ||
-        req.user?.role === UserRole.ADMIN_LOGISTIQUE)
+      req.user?.role === UserRole.ADMIN_TRANSIT
     ) {
       return res.status(403).json({
         success: false,
@@ -430,7 +412,6 @@ export default function handler(req: AuthenticatedRequest, res: NextApiResponse)
       return withAuth(createCaisse, [
         UserRole.ADMIN,
         UserRole.ADMIN_TRANSIT,
-        UserRole.ADMIN_LOGISTIQUE,
         UserRole.AGENT_TRANSIT,
         UserRole.COMPTABLE,
       ])(req, res);

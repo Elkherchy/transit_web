@@ -8,7 +8,7 @@ import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 /**
  * POST /api/caisse/caisses/[id]/valider
  *
- * ADMIN / ADMIN_TRANSIT valide un compte (caisse ou banque) créé en attente
+ * ADMIN / ADMIN_TRANSIT valide un compte (caisse ou banque) créé en attente par
  * par un AGENT_TRANSIT. Le compte devient utilisable (statut VALIDE).
  */
 async function handler(
@@ -57,5 +57,4 @@ async function handler(
 export default withAuth(handler, [
   UserRole.ADMIN,
   UserRole.ADMIN_TRANSIT,
-  UserRole.ADMIN_LOGISTIQUE,
 ]);

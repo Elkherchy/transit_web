@@ -105,7 +105,6 @@ async function handler(
 export default withAuth(handler, [
   UserRole.ADMIN,
   UserRole.ADMIN_TRANSIT,
-  UserRole.ADMIN_LOGISTIQUE,
   UserRole.AGENT_TRANSIT,
   UserRole.CAISSIER,
   UserRole.COMPTABLE,

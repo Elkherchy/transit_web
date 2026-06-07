@@ -26,7 +26,7 @@ interface TransferResult {
  * POST /api/caisse/transfer
  *
  * Transfère un montant d'un compte source vers un compte destination dans
- * le même domaine (Transit ou Logistique). Effets :
+ * le domaine Transit. Effets :
  *   - DEBIT sur le compte source
  *   - CREDIT sur le compte destination
  *
@@ -36,7 +36,7 @@ interface TransferResult {
  * automatiquement les transactions avec mirrorSourceId).
  *
  * Body : { sourceId, destinationId, montant, description?, date? }
- * Auth : ADMIN, ADMIN_TRANSIT, ADMIN_LOGISTIQUE.
+ * Auth : ADMIN, ADMIN_TRANSIT.
  */
 async function handler(
   req: AuthenticatedRequest,
@@ -174,7 +174,7 @@ async function handler(
       });
     }
 
-    // Admin scopé : interdit de croiser les domaines (Transit ↔ Logistique).
+    // Admin scopé : interdit de croiser les domaines.
     // Les caisses CLIENT sans `caisseType` (legacy, créées avant l'ajout du
     // champ) sont implicitement TRANSIT — on les laisse passer.
     const role = req.user!.role;
@@ -195,16 +195,6 @@ async function handler(
       return res.status(403).json({
         success: false,
         error: 'Transfert hors domaine transit non autorisé',
-      });
-    }
-    if (
-      role === UserRole.ADMIN_LOGISTIQUE &&
-      (!matchesDomain(source, CaisseType.LOGISTIQUE) ||
-        !matchesDomain(destination, CaisseType.LOGISTIQUE))
-    ) {
-      return res.status(403).json({
-        success: false,
-        error: 'Transfert hors domaine logistique non autorisé',
       });
     }
 
@@ -299,5 +289,4 @@ async function handler(
 export default withAuth(handler, [
   UserRole.ADMIN,
   UserRole.ADMIN_TRANSIT,
-  UserRole.ADMIN_LOGISTIQUE,
 ]);

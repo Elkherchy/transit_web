@@ -8,7 +8,7 @@ import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 /**
  * POST /api/caisse/caisses/[id]/rejeter
  *
- * ADMIN_TRANSIT rejette un compte EN_ATTENTE → suppression définitive
+ * ADMIN / ADMIN_TRANSIT rejette un compte EN_ATTENTE → suppression définitive
  * (le compte n'a aucune transaction puisqu'il n'était pas utilisable).
  *
  * Garde-fou : refuse de rejeter un compte qui a déjà été utilisé (au cas où
@@ -68,5 +68,4 @@ async function handler(
 export default withAuth(handler, [
   UserRole.ADMIN,
   UserRole.ADMIN_TRANSIT,
-  UserRole.ADMIN_LOGISTIQUE,
 ]);

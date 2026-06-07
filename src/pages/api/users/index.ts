@@ -3,7 +3,6 @@ import connectDB from '@/lib/db';
 import { Caisse, User } from '@/models';
 import { ensureDefaultGeneralCaisse } from '@/lib/caisse';
 import {
-  ADMIN_LOGISTIQUE_CREATABLE_ROLES,
   ADMIN_TRANSIT_CREATABLE_ROLES,
   ApiResponse,
   IUserResponse,
@@ -17,7 +16,6 @@ import { AuthenticatedRequest, withAdmin } from '@/middleware/auth';
  * Liste des rôles que l'utilisateur courant peut créer.
  * - Super-ADMIN  → tous les rôles
  * - ADMIN_TRANSIT → AGENT_TRANSIT, CAISSIER, USER_PAYEUR
- * - ADMIN_LOGISTIQUE → CHAUFFEUR, AGENT_RECEPTION_LOGISTIQUE
  * - Autres → aucun (la route est déjà protégée par withAdmin, mais
  *   on garde une vérification défensive).
  */
@@ -27,9 +25,6 @@ function creatableRolesFor(creatorRole: UserRole | undefined): readonly UserRole
   }
   if (creatorRole === UserRole.ADMIN_TRANSIT) {
     return ADMIN_TRANSIT_CREATABLE_ROLES;
-  }
-  if (creatorRole === UserRole.ADMIN_LOGISTIQUE) {
-    return ADMIN_LOGISTIQUE_CREATABLE_ROLES;
   }
   return [];
 }
@@ -141,7 +136,7 @@ async function createUser(
     if (role === UserRole.COMPTABLE && (!caisse || !Object.values(CaisseType).includes(caisse))) {
       return res.status(400).json({
         success: false,
-        error: 'Une caisse (Transit ou Logistique) est requise pour ce rôle',
+        error: 'Une caisse est requise pour ce rôle',
       });
     }
 

@@ -29,11 +29,6 @@ const CaisseSchema = new Schema(
       enum: Object.values(CaisseKind),
       required: [true, 'Le type de caisse est requis'],
     },
-    /**
-     * Domaine fonctionnel du compte (Transit ou Logistique). Permet de
-     * partitionner les comptes générale/banque par domaine et de filtrer les
-     * vues côté admin scopé.
-     */
     caisseType: {
       type: String,
       enum: Object.values(CaisseType),
@@ -64,15 +59,6 @@ const CaisseSchema = new Schema(
       type: String,
       trim: true,
     },
-    chauffeurId: {
-      type: String,
-      trim: true,
-    },
-    vehiculeMatricule: {
-      type: String,
-      trim: true,
-      uppercase: true,
-    },
     caissierUserId: {
       type: String,
       trim: true,
@@ -87,7 +73,7 @@ const CaisseSchema = new Schema(
     },
     /**
      * Marque le compte BANQUE par défaut pour le domaine `caisseType` (un seul
-     * Banque_Transit et un seul Banque_Logistique par index unique partiel).
+     * Banque_Transit par index unique partiel).
      */
     isDefaultBanque: {
       type: Boolean,
@@ -121,7 +107,6 @@ CaisseSchema.index(
   }
 );
 
-// Un seul Caisse GENERAL par domaine (un General_Transit + un General_Logistique).
 CaisseSchema.index(
   { caisseType: 1, isDefaultGeneral: 1 },
   {
@@ -130,7 +115,6 @@ CaisseSchema.index(
   }
 );
 
-// Un seul Caisse BANQUE par défaut par domaine (Banque_Transit + Banque_Logistique).
 CaisseSchema.index(
   { caisseType: 1, isDefaultBanque: 1 },
   {
@@ -139,10 +123,8 @@ CaisseSchema.index(
   }
 );
 
-// En développement, Next.js peut réutiliser un ancien modèle compilé sans le
-// champ `type` (avant l'ajout de CompteType.GENERAL) ou sans le champ
-// `caisseType` (avant la séparation Transit/Logistique). On invalide le cache
-// pour reconstruire le schéma à jour.
+// En développement, Next.js peut réutiliser un ancien modèle compilé — on invalide
+// le cache si le schéma a changé.
 const existingCaisseModel = models.Caisse as mongoose.Model<unknown> | undefined;
 if (existingCaisseModel) {
   const typePath = existingCaisseModel.schema.path('type') as

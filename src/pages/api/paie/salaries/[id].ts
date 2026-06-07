@@ -15,8 +15,6 @@ function roleToPoste(role: UserRole): string {
       return 'Comptable';
     case UserRole.CAISSIER:
       return 'Caissier';
-    case UserRole.CHAUFFEUR:
-      return 'Chauffeur';
     case UserRole.USER_PAYEUR:
       return 'Payeur';
     default:
