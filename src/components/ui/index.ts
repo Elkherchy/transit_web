@@ -1,5 +1,5 @@
 /**
- * Emama Group Design System - Barrel Export
+ * SNTS Design System - Barrel Export
  * 
  * Ce fichier exporte tous les composants UI du design system
  * pour faciliter les imports dans le projet.

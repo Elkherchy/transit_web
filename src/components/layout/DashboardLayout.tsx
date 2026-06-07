@@ -534,7 +534,7 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
           <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
             <Image
               src="/emama-favorie.png"
-              alt="Emama Group"
+              alt="SNTS"
               width={28}
               height={28}
               className="object-contain p-0.5"
@@ -542,7 +542,7 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[12px] font-semibold text-slate-800 leading-none">
-              Emama Group
+              SNTS
             </p>
             <p className="mt-0.5 truncate text-[11px] text-slate-400 leading-none">
               {roleLabel(user.role, isPayeur)}
@@ -611,7 +611,7 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
         <div className="relative h-7 w-7 overflow-hidden rounded-md border border-slate-200 bg-white">
           <Image src="/emama-favorie.png" alt="Emama" width={28} height={28} className="object-contain p-0.5" />
         </div>
-        <span className="text-sm font-bold text-slate-800">Emama</span>
+        <span className="text-sm font-bold text-slate-800">SNTS</span>
       </div>
       <div className="flex items-center gap-2">
         <LanguageSwitcher variant="light" />

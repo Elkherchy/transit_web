@@ -137,7 +137,7 @@ function buildPrintableTransitHtmlDocument(snapshotHtml: string): string {
   const baseEsc = `${origin}/`.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
   const links = collectStylesheetLinksForPrintDoc(origin);
   return (
-    `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>EMAMA TRANSIT</title>` +
+    `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>SNTS</title>` +
     `<base href="${baseEsc}"><style>${TRANSIT_PRINT_POPUP_ROOT_FIX_CSS}</style>${links}</head>` +
     `<body class="printing-transit">${snapshotHtml}</body></html>`
   );
@@ -155,7 +155,7 @@ function printTransitSnapshotViaHiddenIframe(
 
   return new Promise((resolve) => {
     const iframe = document.createElement('iframe');
-    iframe.setAttribute('title', 'EMAMA TRANSIT');
+    iframe.setAttribute('title', 'SNTS');
     iframe.setAttribute('aria-hidden', 'true');
     Object.assign(iframe.style, {
       position: 'fixed',

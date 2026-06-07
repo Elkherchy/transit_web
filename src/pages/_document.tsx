@@ -15,13 +15,13 @@ export default function Document() {
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="color-scheme" content="light" />
         <meta name="theme-color" content="#02389B" />
-        <meta name="application-name" content="Emama Group" />
+        <meta name="application-name" content="SNTS" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
-        <meta name="apple-mobile-web-app-title" content="Emama" />
+        <meta name="apple-mobile-web-app-title" content="SNTS" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/emama-favorie.png" />
       </Head>

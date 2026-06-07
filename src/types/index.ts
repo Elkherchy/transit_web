@@ -1,5 +1,5 @@
 /**
- * Types communs pour l'application Emama Group — Transit
+ * Types communs pour l'application SNTS — Transit
  */
 
 // ============================================

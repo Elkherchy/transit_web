@@ -4,7 +4,7 @@ import type { FicheTransitData } from '@/components/documents/FicheTransitPDF';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { EMAMA_TRANSIT_AR, transitLogoPublicUrl } from '@/lib/transitLogo';
 
-/** Bleu marine type en-tête papier Emama Transit */
+/** Bleu marine type en-tête papier SNTS Transit */
 const NAVY = '#003366';
 const FOOTER_BODY = '#1a1a1a';
 /** Ligne paiement mobile (modèle papier facture client) */
@@ -72,13 +72,13 @@ export const PrintableTransitDoc = React.forwardRef<HTMLDivElement, PrintableTra
         >
           <header
             className="transit-print-brand mb-3 flex w-full shrink-0 flex-row items-center gap-2 border-b-2 border-[#003366] bg-white pb-2 sm:gap-3 print:mb-2 print:gap-2 print:pb-1.5"
-            aria-label="EMAMA TRANSIT"
+            aria-label="SNTS"
           >
             <span
               className="min-w-0 flex-1 text-left text-sm font-bold uppercase leading-tight tracking-wide text-[#003366] sm:text-base print:text-[11pt]"
               style={{ letterSpacing: '0.02em' }}
             >
-              EMAMA TRANSIT
+              SNTS
             </span>
             <div className="flex shrink-0 items-center justify-center px-0.5 print:px-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -1,7 +1,7 @@
 {
-  "name": "Emama Group",
-  "short_name": "Emama",
-  "description": "Gestion Transit & Logistique — Emama Group",
+  "name": "SNTS",
+  "short_name": "SNTS",
+  "description": "Gestion Transit & Logistique — SNTS",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",

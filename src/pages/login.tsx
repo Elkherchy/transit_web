@@ -103,7 +103,7 @@ export default function Login() {
         />
         <div className="relative z-10 px-6 py-10 sm:px-10 lg:px-14 xl:px-20 text-start rtl:text-right">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/90">
-            Emama Group
+            SNTS
           </p>
           <h1 className="mt-3 max-w-xl text-2xl font-bold leading-tight tracking-tight text-white sm:text-3xl xl:text-4xl rtl:me-auto">
             {t('dashboard.login.tagline')}
@@ -122,7 +122,7 @@ export default function Login() {
               <div className="relative h-14 w-36 shrink-0 sm:h-12 sm:w-32 lg:h-11 lg:w-28">
                 <Image
                   src="/emama-favorie.png"
-                  alt="Emama Group"
+                  alt="SNTS"
                   fill
                   className="object-contain object-center lg:object-left"
                   sizes="(max-width: 1024px) 144px, 112px"
@@ -224,7 +224,7 @@ export default function Login() {
 
           <footer className="mt-12 border-t border-slate-100 pt-8 text-center text-xs text-slate-500">
             <p>
-              © {new Date().getFullYear()} Emama Group
+              © {new Date().getFullYear()} SNTS
             </p>
           </footer>
         </div>

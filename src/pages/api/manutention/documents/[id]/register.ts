@@ -40,7 +40,7 @@ async function handler(
       return res.status(400).json({ success: false, error: 'Clé invalide' });
     }
     // Sécurité : la clé doit être dans le dossier de cette manutention.
-    const expectedPrefix = `transit/manutention/${id}/`;
+    const expectedPrefix = `transit_snts/manutention/${id}/`;
     if (!key.startsWith(expectedPrefix)) {
       return res
         .status(400)

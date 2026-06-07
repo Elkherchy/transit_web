@@ -2,8 +2,8 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { IFacture, IDesignation } from '@/types';
 
-// Logo SVG Emama Transit
-function EmamaLogo({ className }: { className?: string }) {
+// Logo SVG SNTS Transit
+function SNTSLogo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <div className="relative">
@@ -57,8 +57,8 @@ interface InvoiceTemplateProps {
 }
 
 const defaultCompanyInfo = {
-  name: "EMAMA TRANSIT",
-  nameAr: "إمامة اترانزيت",
+  name: "SNTS",
+  nameAr: "SNTS",
   phone: "+222 45 29 57 23",
   mobile: "36 35 11 98",
   email: "contact@ets-emama.com",
@@ -95,12 +95,12 @@ export function InvoiceTemplate({
       <header className="flex items-center justify-between mb-6">
         {/* Left - French */}
         <div className="flex items-center gap-3">
-          <EmamaLogo />
+          <SNTSLogo />
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-black">
-              ÉMAMA TRANSIT
+              SNTS
             </h1>
-            <p className="text-sm text-gray-600">EMAMA TRANSIT</p>
+            <p className="text-sm text-gray-600">SNTS</p>
           </div>
         </div>
 
@@ -136,9 +136,9 @@ export function InvoiceTemplate({
         {/* Right - Arabic */}
         <div className="text-right">
           <h1 className="text-2xl font-bold text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
-            إمامة اترانزيت
+            SNTS
           </h1>
-          <p className="text-sm text-gray-600">EMAMA TRANSIT</p>
+          <p className="text-sm text-gray-600">SNTS</p>
         </div>
       </header>
 
@@ -309,7 +309,7 @@ export function InvoiceTemplate({
                 textAnchor="middle"
               >
                 <textPath href="#stampCurveTop" startOffset="50%">
-                  EMAMA TRANSIT
+                  SNTS
                 </textPath>
               </text>
               {/* Text on bottom arc */}
@@ -419,7 +419,7 @@ export function InvoiceSimple({
       {/* Header */}
       <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-4">
         <div>
-          <h1 className="text-xl font-bold">ÉMAMA TRANSIT</h1>
+          <h1 className="text-xl font-bold">SNTS</h1>
           <p className="text-xs text-gray-600">{companyInfo.nameAr}</p>
         </div>
         <div className="text-center">
@@ -429,7 +429,7 @@ export function InvoiceSimple({
         </div>
         <div className="text-right">
           <h1 className="text-xl font-bold">{companyInfo.nameAr}</h1>
-          <p className="text-xs text-gray-600">EMAMA TRANSIT</p>
+          <p className="text-xs text-gray-600">SNTS</p>
         </div>
       </div>
 

@@ -27,7 +27,7 @@ export function isTransitMinioEnabled(): boolean {
 }
 
 /**
- * Supprime l’objet dans le bucket S3 (clé telle qu’enregistrée en base, ex. transit/…/doc-….pdf).
+ * Supprime l’objet dans le bucket S3 (clé telle qu’enregistrée en base, ex. transit_snts/…/doc-….pdf).
  */
 export async function removeTransitStoredFile(key: string): Promise<void> {
   if (!key || key.includes('..')) {
@@ -59,7 +59,7 @@ export async function storeTransitDocument(
   const ext = path.extname(file.originalname) || '';
   const base =
     'doc-' + Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
-  const objectKey = `transit/${transitId}/${base}`;
+  const objectKey = `transit_snts/${transitId}/${base}`;
   await uploadFile(
     Buffer.from(file.buffer),
     objectKey,
@@ -73,7 +73,7 @@ export async function storeTransitDocument(
 }
 
 /**
- * Enregistre un reçu de paiement dans S3. `recuUrl` en base = clé objet (ex. recus/recu-….pdf).
+ * Enregistre un reçu de paiement dans S3. `recuUrl` en base = clé objet (ex. recus_snts/recu-….pdf).
  */
 export async function storeRecuDocument(
   file: StoreTransitFileInput
@@ -82,7 +82,7 @@ export async function storeRecuDocument(
   const ext = path.extname(file.originalname) || '';
   const base =
     'recu-' + Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
-  const objectKey = `recus/${base}`;
+  const objectKey = `recus_snts/${base}`;
   await uploadFile(
     Buffer.from(file.buffer),
     objectKey,

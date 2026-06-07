@@ -348,7 +348,7 @@ function FactureClientPdfPage({
     <Page size="A4" style={pageStyle}>
       <View style={styles.body}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitleFr}>EMAMA TRANSIT</Text>
+          <Text style={styles.headerTitleFr}>SNTS</Text>
           <View style={styles.headerLogoWrap}>
             <Image src={logoUrl} style={styles.headerLogo} />
           </View>

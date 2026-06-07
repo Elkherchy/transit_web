@@ -53,7 +53,7 @@ async function handler(
     }
     const ext = path.extname(fileName) || '';
     const safeBase = `recu-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    const key = `recus/${safeBase}`;
+    const key = `recus_snts/${safeBase}`;
 
     const presigned = await getUploadSignedUrl(
       key,

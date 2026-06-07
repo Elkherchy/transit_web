@@ -55,7 +55,7 @@ async function handler(
     }
     const ext = path.extname(fileName) || '';
     const safeBase = `doc-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    const key = `transit/manutention/${id}/${safeBase}`;
+    const key = `transit_snts/manutention/${id}/${safeBase}`;
 
     const presigned = await getUploadSignedUrl(
       key,

@@ -7,7 +7,7 @@
 @custom-variant dark (&:is(.never-dark *));
 
 /* ============================================
-   EMAMA GROUP - DESIGN SYSTEM V2
+   SNTS - DESIGN SYSTEM V2
    Mobile-First Responsive Architecture
    ============================================ */
 
@@ -15,7 +15,7 @@
    1. CSS CUSTOM PROPERTIES (Design Tokens)
    ------------------------------------------ */
 :root {
-  /* Brand Colors - Emama Group */
+  /* Brand Colors - SNTS */
   --brand-primary: #02389b;
   --brand-primary-dark: #022a66;
   --brand-primary-light: #0148a8;

@@ -97,7 +97,7 @@ async function handler(
       };
       presignedRecus = (body.recus || [])
         .filter((r): r is { key: string; name?: string; size?: number } =>
-          !!r && typeof r.key === 'string' && r.key.startsWith('recus/')
+          !!r && typeof r.key === 'string' && r.key.startsWith('recus_snts/')
         );
       bodyMontant = body.montant;
       bodyDatePaiement = body.datePaiement;

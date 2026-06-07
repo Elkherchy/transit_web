@@ -1,7 +1,7 @@
 /** Fichier dans `public/` — logo compact (remplace l’ancien bandeau transit.png). */
 export const TRANSIT_LOGO_FILENAME = 'transit-logo.png';
 
-export const EMAMA_TRANSIT_AR = 'امامة اترانزيت';
+export const EMAMA_TRANSIT_AR = 'SNTS';
 
 export function transitLogoPublicPath(): string {
   return `/${TRANSIT_LOGO_FILENAME}`;

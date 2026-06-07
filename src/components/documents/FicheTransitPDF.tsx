@@ -257,7 +257,7 @@ export function FicheTransitPDF({
     <Document title={`Transit ${data.blNumber || data.factureNumber || ''}`}>
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitleFr}>EMAMA TRANSIT</Text>
+          <Text style={styles.headerTitleFr}>SNTS</Text>
           <View style={styles.headerLogoWrap}>
             <Image src={headerImagePath} style={styles.headerLogo} />
           </View>

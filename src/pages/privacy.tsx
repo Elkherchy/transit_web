@@ -4,7 +4,7 @@ export default function PrivacyPage() {
   return (
     <>
       <Head>
-        <title>Politique de Confidentialité — Emama Group</title>
+        <title>Politique de Confidentialité — SNTS</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <meta name="robots" content="index, follow" />
       </Head>
@@ -24,13 +24,13 @@ export default function PrivacyPage() {
           textAlign: 'left',
         }}
       >
-        <h1 style={{ fontSize: 26, marginBottom: 4 }}>Politique de Confidentialité — Emama Group</h1>
+        <h1 style={{ fontSize: 26, marginBottom: 4 }}>Politique de Confidentialité — SNTS</h1>
         <p style={{ color: '#666', marginTop: 0 }}>Dernière mise à jour : 12 mai 2025</p>
 
         <h2 style={{ fontSize: 20, marginTop: 28 }}>1. Présentation</h2>
         <p>
-          Emama Group est une application mobile interne (WebView) destinée exclusivement aux
-          collaborateurs et partenaires autorisés d&apos;Emama Group. Elle donne accès au système
+          SNTS est une application mobile interne (WebView) destinée exclusivement aux
+          collaborateurs et partenaires autorisés d&apos;SNTS. Elle donne accès au système
           d&apos;information interne de l&apos;entreprise.
         </p>
 
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
         <p>
           L&apos;application ne collecte aucune donnée personnelle à des fins commerciales ou
           publicitaires. Les seules données traitées sont les identifiants de connexion (nom
-          d&apos;utilisateur et mot de passe) fournis par l&apos;administrateur Emama Group, utilisés
+          d&apos;utilisateur et mot de passe) fournis par l&apos;administrateur SNTS, utilisés
           uniquement pour authentifier l&apos;utilisateur sur le système interne.
         </p>
 
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
         <h2 style={{ fontSize: 20, marginTop: 28 }}>5. Partage des données</h2>
         <p>
           Aucune donnée personnelle n&apos;est vendue, louée ou partagée avec des tiers extérieurs à
-          Emama Group.
+          SNTS.
         </p>
 
         <h2 style={{ fontSize: 20, marginTop: 28 }}>6. Sécurité</h2>
