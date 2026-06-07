@@ -17,6 +17,15 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+// Capture beforeinstallprompt at module level — fires before React mounts.
+let _pwaPrompt: BeforeInstallPromptEvent | null = null;
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    _pwaPrompt = e as BeforeInstallPromptEvent;
+  });
+}
+
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -66,7 +75,7 @@ function ServiceWorkerRegister() {
 
 function PwaInstallBanner() {
   const { t } = useTranslation();
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => _pwaPrompt);
   const [isStandalone, setIsStandalone] = useState(true); // true = hide until we know
   const [dismissed, setDismissed] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -80,9 +89,10 @@ function PwaInstallBanner() {
     const onChange = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
     mq.addEventListener("change", onChange);
 
-    // Capture native install prompt when Chrome offers it
+    // Capture native install prompt if it fires after mount
     const handler = (e: Event) => {
       e.preventDefault();
+      _pwaPrompt = e as BeforeInstallPromptEvent;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", handler);
