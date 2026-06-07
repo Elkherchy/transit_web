@@ -44,6 +44,8 @@ export interface DataTableProps<TData, TValue> {
   surface?: DataListSurface;
   /** Nombre de lignes par page (default 10, 0 = pas de pagination) */
   pageSize?: number;
+  /** Nombre de colonnes dans la grille mobile (default 1) */
+  mobileGridCols?: 1 | 2;
 }
 
 function isActionsColumn<TData>(column: Column<TData, unknown>): boolean {
@@ -73,6 +75,7 @@ export function DataTable<TData, TValue>({
   className,
   surface: surfaceProp,
   pageSize = 10,
+  mobileGridCols = 1,
 }: DataTableProps<TData, TValue>) {
   const ctxSurface = useDataListSurface();
   const surface = surfaceProp ?? ctxSurface;
@@ -172,6 +175,7 @@ export function DataTable<TData, TValue>({
   );
 
   const mobileRows = table.getRowModel().rows;
+  const isGrid = mobileGridCols === 2;
 
   const mobileList =
     mobileRows.length === 0 ? (
@@ -203,6 +207,7 @@ export function DataTable<TData, TValue>({
           <MobileEntityCard
             key={row.id}
             surface={surface}
+            compact={isGrid}
             title={title}
             fields={fields}
             actions={
@@ -299,8 +304,12 @@ export function DataTable<TData, TValue>({
       <div className="md:hidden">
         <div
           className={cn(
-            'touch-pan-y pb-1 sm:px-0',
-            surface === 'comfortable' ? 'space-y-4' : 'space-y-3 px-1'
+            'touch-pan-y pb-1',
+            isGrid
+              ? 'grid grid-cols-2 gap-2 px-1'
+              : surface === 'comfortable'
+                ? 'space-y-4 sm:px-0'
+                : 'space-y-3 px-1'
           )}
         >
           {mobileList}

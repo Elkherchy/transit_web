@@ -497,14 +497,9 @@ export const DESIGNATION_FIXED_FEES: Record<string, number> = {
   'Bonne de Sortie Douanes': 200,
 };
 
-/** Désignations pour lesquelles le payeur n'a PAS besoin de joindre un reçu
- *  (paiements « cash » sans justificatif). */
-export const DESIGNATIONS_NO_RECU_REQUIRED: ReadonlyArray<string> = [
-  'TS',
-  'Bonne de Sortie Douanes',
-  'Camion',
-  'Sogetrap',
-];
+/** Désignations pour lesquelles le payeur n'a PAS besoin de joindre un reçu.
+ *  Toutes les désignations exigent désormais un reçu obligatoire. */
+export const DESIGNATIONS_NO_RECU_REQUIRED: ReadonlyArray<string> = [];
 
 export function getDesignationMaxAmount(nom: string): number | null {
   const k = (nom || '').trim();

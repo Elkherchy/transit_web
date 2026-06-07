@@ -471,6 +471,7 @@ export default function PayeurTransitDetail() {
             columns={designationColumns}
             data={visibleDesignations}
             emptyMessage={t('dashboard.payeur.transitDetailEmpty')}
+            mobileGridCols={2}
           />
         </div>
 

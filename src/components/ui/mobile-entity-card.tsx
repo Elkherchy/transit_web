@@ -26,6 +26,13 @@ export interface MobileEntityCardProps {
   className?: string;
   /** Surcharge du thème liste (sinon contexte layout, défaut : comfortable) */
   surface?: DataListSurface;
+  /**
+   * Mode compact pour grille 2 colonnes :
+   * - Sans étiquettes de champ
+   * - Padding réduit
+   * - Action en bas pleine largeur
+   */
+  compact?: boolean;
 }
 
 /**
@@ -38,10 +45,57 @@ export function MobileEntityCard({
   actions,
   className,
   surface: surfaceProp,
+  compact = false,
 }: MobileEntityCardProps) {
   const ctxSurface = useDataListSurface();
   const surface = surfaceProp ?? ctxSurface;
   const isComfort = surface === 'comfortable';
+
+  if (compact) {
+    return (
+      <article
+        className={cn(
+          'touch-manipulation flex flex-col overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm',
+          'ring-1 ring-black/[0.03] transition-[transform,box-shadow] active:scale-[0.98]',
+          className
+        )}
+      >
+        {/* Title */}
+        {(title != null || subtitle != null) && (
+          <div className="border-b border-border/50 bg-muted/30 px-3 py-2">
+            {title != null && (
+              <div className="truncate text-[13px] font-semibold leading-snug text-foreground">
+                {title}
+              </div>
+            )}
+            {subtitle != null && (
+              <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                {subtitle}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Fields — valeurs sans étiquette */}
+        {fields.length > 0 && (
+          <div className="flex flex-col divide-y divide-border/40 px-3 py-1.5">
+            {fields.map((f, i) => (
+              <div key={i} className="py-1 text-[12px] leading-snug text-foreground [&_*]:whitespace-normal">
+                {f.value}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Action — full width en bas */}
+        {actions != null && (
+          <div className="mt-auto border-t border-border/40 px-2.5 py-2 [&_button]:w-full [&_a]:w-full [&_button]:justify-center [&_a]:justify-center">
+            {actions}
+          </div>
+        )}
+      </article>
+    );
+  }
 
   return (
     <article

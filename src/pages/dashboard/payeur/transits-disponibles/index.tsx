@@ -99,17 +99,7 @@ export default function PayeurTransitsDisponibles() {
 
   const transitColumns = useMemo<ColumnDef<ITransit>[]>(
     () => [
-      {
-        id: 'date',
-        header: t('dashboard.payeur.colDate'),
-        cell: ({ row }) => (
-          <span className="text-sm">
-            {new Date(
-              row.original.date || row.original.createdAt
-            ).toLocaleDateString('fr-FR')}
-          </span>
-        ),
-      },
+      // Mobile title : client name
       {
         accessorKey: 'client',
         header: t('dashboard.payeur.colClient'),
@@ -122,15 +112,6 @@ export default function PayeurTransitsDisponibles() {
         header: t('dashboard.payeur.colBl'),
         cell: ({ row }) => (
           <span className="tabular-nums text-sm">{row.original.bl}</span>
-        ),
-      },
-      {
-        accessorKey: 'objet',
-        header: t('dashboard.payeur.colObjet'),
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground line-clamp-2">
-            {row.original.objet || '—'}
-          </span>
         ),
       },
       {
@@ -154,6 +135,30 @@ export default function PayeurTransitsDisponibles() {
             </span>
           );
         },
+      },
+      {
+        id: 'date',
+        header: t('dashboard.payeur.colDate'),
+        // Hidden on mobile — shown on desktop only
+        meta: { hideInMobileList: true } satisfies DataTableColumnMeta,
+        cell: ({ row }) => (
+          <span className="text-sm">
+            {new Date(
+              row.original.date || row.original.createdAt
+            ).toLocaleDateString('fr-FR')}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'objet',
+        header: t('dashboard.payeur.colObjet'),
+        // Too verbose for compact grid cards
+        meta: { hideInMobileList: true } satisfies DataTableColumnMeta,
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground line-clamp-2">
+            {row.original.objet || '—'}
+          </span>
+        ),
       },
       {
         id: 'actions',
@@ -227,6 +232,7 @@ export default function PayeurTransitsDisponibles() {
             columns={transitColumns}
             data={transits}
             emptyMessage={t('dashboard.payeur.transitsListEmpty')}
+            mobileGridCols={2}
           />
         </div>
       </PageContent>
