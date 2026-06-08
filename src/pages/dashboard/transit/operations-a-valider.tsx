@@ -9,6 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { UserRole } from '@/types';
 import {
   RefreshCcw,
@@ -17,6 +23,7 @@ import {
   CheckCircle2,
   Clock,
   Loader2,
+  Eye,
 } from 'lucide-react';
 
 interface OperationValidationRow {
@@ -77,6 +84,58 @@ export default function OperationsAValiderPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
+
+  // Receipt viewer state
+  const [viewerRow, setViewerRow] = useState<OperationValidationRow | null>(null);
+  const [viewerUrls, setViewerUrls] = useState<Array<{ url: string; name: string; key: string }>>([]);
+  const [viewerIdx, setViewerIdx] = useState(0);
+  const [viewerLoading, setViewerLoading] = useState(false);
+  const [viewerLoadingId, setViewerLoadingId] = useState<string | null>(null);
+
+  const openViewer = useCallback(
+    async (row: OperationValidationRow) => {
+      if (row.opType !== 'PAYEUR_PAIEMENT') return;
+      setViewerRow(row);
+      setViewerUrls([]);
+      setViewerLoading(true);
+      setViewerLoadingId(row._id);
+      setViewerIdx(0);
+      setError(null);
+      try {
+        const recusRes = await fetch(
+          `/api/transit/designation-recus?id=${encodeURIComponent(row.opId)}`,
+          { credentials: 'include' }
+        );
+        const recusData = await recusRes.json().catch(() => null);
+        if (!recusData?.success || !recusData.data?.recus?.length) {
+          setViewerUrls([]);
+          return;
+        }
+        const recus: Array<{ key: string; name?: string }> = recusData.data.recus;
+        const urls = await Promise.all(
+          recus.filter((r) => r.key).map(async (r) => {
+            const res = await fetch(`/api/documents/${encodeURIComponent(r.key)}`, {
+              credentials: 'include',
+            });
+            const d = await res.json().catch(() => null);
+            return {
+              url: d?.url || '',
+              name: r.name || r.key.split('/').pop() || 'reçu',
+              key: r.key,
+            };
+          })
+        );
+        setViewerUrls(urls.filter((u) => u.url));
+      } catch {
+        setError(t('dashboard.opsValider.errNetwork') || 'Erreur réseau');
+        setViewerRow(null);
+      } finally {
+        setViewerLoading(false);
+        setViewerLoadingId(null);
+      }
+    },
+    [t]
+  );
 
   useEffect(() => {
     if (status !== 'loading' && user && !canAccess) {
@@ -272,6 +331,25 @@ export default function OperationsAValiderPage() {
                           </td>
                           <td className="px-4 py-2.5 text-right">
                             <div className="flex justify-end gap-1.5">
+                              {r.opType === 'PAYEUR_PAIEMENT' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs"
+                                  disabled={viewerLoadingId === r._id}
+                                  onClick={() => void openViewer(r)}
+                                  title={t('dashboard.opsValider.voirRecus')}
+                                >
+                                  {viewerLoadingId === r._id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Eye className="h-3 w-3 sm:mr-1" />
+                                  )}
+                                  <span className="hidden sm:inline">
+                                    {t('dashboard.opsValider.voirRecus')}
+                                  </span>
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 className="h-7 px-2 text-xs bg-emerald-600 hover:bg-emerald-700"
@@ -307,6 +385,90 @@ export default function OperationsAValiderPage() {
           </Card>
         </div>
       </PageContent>
+
+      {/* Receipt viewer dialog */}
+      <Dialog
+        open={!!viewerRow}
+        onOpenChange={(open) => {
+          if (!open) setViewerRow(null);
+        }}
+      >
+        <DialogContent className="max-w-4xl flex flex-col" style={{ height: '85vh' }}>
+          <DialogHeader>
+            <DialogTitle>
+              {t('dashboard.manutention.detail.recuViewerTitle', {
+                nom: viewerRow?.snapshot?.libelle || '',
+              })}
+            </DialogTitle>
+          </DialogHeader>
+          {viewerLoading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : viewerUrls.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+              {t('dashboard.manutention.detail.recuViewerEmpty')}
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                {viewerUrls.length > 1 && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={viewerIdx === 0}
+                      onClick={() => setViewerIdx((i) => i - 1)}
+                    >
+                      {t('dashboard.manutention.detail.recuViewerPrev')}
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      {viewerIdx + 1} / {viewerUrls.length}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={viewerIdx === viewerUrls.length - 1}
+                      onClick={() => setViewerIdx((i) => i + 1)}
+                    >
+                      {t('dashboard.manutention.detail.recuViewerNext')}
+                    </Button>
+                  </>
+                )}
+                <span className="text-sm text-muted-foreground truncate flex-1">
+                  {viewerUrls[viewerIdx]?.name}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    window.open(viewerUrls[viewerIdx]?.url, '_blank', 'noopener')
+                  }
+                >
+                  <Eye className="mr-1 h-3 w-3" />
+                  {t('dashboard.manutention.detail.recuViewerOpenTab')}
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden rounded border min-h-0">
+                {viewerUrls[viewerIdx]?.url &&
+                  (viewerUrls[viewerIdx].key.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <img
+                      src={viewerUrls[viewerIdx].url}
+                      alt={viewerUrls[viewerIdx].name}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <iframe
+                      src={viewerUrls[viewerIdx].url}
+                      title={viewerUrls[viewerIdx].name}
+                      className="w-full h-full border-0"
+                    />
+                  ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

@@ -9,6 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { UserRole } from '@/types';
 import {
   RefreshCcw,
@@ -19,6 +25,7 @@ import {
   AlertCircle,
   Eye,
   XCircle,
+  Unlock,
 } from 'lucide-react';
 
 interface PayeurPaiementRow {
@@ -62,36 +69,41 @@ export default function CaissierOperationsAValiderPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [actingKey, setActingKey] = useState<string | null>(null);
-  const [openingKey, setOpeningKey] = useState<string | null>(null);
 
-  /** Ouvre les reçus joints dans de nouveaux onglets via URL signée S3. */
-  const openRecus = useCallback(
+  // Receipt viewer state
+  const [viewerRow, setViewerRow] = useState<PayeurPaiementRow | null>(null);
+  const [viewerUrls, setViewerUrls] = useState<Array<{ url: string; name: string; key: string }>>([]);
+  const [viewerIdx, setViewerIdx] = useState(0);
+  const [viewerLoading, setViewerLoading] = useState(false);
+
+  const openViewer = useCallback(
     async (row: PayeurPaiementRow) => {
-      if (!row.recus || row.recus.length === 0) {
-        setError(t('dashboard.caissier.opsValider.errNoRecu'));
-        return;
-      }
-      const key = opKey(row);
-      setOpeningKey(key);
+      if (!row.recus || row.recus.length === 0) return;
+      setViewerRow(row);
+      setViewerUrls([]);
+      setViewerLoading(true);
+      setViewerIdx(0);
       setError(null);
       try {
-        for (const r of row.recus) {
-          if (!r.key) continue;
-          const res = await fetch(
-            `/api/documents/${encodeURIComponent(r.key)}`,
-            { credentials: 'include' }
-          );
-          const d = await res.json().catch(() => null);
-          if (d?.success && d.url) {
-            window.open(d.url, '_blank', 'noopener');
-          } else {
-            setError(d?.error || t('dashboard.caissier.opsValider.errRecuIntrouvable'));
-          }
-        }
+        const urls = await Promise.all(
+          row.recus.filter((r) => r.key).map(async (r) => {
+            const res = await fetch(`/api/documents/${encodeURIComponent(r.key)}`, {
+              credentials: 'include',
+            });
+            const d = await res.json().catch(() => null);
+            return {
+              url: d?.url || '',
+              name: r.name || r.key.split('/').pop() || 'reçu',
+              key: r.key,
+            };
+          })
+        );
+        setViewerUrls(urls.filter((u) => u.url));
       } catch {
         setError(t('dashboard.caissier.opsValider.errNetwork'));
+        setViewerRow(null);
       } finally {
-        setOpeningKey(null);
+        setViewerLoading(false);
       }
     },
     [t]
@@ -168,14 +180,42 @@ export default function CaissierOperationsAValiderPage() {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            designationId: row.designationId,
-            motif,
-          }),
+          body: JSON.stringify({ designationId: row.designationId, motif }),
         });
         const data = await r.json().catch(() => null);
         if (r.ok && data?.success) {
           setSuccess(t('dashboard.caissier.opsValider.successRejete'));
+          void reload();
+        } else {
+          setError(data?.error || `Erreur ${r.status}`);
+        }
+      } catch {
+        setError(t('dashboard.caissier.opsValider.errNetwork'));
+      } finally {
+        setActingKey(null);
+      }
+    },
+    [reload, t]
+  );
+
+  const liberer = useCallback(
+    async (row: PayeurPaiementRow) => {
+      const motif =
+        window.prompt(t('dashboard.caissier.opsValider.motifLibererPrompt'))?.trim() || '';
+      const key = opKey(row);
+      setActingKey(key);
+      setError(null);
+      setSuccess(null);
+      try {
+        const r = await fetch('/api/operations-validation/liberer-designation', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ designationId: row.designationId, motif }),
+        });
+        const data = await r.json().catch(() => null);
+        if (r.ok && data?.success) {
+          setSuccess(t('dashboard.caissier.opsValider.successLibere'));
           void reload();
         } else {
           setError(data?.error || `Erreur ${r.status}`);
@@ -272,7 +312,7 @@ export default function CaissierOperationsAValiderPage() {
     icon: React.ReactNode,
     badge: React.ReactNode,
     data: PayeurPaiementRow[],
-    options: { withValiderBtn?: boolean; tone?: 'pending' | 'sent' | 'valid' | 'rejected' } = {}
+    options: { withValiderBtn?: boolean; withRejectedActions?: boolean; tone?: 'pending' | 'sent' | 'valid' | 'rejected' } = {}
   ) => (
     <Card>
       <CardHeader>
@@ -337,11 +377,11 @@ export default function CaissierOperationsAValiderPage() {
                               size="sm"
                               variant="outline"
                               className="h-7 px-2 text-xs"
-                              disabled={openingKey === k}
-                              onClick={() => void openRecus(r)}
+                              disabled={viewerLoading && viewerRow?.designationId === r.designationId}
+                              onClick={() => void openViewer(r)}
                               title={t('dashboard.caissier.opsValider.titleVoirRecus', { count: r.recus.length })}
                             >
-                              {openingKey === k ? (
+                              {viewerLoading && viewerRow?.designationId === r.designationId ? (
                                 <Loader2 className="h-3 w-3 animate-spin" />
                               ) : (
                                 <Eye className="h-3 w-3 sm:mr-1" />
@@ -377,6 +417,60 @@ export default function CaissierOperationsAValiderPage() {
                               >
                                 <XCircle className="mr-1 h-3 w-3" />
                                 {t('dashboard.caissier.opsValider.btnRejeter')}
+                              </Button>
+                            </>
+                          )}
+                          {options.withRejectedActions && (
+                            <>
+                              <Button
+                                size="sm"
+                                className="h-7 px-2 text-xs bg-emerald-600 hover:bg-emerald-700"
+                                disabled={actingKey === k}
+                                onClick={() => void valider(r)}
+                                title={t('dashboard.caissier.opsValider.btnRevalider')}
+                              >
+                                {actingKey === k ? (
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                ) : (
+                                  <ShieldCheck className="mr-1 h-3 w-3" />
+                                )}
+                                <span className="hidden sm:inline">
+                                  {t('dashboard.caissier.opsValider.btnRevalider')}
+                                </span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-7 px-2 text-xs"
+                                disabled={actingKey === k}
+                                onClick={() => void rejeter(r)}
+                                title={t('dashboard.caissier.opsValider.btnRejeterDef')}
+                              >
+                                {actingKey === k ? (
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                ) : (
+                                  <XCircle className="mr-1 h-3 w-3" />
+                                )}
+                                <span className="hidden sm:inline">
+                                  {t('dashboard.caissier.opsValider.btnRejeterDef')}
+                                </span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2 text-xs border-amber-500 text-amber-700 hover:bg-amber-50"
+                                disabled={actingKey === k}
+                                onClick={() => void liberer(r)}
+                                title={t('dashboard.caissier.opsValider.btnLiberer')}
+                              >
+                                {actingKey === k ? (
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Unlock className="mr-1 h-3 w-3" />
+                                )}
+                                <span className="hidden sm:inline">
+                                  {t('dashboard.caissier.opsValider.btnLiberer')}
+                                </span>
                               </Button>
                             </>
                           )}
@@ -460,10 +554,94 @@ export default function CaissierOperationsAValiderPage() {
               <AlertCircle className="h-4 w-4 text-red-600" />,
               <Badge variant="destructive">{rejected.length}</Badge>,
               rejected,
-              { tone: 'rejected' }
+              { tone: 'rejected', withRejectedActions: true }
             )}
         </div>
       </PageContent>
+
+      {/* Receipt viewer dialog */}
+      <Dialog
+        open={!!viewerRow}
+        onOpenChange={(open) => {
+          if (!open) setViewerRow(null);
+        }}
+      >
+        <DialogContent className="max-w-4xl flex flex-col" style={{ height: '85vh' }}>
+          <DialogHeader>
+            <DialogTitle>
+              {t('dashboard.manutention.detail.recuViewerTitle', {
+                nom: viewerRow?.designationNom || '',
+              })}
+            </DialogTitle>
+          </DialogHeader>
+          {viewerLoading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : viewerUrls.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+              {t('dashboard.manutention.detail.recuViewerEmpty')}
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                {viewerUrls.length > 1 && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={viewerIdx === 0}
+                      onClick={() => setViewerIdx((i) => i - 1)}
+                    >
+                      {t('dashboard.manutention.detail.recuViewerPrev')}
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      {viewerIdx + 1} / {viewerUrls.length}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={viewerIdx === viewerUrls.length - 1}
+                      onClick={() => setViewerIdx((i) => i + 1)}
+                    >
+                      {t('dashboard.manutention.detail.recuViewerNext')}
+                    </Button>
+                  </>
+                )}
+                <span className="text-sm text-muted-foreground truncate flex-1">
+                  {viewerUrls[viewerIdx]?.name}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    window.open(viewerUrls[viewerIdx]?.url, '_blank', 'noopener')
+                  }
+                >
+                  <Eye className="mr-1 h-3 w-3" />
+                  {t('dashboard.manutention.detail.recuViewerOpenTab')}
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden rounded border min-h-0">
+                {viewerUrls[viewerIdx]?.url &&
+                  (viewerUrls[viewerIdx].key.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <img
+                      src={viewerUrls[viewerIdx].url}
+                      alt={viewerUrls[viewerIdx].name}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <iframe
+                      src={viewerUrls[viewerIdx].url}
+                      title={viewerUrls[viewerIdx].name}
+                      className="w-full h-full border-0"
+                    />
+                  ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
