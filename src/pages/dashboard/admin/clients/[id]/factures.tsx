@@ -240,19 +240,17 @@ export default function AdminClientFactures() {
             <table>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left' }}>
-                    {t('dashboard.clients.factures.printColObjet')}
-                  </th>
-                  <th style={{ textAlign: 'right' }}>
-                    {t('dashboard.clients.factures.printColTotal')}
-                  </th>
+                  <th style={{ textAlign: 'left' }}>{t('dashboard.clients.factures.printColFichierId')}</th>
+                  <th style={{ textAlign: 'left' }}>{t('dashboard.clients.factures.printColFactureId')}</th>
+                  <th style={{ textAlign: 'left' }}>{t('dashboard.clients.factures.printColObjet')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('dashboard.clients.factures.printColTotal')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>
-                    {printFacture?.transitObjet || printFacture?.bl || '—'}
-                  </td>
+                  <td>{printFacture?.bl || '—'}</td>
+                  <td>{printFacture?.numero || '—'}</td>
+                  <td>{printFacture?.transitObjet || printFacture?.bl || '—'}</td>
                   <td className="total" style={{ textAlign: 'right' }}>
                     {fmt(printFacture?.totalFinal ?? 0)} MRU
                   </td>
@@ -262,22 +260,34 @@ export default function AdminClientFactures() {
           </div>
 
           {/* Preview */}
-          <div className="space-y-3 rounded-lg border border-slate-200 p-4 text-sm">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">
-                {t('dashboard.clients.factures.printColObjet')}
-              </p>
-              <p className="font-semibold text-base">
-                {printFacture?.transitObjet || printFacture?.bl || '—'}
-              </p>
+          <div className="space-y-0 rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t('dashboard.clients.factures.printColFichierId')}
+              </span>
+              <span className="font-mono font-semibold">{printFacture?.bl || '—'}</span>
             </div>
-            <div className="border-t border-slate-100 pt-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">
+            <div className="flex items-center justify-between px-4 py-2.5">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t('dashboard.clients.factures.printColFactureId')}
+              </span>
+              <span className="font-mono font-semibold">{printFacture?.numero || '—'}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-2.5">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t('dashboard.clients.factures.printColObjet')}
+              </span>
+              <span className="font-semibold max-w-[60%] text-right">
+                {printFacture?.transitObjet || printFacture?.bl || '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between bg-slate-50 px-4 py-3">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {t('dashboard.clients.factures.printColTotal')}
-              </p>
-              <p className="font-bold text-xl tabular-nums text-primary">
+              </span>
+              <span className="font-bold text-lg tabular-nums text-primary">
                 {fmt(printFacture?.totalFinal ?? 0)} MRU
-              </p>
+              </span>
             </div>
           </div>
 

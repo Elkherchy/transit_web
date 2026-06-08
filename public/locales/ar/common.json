@@ -661,6 +661,8 @@
         "statusPaiementPartiel": "دفع جزئي",
         "statusPayee": "مدفوعة",
         "printTitle": "معاينة قبل الطباعة",
+        "printColFichierId": "رقم الملف (BL)",
+        "printColFactureId": "رقم الفاتورة",
         "printColObjet": "موضوع الملف",
         "printColTotal": "المبلغ الإجمالي للملف"
       },
@@ -1332,7 +1334,23 @@
         "submitting": "جارٍ التحويل…",
         "errSelectPayeur": "اختر دافعًا",
         "errInvalidAmount": "المبلغ غير صالح",
-        "successAlim": "تم التمويل. الرصيد الجديد للدافع : {{value}} MRU"
+        "successAlim": "تم التمويل. الرصيد الجديد للدافع : {{value}} MRU",
+        "reassignTooltip": "إعادة تخصيص لدافع آخر",
+        "reassignTitle": "إعادة تخصيص التمويل",
+        "reassignCurrentPayeur": "الدافع الحالي",
+        "reassignMontant": "المبلغ",
+        "reassignNewPayeur": "الدافع الجديد",
+        "reassignSelectNewPayeur": "اختر الدافع الجديد",
+        "reassignSubmitting": "جارٍ إعادة التخصيص…",
+        "reassignSubmit": "إعادة التخصيص",
+        "reassignSuccess": "تمت إعادة تخصيص التمويل بنجاح.",
+        "retourSubmitting": "جارٍ الإرجاع…",
+        "retourSubmit": "إرجاع",
+        "retourSuccess": "تم إرجاع التمويل إلى الصندوق العام.",
+        "retourMontantLabel": "المبلغ المُرجَع",
+        "retourMontantHint": "اترك المبلغ كاملاً للإرجاع التام.",
+        "retourSectionTitle": "إرجاع إلى الصندوق العام",
+        "reassignSectionTitle": "إعادة تخصيص لدافع آخر"
       },
       "cloturer": {
         "elementCol": "العنصر",

@@ -127,37 +127,6 @@ function PwaInstallBanner() {
 
   return (
     <>
-      {/* env(safe-area-inset-bottom) keeps the banner above iOS Safari's home bar */}
-      <div
-        className="fixed start-4 end-4 z-[9999] mx-auto max-w-md flex items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-xl"
-        style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
-        role="alert"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icon-192.png" alt="SNTS" className="h-10 w-10 rounded-lg shrink-0" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold leading-tight">
-            {t("pwa.installTitle", { defaultValue: "Installer SNTS" })}
-          </p>
-          <p className="text-xs text-muted-foreground leading-tight">
-            {t("pwa.installSubtitle", { defaultValue: "Accès rapide depuis l'écran d'accueil" })}
-          </p>
-        </div>
-        <button
-          onClick={() => void install()}
-          className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 transition-colors"
-        >
-          {t("pwa.installBtn", { defaultValue: "Installer" })}
-        </button>
-        <button
-          onClick={() => setDismissed(true)}
-          className="shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Fermer"
-        >
-          ✕
-        </button>
-      </div>
-
       {showInstructions && (
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4"

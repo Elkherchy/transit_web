@@ -653,6 +653,8 @@
         "statusPaiementPartiel": "Paiement partiel",
         "statusPayee": "Payée",
         "printTitle": "Aperçu avant impression",
+        "printColFichierId": "N° Fichier (BL)",
+        "printColFactureId": "N° Facture",
         "printColObjet": "Objet du dossier",
         "printColTotal": "Montant total du dossier"
       },
@@ -1312,7 +1314,23 @@
         "submitting": "Transfert…",
         "errSelectPayeur": "Sélectionnez un payeur",
         "errInvalidAmount": "Montant invalide",
-        "successAlim": "Alimentation OK. Nouveau solde payeur : {{value}} MRU"
+        "successAlim": "Alimentation OK. Nouveau solde payeur : {{value}} MRU",
+        "reassignTooltip": "Réaffecter à un autre payeur",
+        "reassignTitle": "Réaffecter l'alimentation",
+        "reassignCurrentPayeur": "Payeur actuel",
+        "reassignMontant": "Montant",
+        "reassignNewPayeur": "Nouveau payeur",
+        "reassignSelectNewPayeur": "Sélectionner le nouveau payeur",
+        "reassignSubmitting": "Réaffectation…",
+        "reassignSubmit": "Réaffecter",
+        "reassignSuccess": "Alimentation réaffectée avec succès.",
+        "retourSubmitting": "Retour…",
+        "retourSubmit": "Retourner",
+        "retourSuccess": "Alimentation retournée à la caisse générale.",
+        "retourMontantLabel": "Montant à retourner",
+        "retourMontantHint": "Laissez le montant complet pour un retour total.",
+        "retourSectionTitle": "Retour caisse générale",
+        "reassignSectionTitle": "Réaffecter à un autre payeur"
       },
       "cloturer": {
         "elementCol": "Élément",
