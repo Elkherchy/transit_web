@@ -93,22 +93,32 @@ async function getClient(
         .lean(),
     ]);
 
-    // Populate transitObjet from Transit for each facture
+    // Populate transitObjet + bl (fallback) from Transit for each facture
     const transitIds = facturesRaw
       .map((f) => f.transitId)
       .filter(Boolean);
     const transits = transitIds.length
       ? await Transit.find({ _id: { $in: transitIds } })
-          .select('_id objet')
+          .select('_id objet bl')
           .lean()
       : [];
-    const transitObjMap = new Map(
-      transits.map((t) => [String(t._id), (t as { objet?: string }).objet || ''])
+    const transitMap = new Map(
+      transits.map((t) => [
+        String(t._id),
+        {
+          objet: (t as { objet?: string }).objet || '',
+          bl: (t as { bl?: string }).bl || '',
+        },
+      ])
     );
-    const factures = facturesRaw.map((f) => ({
-      ...f,
-      transitObjet: transitObjMap.get(String(f.transitId)) || undefined,
-    }));
+    const factures = facturesRaw.map((f) => {
+      const transit = transitMap.get(String(f.transitId));
+      return {
+        ...f,
+        bl: f.bl || transit?.bl || undefined,
+        transitObjet: transit?.objet || undefined,
+      };
+    });
 
     return res.status(200).json({
       success: true,

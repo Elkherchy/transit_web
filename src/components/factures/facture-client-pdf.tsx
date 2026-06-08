@@ -16,7 +16,6 @@ import { EMAMA_TRANSIT_AR, transitLogoPublicUrl } from '@/lib/transitLogo';
 
 const NAVY = '#003366';
 const FOOTER = '#1a1a1a';
-const BANKILY_LINE = 'Bankily,Masrivi : 36351198';
 const TABLE_TOTAL_BG = '#cce5f7';
 
 const TABLE_ROW_TARGET = 10;
@@ -372,9 +371,6 @@ function FactureClientPdfPage({
                 <Text style={styles.label}>Date :</Text> {model.issueDate || ''}
               </Text>
             </View>
-          </View>
-          <View style={styles.metaBankily}>
-            <Text style={styles.metaBankilyText}>{BANKILY_LINE}</Text>
           </View>
           <View style={{ flexDirection: 'row' }}>
             <View style={{ ...styles.metaCell, flexGrow: 2, flexBasis: 0, borderBottomWidth: 0 }}>

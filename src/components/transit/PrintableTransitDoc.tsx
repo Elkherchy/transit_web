@@ -8,7 +8,6 @@ import { EMAMA_TRANSIT_AR, transitLogoPublicUrl } from '@/lib/transitLogo';
 const NAVY = '#003366';
 const FOOTER_BODY = '#1a1a1a';
 /** Ligne paiement mobile (modèle papier facture client) */
-const BANKILY_LINE = 'Bankily,Masrivi : 36351198';
 /** Fond ligne total tableau (comme modèle papier) */
 const TABLE_TOTAL_BG = '#cce5f7';
 
@@ -122,15 +121,6 @@ export const PrintableTransitDoc = React.forwardRef<HTMLDivElement, PrintableTra
                       Date :
                     </span>{' '}
                     {model.issueDate || ''}
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="border-t border-black p-1.5 text-center text-[12px] print:text-[8pt]"
-                    style={{ color: NAVY }}
-                  >
-                    {BANKILY_LINE}
                   </td>
                 </tr>
                 <tr>

@@ -176,11 +176,6 @@ export function InvoiceTemplate({
               <td className="border-r border-black px-3 py-2 font-semibold text-center">
                 {facture.numero || facture._id?.slice(-5) || "—"}
               </td>
-              <td colSpan={2} className="border-r border-black px-3 py-2 text-center">
-                {facture.bankily && (
-                  <span className="font-semibold">Bankily, Masrivi : {facture.bankily}</span>
-                )}
-              </td>
               <td className="border-r border-black px-3 py-2 font-semibold bg-gray-50">
                 Fiche N° :
               </td>
@@ -446,9 +441,6 @@ export function InvoiceSimple({
         </div>
         <div className="border-r border-t border-black p-2">
           <span className="font-semibold">Facture N°:</span> {facture.numero || "—"}
-        </div>
-        <div className="border-r border-t border-black p-2">
-          {facture.bankily && <span>Bankily: {facture.bankily}</span>}
         </div>
         <div className="border-t border-black p-2">
           <span className="font-semibold">Fiche N°:</span> {facture.ficheNumber || "—"}
