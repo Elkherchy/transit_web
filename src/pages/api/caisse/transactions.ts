@@ -312,6 +312,10 @@ async function createTransaction(
       userId: u.userId,
     });
 
+    // Sync stored solde on the caisse document
+    const delta = type === TransactionType.CREDIT ? montant : -montant;
+    await Caisse.findByIdAndUpdate(caisseDoc._id, { $inc: { solde: delta } });
+
     if (caisseDoc.kind === CaisseKind.USER) {
       await ensureDefaultGeneralCaisse();
       const gen = await Caisse.findOne({ isDefaultGeneral: true, actif: true });
@@ -331,6 +335,7 @@ async function createTransaction(
           mirrorSourceId: primary._id,
           sourcePaiementId: primary.sourcePaiementId,
         });
+        await Caisse.findByIdAndUpdate(gen._id, { $inc: { solde: delta } });
       }
     }
 

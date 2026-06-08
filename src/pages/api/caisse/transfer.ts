@@ -10,7 +10,7 @@ import {
 } from '@/types';
 import { ClientStatus } from '@/models/Client';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
-import { ensureClientCaisse } from '@/lib/caisse';
+import { ensureClientCaisse, getSoldeMapForCaisseIds } from '@/lib/caisse';
 
 interface TransferResult {
   sourceId: string;
@@ -203,7 +203,13 @@ async function handler(
     // négatif (créance / dette enregistrée sans contrainte de provision).
     const involvesClient = Boolean(sourceClientId || destinationClientId);
     if (!involvesClient) {
-      const currentSourceSolde = Number(source.solde) || 0;
+      // Use computed solde from transactions (authoritative) rather than
+      // the stored field which may lag if created outside this API.
+      const soldeMap = await getSoldeMapForCaisseIds([
+        source._id as mongoose.Types.ObjectId,
+      ]);
+      const currentSourceSolde =
+        soldeMap.get(String(source._id)) ?? Number(source.solde) ?? 0;
       if (currentSourceSolde < m) {
         return res.status(400).json({
           success: false,
