@@ -259,20 +259,20 @@ export const PrintableTransitDoc = React.forwardRef<HTMLDivElement, PrintableTra
           {/* Pied de page : ancré en bas de la feuille (flex + min-h sur .transit-print-sheet à l’impression) */}
           <div className="transit-print-footer mt-auto flex shrink-0 flex-col items-center gap-0.5 pb-6 text-center text-[10px] font-medium leading-[1.35] print:pb-2 print:text-[7.5pt] print:leading-[1.35]">
             <div className="flex flex-wrap items-center justify-center font-medium" style={{ color: NAVY }}>
-              <span>Tél.(الهاتف): +222 45 29 57 23 --- mobile : 36 35 11 98 +</span>
+              <span>Tél.(الهاتف): +222 46 91 19 19 --- mobile : 36 31 10 37 +</span>
             </div>
             <div
               className="flex flex-wrap justify-center underline decoration-1 underline-offset-1 [text-underline-offset:2px]"
               style={{ color: NAVY }}
             >
-              <span>E-mail (البريد الإلكتروني) : contact@ets-emama.com -</span>
-              <span>site web (الموقع) : www.groupe-emama.com</span>
+              <span>E-mail (البريد الإلكتروني) : contact@snts.mr -</span>
+              <span>site web (الموقع) : www.snts.mr</span>
             </div>
             <div className="pt-0.5" style={{ color: FOOTER_BODY }}>
-              Siège : Avenue Elmoukhtar Ould DADAH, en face de la Banque mondiale
+              Siège : Avenue Elmoukhtar Ould DADAH, en face de la mosquée de Quba
             </div>
             <div className="pt-0.5 font-medium" dir="rtl" style={{ color: FOOTER_BODY }}>
-              المقر: شارع المختار ولد داداه، قبالة البنك الدولي
+              المقر: شارع المختار ولد داداه، قبالة مسجد قباء
             </div>
             <div className="pt-0.5 font-bold tracking-wide" style={{ color: FOOTER_BODY }}>
               Nouakchott-Mauritanie === نواكشوط-موريتانيا

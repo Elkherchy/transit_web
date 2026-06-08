@@ -1027,14 +1027,13 @@ export default function AdminFactureManutentionDetail() {
             </div>
           )}
 
-          {/* Désignations du transit lié — masquées pour AGENT_TRANSIT */}
-          {!isAgentOnly && (
+          {/* Désignations du transit lié — lecture seule pour AGENT_TRANSIT */}
           <div className="rounded-lg bg-white p-4 max-md:rounded-none max-md:bg-transparent max-md:px-4 max-md:py-3 border shadow-sm space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <CardHeader className="text-xl font-bold text-primary p-0">
                 {t('dashboard.manutention.detail.designationsTitle')}
               </CardHeader>
-              {editMode && (
+              {editMode && !isAgentOnly && (
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -1082,7 +1081,7 @@ export default function AdminFactureManutentionDetail() {
               <p className="text-sm text-muted-foreground">
                 {t('dashboard.manutention.detail.noTransit')}
               </p>
-            ) : editMode ? (
+            ) : editMode && !isAgentOnly ? (
               <div className="space-y-2">
                 {editDesignations.length === 0 ? (
                   <p className="rounded border border-dashed bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
@@ -1244,7 +1243,6 @@ export default function AdminFactureManutentionDetail() {
               </>
             )}
           </div>
-          )}
         </div>
 
         {/* Receipt viewer dialog */}

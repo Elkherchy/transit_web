@@ -452,15 +452,15 @@ function FactureClientPdfPage({
       <View style={styles.footerWrap} fixed>
         <View style={styles.footer}>
           <Text style={styles.footerBlue}>
-            Tél. (الهاتف) : +222 45 29 57 23 --- mobile : 36 35 11 98 +
+            Tél. (الهاتف) : +222 46 91 19 19 --- mobile : 36 31 10 37 +
           </Text>
           <Text style={{ ...styles.footerBlue, textDecoration: 'underline' }}>
-            E-mail (البريد الالكتروني) : contact@ets-emama.com - site web (الموقع) : www.groupe-emama.com
+            E-mail (البريد الالكتروني) : contact@snts.mr - site web (الموقع) : www.snts.mr
           </Text>
           <Text style={styles.footerLine}>
-            Siège : Avenue Elmoukhtar Ould DADAH, en face de la Banque mondiale
+            Siège : Avenue Elmoukhtar Ould DADAH, en face de la mosquée de Quba
           </Text>
-          <Text style={styles.footerLine}>المقر: شارع المختار ولد داداه، قبالة البنك الدولي</Text>
+          <Text style={styles.footerLine}>المقر: شارع المختار ولد داداه، قبالة مسجد قباء</Text>
           <Text style={{ ...styles.footerLine, fontWeight: 'bold' }}>
             Nouakchott-Mauritanie === نواكشوط موريتانيا
           </Text>
