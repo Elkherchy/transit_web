@@ -40,6 +40,7 @@ import {
   Camera,
   FileUp,
   X as XIcon,
+  Pencil,
 } from 'lucide-react';
 
 function StatusBadge({ s }: { s?: DesignationStatus }) {
@@ -102,6 +103,12 @@ export default function PayeurTransitDetail() {
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
   const [payDialog, setPayDialog] = useState<PayDialogState | null>(null);
+
+  // Edit-montant dialog state
+  const [editDialog, setEditDialog] = useState<IDesignation | null>(null);
+  const [editMontant, setEditMontant] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+  const [submittingEdit, setSubmittingEdit] = useState(false);
   /** Liste de tous les reçus en attente d'upload. Le bouton « +Ajouter »
    *  pousse un nouveau File ici ; chaque entrée a son bouton supprimer. */
   const [recuFiles, setRecuFiles] = useState<File[]>([]);
@@ -225,6 +232,7 @@ export default function PayeurTransitDetail() {
           const canReserve = d.statutDesignation === DesignationStatus.LIBRE;
           const canPay = isMine && d.statutDesignation === DesignationStatus.RESERVEE;
           const canRepay = isMine && d.statutDesignation === DesignationStatus.REJETEE;
+          const canEditMontant = isMine && d.statutDesignation === DesignationStatus.PAYEE;
           const k = `${transit._id}:${d._id}`;
           if (canReserve) {
             return (
@@ -259,6 +267,22 @@ export default function PayeurTransitDetail() {
                 <Upload className="me-1.5 h-4 w-4" />
                 {t('dashboard.payeur.btnRepayer')}
               </Button>
+            );
+          }
+          if (canEditMontant) {
+            return (
+              <div className="flex items-center justify-end gap-1.5">
+                <span className="text-xs text-muted-foreground">{t('dashboard.payeur.vous')}</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => openEdit(d)}
+                >
+                  <Pencil className="me-1 h-3 w-3" />
+                  {t('dashboard.payeur.btnModifierMontant')}
+                </Button>
+              </div>
             );
           }
           if (isMine) {
@@ -298,6 +322,44 @@ export default function PayeurTransitDetail() {
     setMontant(initial > 0 ? String(initial) : '');
     setRecuFiles([]);
     setPayError(null);
+  };
+
+  const openEdit = (d: IDesignation) => {
+    setEditDialog(d);
+    setEditMontant(String(Number(d.montant) || ''));
+    setEditError(null);
+  };
+
+  const submitEditMontant = async () => {
+    if (!editDialog || !transit) return;
+    const m = parseFloat(editMontant.replace(',', '.'));
+    if (!Number.isFinite(m) || m <= 0) {
+      setEditError(t('dashboard.payeur.errMontantPositif'));
+      return;
+    }
+    setSubmittingEdit(true);
+    setEditError(null);
+    try {
+      const r = await fetch(
+        `/api/transit/${transit._id}/designation/${editDialog._id}/modifier-montant`,
+        {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ montant: m }),
+        }
+      ).then((x) => x.json());
+      if (r.success) {
+        setEditDialog(null);
+        void reload();
+      } else {
+        setEditError(r.error || t('common.errorNetwork'));
+      }
+    } catch {
+      setEditError(t('common.errorNetwork'));
+    } finally {
+      setSubmittingEdit(false);
+    }
   };
 
   const submitPay = async () => {
@@ -673,6 +735,48 @@ export default function PayeurTransitDetail() {
                   : recuFiles.length > 1
                     ? `${t('dashboard.payeur.confirmerPaiement')} (${recuFiles.length} reçus)`
                     : t('dashboard.payeur.confirmerPaiement')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* Edit-montant dialog */}
+        <Dialog open={!!editDialog} onOpenChange={(o) => !o && setEditDialog(null)}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{t('dashboard.payeur.editMontantTitle')}</DialogTitle>
+              <DialogDescription>
+                {editDialog?.nom}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              {editError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{editError}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-1.5">
+                <Label htmlFor="editM">{t('dashboard.payeur.montantPaye')}</Label>
+                <Input
+                  id="editM"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={editMontant}
+                  onChange={(e) => setEditMontant(e.target.value)}
+                  placeholder={t('dashboard.payeur.saisissezMontant')}
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setEditDialog(null)}
+                disabled={submittingEdit}
+              >
+                {t('actions.cancel')}
+              </Button>
+              <Button onClick={() => void submitEditMontant()} disabled={submittingEdit}>
+                {submittingEdit ? t('dashboard.payeur.envoi') : t('actions.save')}
               </Button>
             </DialogFooter>
           </DialogContent>

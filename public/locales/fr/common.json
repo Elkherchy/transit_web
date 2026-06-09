@@ -1690,7 +1690,9 @@
       "envoi": "Envoi…",
       "confirmerPaiement": "Confirmer paiement",
       "headerListe": "Liste",
-      "btnRepayer": "Repayer"
+      "btnRepayer": "Repayer",
+      "btnModifierMontant": "Modifier",
+      "editMontantTitle": "Modifier le montant"
     },
     "agentTransit": {
       "title": "Dashboard agent transit",

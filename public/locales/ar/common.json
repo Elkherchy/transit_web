@@ -1718,7 +1718,9 @@
       "envoi": "جارٍ الإرسال…",
       "confirmerPaiement": "تأكيد الدفع",
       "headerListe": "القائمة",
-      "btnRepayer": "إعادة الدفع"
+      "btnRepayer": "إعادة الدفع",
+      "btnModifierMontant": "تعديل",
+      "editMontantTitle": "تعديل المبلغ"
     },
     "agentTransit": {
       "title": "لوحة وكيل العبور",
