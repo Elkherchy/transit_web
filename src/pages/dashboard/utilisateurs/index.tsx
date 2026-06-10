@@ -46,7 +46,7 @@ import {
   IUserResponse,
   UserRole,
 } from '@/types';
-import { Plus, Eye, Pencil, Trash2, User, MoreHorizontal } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2, User, MoreHorizontal, MinusCircle } from 'lucide-react';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -89,6 +89,13 @@ export default function UtilisateursPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<IUserResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<IUserResponse | null>(null);
+
+  // Debit dialog state
+  const [debitTarget, setDebitTarget] = useState<IUserResponse | null>(null);
+  const [debitMontant, setDebitMontant] = useState('');
+  const [debitDescription, setDebitDescription] = useState('');
+  const [debitError, setDebitError] = useState<string | null>(null);
+  const [submittingDebit, setSubmittingDebit] = useState(false);
 
   const [formNom, setFormNom] = useState('');
   const [formEmail, setFormEmail] = useState('');
@@ -299,6 +306,47 @@ export default function UtilisateursPage() {
     }
   };
 
+  const openDebit = useCallback((u: IUserResponse) => {
+    setDebitTarget(u);
+    setDebitMontant('');
+    setDebitDescription('');
+    setDebitError(null);
+  }, []);
+
+  const submitDebit = async () => {
+    if (!debitTarget) return;
+    const m = parseFloat(debitMontant.replace(',', '.'));
+    if (!Number.isFinite(m) || m <= 0) {
+      setDebitError(t('dashboard.utilisateurs.debit.errMontant'));
+      return;
+    }
+    if (!debitDescription.trim()) {
+      setDebitError(t('dashboard.utilisateurs.debit.errDescription'));
+      return;
+    }
+    setSubmittingDebit(true);
+    setDebitError(null);
+    try {
+      const r = await fetch(`/api/admin/payeurs/${debitTarget._id}/debit`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ montant: m, description: debitDescription.trim() }),
+      });
+      const json = await r.json();
+      if (json.success) {
+        setDebitTarget(null);
+        void fetchPayeurCaisses();
+      } else {
+        setDebitError(json.error || t('common.errorNetwork'));
+      }
+    } catch {
+      setDebitError(t('common.errorNetwork'));
+    } finally {
+      setSubmittingDebit(false);
+    }
+  };
+
   // Render mobile cards
   const renderMobileCards = () => (
     <div className="space-y-3">
@@ -363,6 +411,12 @@ export default function UtilisateursPage() {
                     <Pencil className="mr-2 h-4 w-4" />
                     {t('actions.edit')}
                   </DropdownMenuItem>
+                  {userRow.role === UserRole.USER_PAYEUR && (
+                    <DropdownMenuItem onClick={() => openDebit(userRow)} className="text-amber-600 focus:text-amber-700">
+                      <MinusCircle className="mr-2 h-4 w-4" />
+                      {t('dashboard.utilisateurs.debit.btnDebit')}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onClick={() => requestDeleteUser(userRow)}
                     className="text-destructive focus:text-destructive"
@@ -456,6 +510,12 @@ export default function UtilisateursPage() {
                           <Pencil className="mr-2 h-4 w-4" />
                           {t('actions.edit')}
                         </DropdownMenuItem>
+                        {userRow.role === UserRole.USER_PAYEUR && (
+                          <DropdownMenuItem onClick={() => openDebit(userRow)} className="text-amber-600 focus:text-amber-700">
+                            <MinusCircle className="mr-2 h-4 w-4" />
+                            {t('dashboard.utilisateurs.debit.btnDebit')}
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           onClick={() => requestDeleteUser(userRow)}
                           className="text-destructive focus:text-destructive"
@@ -773,6 +833,70 @@ export default function UtilisateursPage() {
             </Button>
             <Button variant="destructive" onClick={() => void confirmDelete()} className="w-full sm:w-auto">
               {t('actions.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Debit dialog */}
+      <Dialog open={!!debitTarget} onOpenChange={(o) => !o && setDebitTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MinusCircle className="h-4 w-4 text-amber-600" />
+              {t('dashboard.utilisateurs.debit.title')}
+            </DialogTitle>
+          </DialogHeader>
+          {debitTarget && (
+            <p className="text-sm text-muted-foreground -mt-1">
+              {debitTarget.nom}
+              {(() => {
+                const c = payeurCaisseMap.get(String(debitTarget._id));
+                return c ? (
+                  <span className="ml-2 font-semibold tabular-nums text-foreground">
+                    {Number(c.solde ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MRU
+                  </span>
+                ) : null;
+              })()}
+            </p>
+          )}
+          <div className="space-y-3 py-1">
+            {debitError && (
+              <Alert variant="destructive">
+                <AlertDescription>{debitError}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="debitM">{t('dashboard.utilisateurs.debit.labelMontant')}</Label>
+              <Input
+                id="debitM"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={debitMontant}
+                onChange={(e) => setDebitMontant(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="debitDesc">{t('dashboard.utilisateurs.debit.labelDescription')}</Label>
+              <Input
+                id="debitDesc"
+                value={debitDescription}
+                onChange={(e) => setDebitDescription(e.target.value)}
+                placeholder={t('dashboard.utilisateurs.debit.descPlaceholder')}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDebitTarget(null)} disabled={submittingDebit}>
+              {t('actions.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void submitDebit()}
+              disabled={submittingDebit}
+            >
+              {submittingDebit ? '…' : t('dashboard.utilisateurs.debit.btnConfirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

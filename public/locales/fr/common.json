@@ -579,6 +579,16 @@
       },
       "table": {
         "empty": "Aucun utilisateur"
+      },
+      "debit": {
+        "btnDebit": "Débiter compte",
+        "title": "Débit manuel — payeur",
+        "labelMontant": "Montant à débiter (MRU)",
+        "labelDescription": "Motif du débit",
+        "descPlaceholder": "Ex : correction de solde, remboursement…",
+        "btnConfirm": "Confirmer le débit",
+        "errMontant": "Montant invalide",
+        "errDescription": "Le motif est obligatoire"
       }
     },
     "clients": {

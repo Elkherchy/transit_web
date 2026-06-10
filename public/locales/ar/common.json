@@ -583,6 +583,16 @@
       },
       "table": {
         "empty": "لا يوجد مستخدمون"
+      },
+      "debit": {
+        "btnDebit": "خصم الحساب",
+        "title": "خصم يدوي — دافع",
+        "labelMontant": "المبلغ المراد خصمه (MRU)",
+        "labelDescription": "سبب الخصم",
+        "descPlaceholder": "مثال: تصحيح الرصيد، استرداد…",
+        "btnConfirm": "تأكيد الخصم",
+        "errMontant": "مبلغ غير صحيح",
+        "errDescription": "السبب إلزامي"
       }
     },
     "clients": {
