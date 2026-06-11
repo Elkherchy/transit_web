@@ -293,7 +293,13 @@
         "labelDate": "التاريخ",
         "labelJustificatif": "صورة الإثبات (شيك، إيصال، …)",
         "btnSubmit": "تحويل"
-      }
+      },
+      "btnSetSolde": "تعديل الرصيد",
+      "setSoldeDialogTitle": "تعديل الرصيد",
+      "setSoldeNewLabel": "الرصيد الجديد",
+      "setSoldeDescLabel": "الوصف",
+      "setSoldeDescPlaceholder": "تصحيح يدوي للرصيد",
+      "setSoldeBtn": "تطبيق"
     },
     "caisses": {
       "title": "الحسابات",
@@ -593,6 +599,16 @@
         "btnConfirm": "تأكيد الخصم",
         "errMontant": "مبلغ غير صحيح",
         "errDescription": "السبب إلزامي"
+      },
+      "setSolde": {
+        "btn": "تعديل الرصيد",
+        "title": "تعديل الرصيد — دافع",
+        "actuel": "الرصيد الحالي:",
+        "labelNouveauSolde": "الرصيد الجديد (MRU)",
+        "labelMotif": "السبب (اختياري)",
+        "motifPlaceholder": "مثال: تصحيح أولي، تسوية…",
+        "btnConfirm": "تطبيق",
+        "errSolde": "رصيد غير صحيح"
       }
     },
     "clients": {

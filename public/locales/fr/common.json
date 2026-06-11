@@ -289,7 +289,13 @@
         "labelDate": "Date",
         "labelJustificatif": "Image justificative (chèque, reçu, …)",
         "btnSubmit": "Transférer"
-      }
+      },
+      "btnSetSolde": "Modifier solde",
+      "setSoldeDialogTitle": "Modifier le solde",
+      "setSoldeNewLabel": "Nouveau solde",
+      "setSoldeDescLabel": "Description",
+      "setSoldeDescPlaceholder": "Correction manuelle de solde",
+      "setSoldeBtn": "Appliquer"
     },
     "caisses": {
       "title": "Comptes",
@@ -589,6 +595,16 @@
         "btnConfirm": "Confirmer le débit",
         "errMontant": "Montant invalide",
         "errDescription": "Le motif est obligatoire"
+      },
+      "setSolde": {
+        "btn": "Modifier solde",
+        "title": "Modifier le solde — payeur",
+        "actuel": "Solde actuel :",
+        "labelNouveauSolde": "Nouveau solde (MRU)",
+        "labelMotif": "Motif (optionnel)",
+        "motifPlaceholder": "Ex : correction initiale, ajustement…",
+        "btnConfirm": "Appliquer",
+        "errSolde": "Solde invalide"
       }
     },
     "clients": {

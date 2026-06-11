@@ -57,6 +57,7 @@ import {
   XCircle,
   Clock,
   Loader2,
+  SlidersHorizontal,
 } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 
@@ -116,6 +117,55 @@ export default function AdminScopedCaisseView({
   }
   const [pending, setPending] = useState<MouvementPendingRow[]>([]);
   const [actingPendingId, setActingPendingId] = useState<string | null>(null);
+
+  // Dialog : modifier le solde d'une caisse utilisateur (correction directe).
+  const [corrRow, setCorrRow] = useState<ICaisseListItem | null>(null);
+  const [corrSolde, setCorrSolde] = useState('');
+  const [corrDesc, setCorrDesc] = useState('');
+  const [corrError, setCorrError] = useState<string | null>(null);
+  const [submittingCorr, setSubmittingCorr] = useState(false);
+
+  const openSetSolde = (row: ICaisseListItem) => {
+    setCorrRow(row);
+    setCorrSolde(String(Number(row.solde) || 0));
+    setCorrDesc('Correction manuelle de solde');
+    setCorrError(null);
+  };
+
+  const submitSetSolde = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!corrRow) return;
+    setCorrError(null);
+    const newSolde = parseFloat(corrSolde.replace(',', '.'));
+    if (!Number.isFinite(newSolde)) {
+      setCorrError('Solde invalide');
+      return;
+    }
+    setSubmittingCorr(true);
+    try {
+      const r = await fetch(`/api/admin/caisses/${corrRow._id}/set-solde`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newSolde, description: corrDesc.trim() || undefined }),
+      });
+      const data = await r.json();
+      if (data.success) {
+        const savedSolde: number = typeof data.data?.solde === 'number' ? data.data.solde : newSolde;
+        setSuccess(`Solde mis à jour : ${savedSolde.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MRU`);
+        // Update immediately in local state (bypass 304 cache on reload)
+        setRows((prev) => prev.map((row) => row._id === corrRow!._id ? { ...row, solde: savedSolde } : row));
+        setCorrRow(null);
+        void reload();
+      } else {
+        setCorrError(data.error || t('common.error'));
+      }
+    } catch {
+      setCorrError(t('common.errorNetwork'));
+    } finally {
+      setSubmittingCorr(false);
+    }
+  };
 
   // Dialog création nouveau compte bancaire (BMP, BMI, BMCI, …)
   const [createOpen, setCreateOpen] = useState(false);
@@ -377,7 +427,7 @@ export default function AdminScopedCaisseView({
       // on passe quand même le query param pour le super-ADMIN qui consulte
       // cette page.
       const r = await fetch(
-        `/api/caisse/caisses?includeUser=true&caisseType=${caisseType}`,
+        `/api/caisse/caisses?includeUser=true&caisseType=${caisseType}&_t=${Date.now()}`,
         { credentials: 'include' }
       );
       const data = await r.json();
@@ -604,12 +654,23 @@ export default function AdminScopedCaisseView({
         meta: { align: 'right' } satisfies DataTableColumnMeta,
         header: '',
         cell: ({ row }) => (
-          <Button asChild size="sm" variant="outline">
-            <Link href={`${detailBase}/${row.original._id}`}>
-              <Eye className="mr-1.5 h-3.5 w-3.5 rtl:rotate-180" />
-              {t('actions.view')}
-            </Link>
-          </Button>
+          <div className="flex gap-1.5 justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-2 text-xs"
+              onClick={() => openSetSolde(row.original)}
+            >
+              <SlidersHorizontal className="mr-1 h-3.5 w-3.5" />
+              {t('dashboard.adminScopedCaisse.btnSetSolde', 'Modifier solde')}
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href={`${detailBase}/${row.original._id}`}>
+                <Eye className="mr-1.5 h-3.5 w-3.5 rtl:rotate-180" />
+                {t('actions.view')}
+              </Link>
+            </Button>
+          </div>
         ),
       },
     ],
@@ -700,6 +761,14 @@ export default function AdminScopedCaisseView({
                   >
                     <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" />
                     {t('dashboard.adminScopedCaisse.btnTransfer')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openSetSolde(general)}
+                  >
+                    <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+                    {t('dashboard.adminScopedCaisse.btnSetSolde', 'Modifier solde')}
                   </Button>
                   <Button asChild size="sm" variant="outline">
                     <Link href={`${detailBase}/${general._id}`}>
@@ -978,12 +1047,23 @@ export default function AdminScopedCaisseView({
                           },
                         ]}
                         actions={
-                          <Button asChild size="sm" variant="outline">
-                            <Link href={`${detailBase}/${c._id}`}>
-                              <Eye className="mr-1.5 h-3.5 w-3.5 rtl:rotate-180" />
-                              {t('actions.view')}
-                            </Link>
-                          </Button>
+                          <div className="flex gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-2 text-xs"
+                              onClick={() => openSetSolde(c)}
+                            >
+                              <SlidersHorizontal className="mr-1 h-3.5 w-3.5" />
+                              {t('dashboard.adminScopedCaisse.btnSetSolde', 'Modifier solde')}
+                            </Button>
+                            <Button asChild size="sm" variant="outline">
+                              <Link href={`${detailBase}/${c._id}`}>
+                                <Eye className="mr-1.5 h-3.5 w-3.5 rtl:rotate-180" />
+                                {t('actions.view')}
+                              </Link>
+                            </Button>
+                          </div>
                         }
                       />
                     ))}
@@ -1159,6 +1239,85 @@ export default function AdminScopedCaisseView({
                 {soldeSubmitting
                   ? t('actions.loading')
                   : t('dashboard.adminScopedCaisse.addSoldeBtn')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog : modifier le solde d'une caisse utilisateur (correction directe) */}
+      <Dialog
+        open={!!corrRow}
+        onOpenChange={(o) => {
+          if (!o) setCorrRow(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {t('dashboard.adminScopedCaisse.setSoldeDialogTitle', 'Modifier le solde')}
+            </DialogTitle>
+          </DialogHeader>
+          {corrError && (
+            <Alert variant="destructive">
+              <AlertDescription>{corrError}</AlertDescription>
+            </Alert>
+          )}
+          <form onSubmit={submitSetSolde} className="space-y-3">
+            {corrRow && (
+              <div className="rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">
+                <div className="font-medium text-foreground">{corrRow.nom}</div>
+                <div>
+                  {t('dashboard.caisses.colSolde')} :{' '}
+                  <span className="tabular-nums font-medium">
+                    {fmt(Number(corrRow.solde) || 0)} {t('common.mru')}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="grid gap-2">
+              <Label htmlFor="set-solde-value">
+                {t('dashboard.adminScopedCaisse.setSoldeNewLabel', 'Nouveau solde')} ({t('common.mru')}) *
+              </Label>
+              <Input
+                id="set-solde-value"
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                value={corrSolde}
+                onChange={(e) => setCorrSolde(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="set-solde-desc">
+                {t('dashboard.adminScopedCaisse.setSoldeDescLabel', 'Description')}
+              </Label>
+              <Input
+                id="set-solde-desc"
+                value={corrDesc}
+                onChange={(e) => setCorrDesc(e.target.value)}
+                placeholder={t('dashboard.adminScopedCaisse.setSoldeDescPlaceholder', 'Correction manuelle de solde')}
+              />
+            </div>
+            <DialogFooter className="flex-col gap-2 pt-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={submittingCorr}
+                onClick={() => setCorrRow(null)}
+                className="w-full sm:w-auto"
+              >
+                {t('actions.cancel')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={submittingCorr}
+                className="w-full sm:w-auto"
+              >
+                {submittingCorr
+                  ? t('actions.loading')
+                  : t('dashboard.adminScopedCaisse.setSoldeBtn', 'Appliquer')}
               </Button>
             </DialogFooter>
           </form>

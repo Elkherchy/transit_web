@@ -119,24 +119,19 @@ export default function CaissierOperationsAValiderPage() {
     setLoading(true);
     setError(null);
     try {
+      const ts = Date.now();
       const [payeursRes, validations] = await Promise.all([
-        fetch('/api/journee/payeur-paiements', { credentials: 'include' }).then(
+        fetch(`/api/journee/payeur-paiements?_t=${ts}`, { credentials: 'include' }).then(
           (x) => x.json()
         ),
         Promise.all([
-          fetch('/api/operations-validation?statut=EN_ATTENTE_AGENT&opType=PAYEUR_PAIEMENT&limit=500', {
+          fetch(`/api/operations-validation?statut=EN_ATTENTE_AGENT&opType=PAYEUR_PAIEMENT&limit=500&_t=${ts}`, {
             credentials: 'include',
           }).then((x) => x.json()),
-          fetch('/api/operations-validation?statut=EN_ATTENTE_ADMIN&opType=PAYEUR_PAIEMENT&limit=500', {
+          fetch(`/api/operations-validation?statut=EN_ATTENTE_ADMIN&opType=PAYEUR_PAIEMENT&limit=500&_t=${ts}`, {
             credentials: 'include',
           }).then((x) => x.json()),
-          fetch('/api/operations-validation?statut=VALIDEE_ADMIN&opType=PAYEUR_PAIEMENT&limit=500', {
-            credentials: 'include',
-          }).then((x) => x.json()),
-          fetch('/api/operations-validation?statut=VALIDEE_AGENT&opType=PAYEUR_PAIEMENT&limit=500', {
-            credentials: 'include',
-          }).then((x) => x.json()),
-          fetch('/api/operations-validation?statut=REJETEE&opType=PAYEUR_PAIEMENT&limit=500', {
+          fetch(`/api/operations-validation?statut=REJETEE&opType=PAYEUR_PAIEMENT&limit=500&_t=${ts}`, {
             credentials: 'include',
           }).then((x) => x.json()),
         ]),
@@ -280,10 +275,8 @@ export default function CaissierOperationsAValiderPage() {
       const k = opKey(row);
       const st = sentMap.get(k);
       if (!st) p.push(row);
-      // En cours dans la chaîne agent/admin : agent en attente OU admin en attente.
       else if (st === 'EN_ATTENTE_AGENT' || st === 'EN_ATTENTE_ADMIN') s.push(row);
-      // Validation finale (admin) — legacy VALIDEE_AGENT inclus pour compat.
-      else if (st === 'VALIDEE_ADMIN' || st === 'VALIDEE_AGENT') v.push(row);
+      // VALIDEE_ADMIN / VALIDEE_AGENT → opération clôturée, ne plus afficher
       else if (st === 'REJETEE') r.push(row);
     }
     return {
@@ -537,16 +530,6 @@ export default function CaissierOperationsAValiderPage() {
               </Badge>,
               sentToAgent,
               { tone: 'sent' }
-            )}
-          {agentValidated.length > 0 &&
-            renderTable(
-              t('dashboard.caissier.opsValider.sectionValidated'),
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
-              <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
-                {agentValidated.length}
-              </Badge>,
-              agentValidated,
-              { tone: 'valid' }
             )}
           {rejected.length > 0 &&
             renderTable(

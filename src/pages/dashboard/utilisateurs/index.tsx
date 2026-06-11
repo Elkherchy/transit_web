@@ -46,7 +46,7 @@ import {
   IUserResponse,
   UserRole,
 } from '@/types';
-import { Plus, Eye, Pencil, Trash2, User, MoreHorizontal, MinusCircle } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2, User, MoreHorizontal, MinusCircle, SlidersHorizontal } from 'lucide-react';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -96,6 +96,13 @@ export default function UtilisateursPage() {
   const [debitDescription, setDebitDescription] = useState('');
   const [debitError, setDebitError] = useState<string | null>(null);
   const [submittingDebit, setSubmittingDebit] = useState(false);
+
+  // Set-solde dialog state
+  const [setSoldeTarget, setSetSoldeTarget] = useState<IUserResponse | null>(null);
+  const [setSoldeValue, setSetSoldeValue] = useState('');
+  const [setSoldeDescription, setSetSoldeDescription] = useState('');
+  const [setSoldeError, setSetSoldeError] = useState<string | null>(null);
+  const [submittingSetSolde, setSubmittingSetSolde] = useState(false);
 
   const [formNom, setFormNom] = useState('');
   const [formEmail, setFormEmail] = useState('');
@@ -347,6 +354,47 @@ export default function UtilisateursPage() {
     }
   };
 
+  const openSetSolde = useCallback((u: IUserResponse) => {
+    const c = payeurCaisseMap.get(String(u._id));
+    setSetSoldeTarget(u);
+    setSetSoldeValue(c ? String(Number(c.solde ?? 0).toFixed(2)) : '0');
+    setSetSoldeDescription('');
+    setSetSoldeError(null);
+  }, [payeurCaisseMap]);
+
+  const submitSetSolde = async () => {
+    if (!setSoldeTarget) return;
+    const v = parseFloat(setSoldeValue.replace(',', '.'));
+    if (!Number.isFinite(v)) {
+      setSetSoldeError(t('dashboard.utilisateurs.setSolde.errSolde'));
+      return;
+    }
+    setSubmittingSetSolde(true);
+    setSetSoldeError(null);
+    try {
+      const r = await fetch(`/api/admin/payeurs/${setSoldeTarget._id}/set-solde`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          newSolde: v,
+          description: setSoldeDescription.trim() || undefined,
+        }),
+      });
+      const json = await r.json();
+      if (json.success) {
+        setSetSoldeTarget(null);
+        void fetchPayeurCaisses();
+      } else {
+        setSetSoldeError(json.error || t('common.errorNetwork'));
+      }
+    } catch {
+      setSetSoldeError(t('common.errorNetwork'));
+    } finally {
+      setSubmittingSetSolde(false);
+    }
+  };
+
   // Render mobile cards
   const renderMobileCards = () => (
     <div className="space-y-3">
@@ -412,10 +460,16 @@ export default function UtilisateursPage() {
                     {t('actions.edit')}
                   </DropdownMenuItem>
                   {userRow.role === UserRole.USER_PAYEUR && (
-                    <DropdownMenuItem onClick={() => openDebit(userRow)} className="text-amber-600 focus:text-amber-700">
-                      <MinusCircle className="mr-2 h-4 w-4" />
-                      {t('dashboard.utilisateurs.debit.btnDebit')}
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem onClick={() => openDebit(userRow)} className="text-amber-600 focus:text-amber-700">
+                        <MinusCircle className="mr-2 h-4 w-4" />
+                        {t('dashboard.utilisateurs.debit.btnDebit')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openSetSolde(userRow)} className="text-blue-600 focus:text-blue-700">
+                        <SlidersHorizontal className="mr-2 h-4 w-4" />
+                        {t('dashboard.utilisateurs.setSolde.btn')}
+                      </DropdownMenuItem>
+                    </>
                   )}
                   <DropdownMenuItem
                     onClick={() => requestDeleteUser(userRow)}
@@ -511,10 +565,16 @@ export default function UtilisateursPage() {
                           {t('actions.edit')}
                         </DropdownMenuItem>
                         {userRow.role === UserRole.USER_PAYEUR && (
-                          <DropdownMenuItem onClick={() => openDebit(userRow)} className="text-amber-600 focus:text-amber-700">
-                            <MinusCircle className="mr-2 h-4 w-4" />
-                            {t('dashboard.utilisateurs.debit.btnDebit')}
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuItem onClick={() => openDebit(userRow)} className="text-amber-600 focus:text-amber-700">
+                              <MinusCircle className="mr-2 h-4 w-4" />
+                              {t('dashboard.utilisateurs.debit.btnDebit')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openSetSolde(userRow)} className="text-blue-600 focus:text-blue-700">
+                              <SlidersHorizontal className="mr-2 h-4 w-4" />
+                              {t('dashboard.utilisateurs.setSolde.btn')}
+                            </DropdownMenuItem>
+                          </>
                         )}
                         <DropdownMenuItem
                           onClick={() => requestDeleteUser(userRow)}
@@ -837,6 +897,67 @@ export default function UtilisateursPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Set-solde dialog */}
+      <Dialog open={!!setSoldeTarget} onOpenChange={(o) => !o && setSetSoldeTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-blue-600" />
+              {t('dashboard.utilisateurs.setSolde.title')}
+            </DialogTitle>
+          </DialogHeader>
+          {setSoldeTarget && (
+            <p className="text-sm text-muted-foreground -mt-1">
+              {setSoldeTarget.nom}
+              {(() => {
+                const c = payeurCaisseMap.get(String(setSoldeTarget._id));
+                return c ? (
+                  <span className="ml-2 font-semibold tabular-nums text-foreground">
+                    {t('dashboard.utilisateurs.setSolde.actuel')}{' '}
+                    {Number(c.solde ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} MRU
+                  </span>
+                ) : null;
+              })()}
+            </p>
+          )}
+          <div className="space-y-3 py-1">
+            {setSoldeError && (
+              <Alert variant="destructive">
+                <AlertDescription>{setSoldeError}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="setSoldeV">{t('dashboard.utilisateurs.setSolde.labelNouveauSolde')}</Label>
+              <Input
+                id="setSoldeV"
+                type="number"
+                step="0.01"
+                value={setSoldeValue}
+                onChange={(e) => setSetSoldeValue(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="setSoldeDesc">{t('dashboard.utilisateurs.setSolde.labelMotif')}</Label>
+              <Input
+                id="setSoldeDesc"
+                value={setSoldeDescription}
+                onChange={(e) => setSetSoldeDescription(e.target.value)}
+                placeholder={t('dashboard.utilisateurs.setSolde.motifPlaceholder')}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setSetSoldeTarget(null)} disabled={submittingSetSolde}>
+              {t('actions.cancel')}
+            </Button>
+            <Button onClick={() => void submitSetSolde()} disabled={submittingSetSolde}>
+              {submittingSetSolde ? '…' : t('dashboard.utilisateurs.setSolde.btnConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Debit dialog */}
       <Dialog open={!!debitTarget} onOpenChange={(o) => !o && setDebitTarget(null)}>
         <DialogContent className="sm:max-w-sm">
