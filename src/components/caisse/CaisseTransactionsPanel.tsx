@@ -121,7 +121,11 @@ export interface CaisseTransactionsPanelProps {
   hideBack?: boolean;
   /** Masquer le bloc titre/sous-titre (ex. page avec PageHeader) */
   hidePanelHeading?: boolean;
+  /** Pré-sélectionner un filtre de type (CREDIT | DEBIT | '' pour tout) */
+  initialTypeFilter?: TransactionType | '' | 'ALL';
 }
+
+const TYPE_ALL = 'ALL' as const;
 
 export default function CaisseTransactionsPanel({
   caisseId,
@@ -132,6 +136,7 @@ export default function CaisseTransactionsPanel({
   isPayeurOwnCaisse = false,
   hideBack = false,
   hidePanelHeading = false,
+  initialTypeFilter = '',
 }: CaisseTransactionsPanelProps) {
   const { data: session } = useSession();
   const { t } = useTranslation();
@@ -145,15 +150,19 @@ export default function CaisseTransactionsPanel({
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalMontant, setTotalMontant] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  // Filtre date — par défaut sur aujourd'hui pour ne montrer que les opérations du jour.
-  const [dateDebut, setDateDebut] = useState<string>(() => todayIso());
-  const [dateFin, setDateFin] = useState<string>(() => todayIso());
+  // Filtre date — par défaut sur aujourd'hui, sauf si un filtre de type est pré-sélectionné
+  // (dans ce cas on montre tout pour avoir le bon total).
+  const hasInitialType = Boolean(initialTypeFilter && initialTypeFilter !== TYPE_ALL);
+  const [dateDebut, setDateDebut] = useState<string>(() => hasInitialType ? '' : todayIso());
+  const [dateFin, setDateFin] = useState<string>(() => hasInitialType ? '' : todayIso());
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ITransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ITransaction | null>(null);
+  const [typeFilter, setTypeFilter] = useState<TransactionType | 'ALL'>(initialTypeFilter || TYPE_ALL);
   const [creditOnlyMode, setCreditOnlyMode] = useState(false);
   const [viewTarget, setViewTarget] = useState<ITransaction | null>(null);
   const [linkedTarget, setLinkedTarget] = useState<ITransaction | null>(null);
@@ -179,6 +188,7 @@ export default function CaisseTransactionsPanel({
         caisseId,
       });
       if (search.trim()) params.set('search', search.trim());
+      if (typeFilter !== TYPE_ALL) params.set('type', typeFilter);
       // Filtre date : on étend dateFin à 23:59:59 pour inclure toute la journée.
       if (dateDebut) {
         params.set('dateDebut', new Date(`${dateDebut}T00:00:00`).toISOString());
@@ -197,13 +207,14 @@ export default function CaisseTransactionsPanel({
       }
       setTransactions(json.data.data);
       setTotalPages(json.data.totalPages || 1);
+      setTotalMontant(typeof json.data.totalMontant === 'number' ? json.data.totalMontant : null);
     } catch {
       setError(t('common.errorNetwork'));
       setTransactions([]);
     } finally {
       setLoading(false);
     }
-  }, [caisseId, page, search, dateDebut, dateFin, t]);
+  }, [caisseId, page, search, dateDebut, dateFin, typeFilter, t]);
 
   useEffect(() => {
     void fetchTransactions();
@@ -443,7 +454,14 @@ export default function CaisseTransactionsPanel({
       <Card>
         <CardHeader className="space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <CardTitle>{t('components.caissePanel.operationsTitle')}</CardTitle>
+            <div className="flex items-center gap-3 flex-wrap">
+              <CardTitle>{t('components.caissePanel.operationsTitle')}</CardTitle>
+              {totalMontant !== null && (
+                <span className={`text-sm font-semibold tabular-nums px-2 py-0.5 rounded-md ${typeFilter === 'CREDIT' ? 'bg-green-50 text-green-700' : typeFilter === 'DEBIT' ? 'bg-red-50 text-red-700' : 'bg-muted text-muted-foreground'}`}>
+                  {t('components.caissePanel.total')} : {totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} {t('common.mru')}
+                </span>
+              )}
+            </div>
             <Button
               variant="outline"
               size="icon"
@@ -567,6 +585,26 @@ export default function CaisseTransactionsPanel({
                   {t('components.caissePanel.all')}
                 </Button>
               </div>
+            </div>
+
+            {/* Filtre type : Tous / Crédit / Débit */}
+            <div className="flex items-center gap-2">
+              <Select
+                value={typeFilter}
+                onValueChange={(v) => {
+                  setTypeFilter(v as TransactionType | 'ALL');
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TYPE_ALL}>{t('components.caissePanel.allTypes')}</SelectItem>
+                  <SelectItem value={TransactionType.CREDIT}>{t('components.caissePanel.typeCredit')}</SelectItem>
+                  <SelectItem value={TransactionType.DEBIT}>{t('components.caissePanel.typeDebit')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>

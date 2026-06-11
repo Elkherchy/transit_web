@@ -231,10 +231,16 @@ async function getTransactions(
       query.sourcePaiementId = sourcePaiementId;
     }
 
-    const [transactions, total] = await Promise.all([
+    const [transactions, total, sumResult] = await Promise.all([
       Transaction.find(query).sort({ date: -1 }).skip(skip).limit(limitNum).lean(),
       Transaction.countDocuments(query),
+      Transaction.aggregate<{ sum: number }>([
+        { $match: query },
+        { $group: { _id: null, sum: { $sum: '$montant' } } },
+      ]),
     ]);
+
+    const totalMontant = sumResult[0]?.sum ?? 0;
 
     return res.status(200).json({
       success: true,
@@ -250,6 +256,7 @@ async function getTransactions(
           );
         }),
         total,
+        totalMontant,
         page: pageNum,
         limit: limitNum,
         totalPages: Math.ceil(total / limitNum),

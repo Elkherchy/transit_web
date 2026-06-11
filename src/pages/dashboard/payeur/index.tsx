@@ -22,6 +22,8 @@ import {
   Wallet,
   ShoppingCart,
   Banknote,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 
 const fmt = (n: number) =>
@@ -146,6 +148,20 @@ export default function PayeurDashboard() {
               icon={<Wallet className="h-5 w-5" />}
               href="/dashboard/caisses/mine"
               accent="#16a34a"
+            />
+            <ActionCard
+              title={t('dashboard.payeur.credits')}
+              description={t('dashboard.payeur.creditsDesc')}
+              icon={<TrendingUp className="h-5 w-5" />}
+              href="/dashboard/caisses/mine?type=CREDIT"
+              accent="#16a34a"
+            />
+            <ActionCard
+              title={t('dashboard.payeur.debits')}
+              description={t('dashboard.payeur.debitsDesc')}
+              icon={<TrendingDown className="h-5 w-5" />}
+              href="/dashboard/caisses/mine?type=DEBIT"
+              accent="#dc2626"
             />
           </div>
         </div>

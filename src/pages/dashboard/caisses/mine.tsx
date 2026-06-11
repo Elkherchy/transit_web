@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 import CaisseTransactionsPanel from '@/components/caisse/CaisseTransactionsPanel';
-import { ICaisseListItem, UserRole } from '@/types';
+import { ICaisseListItem, TransactionType, UserRole } from '@/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PageHeader, PageContent, PageSkeleton } from '@/components/ui';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,6 +19,14 @@ export default function MonComptePayeurPage() {
 
   const [row, setRow] = useState<ICaisseListItem | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+
+  const typeQuery = router.query.type;
+  const initialTypeFilter =
+    typeQuery === TransactionType.CREDIT
+      ? TransactionType.CREDIT
+      : typeQuery === TransactionType.DEBIT
+        ? TransactionType.DEBIT
+        : '';
 
   useEffect(() => {
     if (status !== 'loading' && user && user.role !== UserRole.USER_PAYEUR) {
@@ -141,6 +149,7 @@ export default function MonComptePayeurPage() {
           backHref="/dashboard/factures"
           isPayeurOwnCaisse
           hidePanelHeading
+          initialTypeFilter={initialTypeFilter}
         />
       </PageContent>
     </DashboardLayout>
