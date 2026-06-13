@@ -39,6 +39,7 @@ interface MouvementPayload {
   solde: number;
   charges: number;
   benefices: number;
+  interetBL: number;
   creditClient: number;
   comptes: ComptePayload[];
 }
@@ -136,7 +137,7 @@ export default function MouvementGeneralView({
 
   if (!isAllowed) return null;
 
-  const isPositiveProfit = (data?.benefices || 0) >= 0;
+  const isPositiveProfit = (data?.interetBL ?? data?.benefices ?? 0) >= 0;
 
   return (
     <DashboardLayout>
@@ -253,10 +254,10 @@ export default function MouvementGeneralView({
                   isPositiveProfit ? 'text-emerald-700' : 'text-red-700'
                 }`}
               >
-                {fmt(data?.benefices || 0)}
+                {fmt(data?.interetBL ?? 0)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {t('common.mru')} · {t('dashboard.mouvement.beneficesHint')}
+                {t('common.mru')} · {t('dashboard.mouvement.beneficesInteretBL')}
               </p>
             </CardContent>
           </Card>

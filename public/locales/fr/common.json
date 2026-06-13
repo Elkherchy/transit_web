@@ -219,6 +219,7 @@
       "chargesHint": "Sorties sur la période",
       "benefices": "Bénéfices",
       "beneficesHint": "Entrées − sorties sur la période",
+      "beneficesInteretBL": "Total intérêts de tous les BL",
       "creditClient": "Crédit Client",
       "creditClientHint": "Montant dû par les clients",
       "comptesDetailTitle": "Détail des comptes",

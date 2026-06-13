@@ -6,6 +6,7 @@ import {
   Caisse,
   Facture,
   Transaction,
+  Transit,
 } from '@/models';
 import {
   CaisseType,
@@ -21,6 +22,8 @@ export interface MouvementGeneral {
   solde: number;
   charges: number;
   benefices: number;
+  /** Somme des intérêts de tous les BL (Transit.interet). */
+  interetBL: number;
   creditClient: number;
   /** Détail des comptes du domaine pour traçabilité. */
   comptes: Array<{
@@ -125,7 +128,14 @@ export async function computeMouvementGeneral(
   const charges = Math.round(debits * 100) / 100;
   const benefices = Math.round((credits - debits) * 100) / 100;
 
-  // 4. Crédit client : factures transit non soldées.
+  // 4. Intérêts BL : somme de Transit.interet sur tous les BL (sans filtre date).
+  const interetAgg = await Transit.aggregate<{ total: number }>([
+    { $match: { interet: { $gt: 0 } } },
+    { $group: { _id: null, total: { $sum: '$interet' } } },
+  ]);
+  const interetBL = Math.round((interetAgg[0]?.total ?? 0) * 100) / 100;
+
+  // 5. Crédit client : factures transit non soldées.
   let creditClient = 0;
   if (caisseType === CaisseType.TRANSIT) {
     const fAgg = await Facture.aggregate<{
@@ -155,6 +165,7 @@ export async function computeMouvementGeneral(
     solde: Math.round(solde * 100) / 100,
     charges,
     benefices,
+    interetBL,
     creditClient,
     comptes: comptes.map((c) => ({
       _id: String(c._id),

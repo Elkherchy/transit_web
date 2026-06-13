@@ -27,14 +27,28 @@ async function handler(
     await connectDB();
     const uid = req.user!.userId;
 
-    // Transit ayant au moins une désignation LIBRE OU une désignation appartenant au payeur.
-    // Les dossiers BROUILLON (créés par AGENT_TRANSIT, non encore validés par
-    // l'admin transit) sont masqués côté payeur.
+    // Transit ayant au moins une désignation LIBRE OU une désignation active du payeur.
+    // Exclus : BROUILLON (non validé par admin) et CLOTURE (manutention clôturée).
+    // Pour le payeur, on n'affiche que les transits où il a au moins une désignation
+    // non encore clôturée (pas VALIDEE_ADMIN) — évite l'affichage post-clôture.
+    const ACTIVE_PAYEUR_STATUTS = [
+      DesignationStatus.RESERVEE,
+      DesignationStatus.PAYEE,
+      DesignationStatus.VALIDEE_TRANSIT,
+      DesignationStatus.REJETEE,
+    ];
     const transits = await Transit.find({
-      statut: { $ne: TransitStatus.BROUILLON },
+      statut: { $nin: [TransitStatus.BROUILLON, TransitStatus.CLOTURE] },
       $or: [
         { 'designations.statutDesignation': DesignationStatus.LIBRE },
-        { 'designations.payeurId': uid },
+        {
+          designations: {
+            $elemMatch: {
+              payeurId: uid,
+              statutDesignation: { $in: ACTIVE_PAYEUR_STATUTS },
+            },
+          },
+        },
       ],
     })
       .sort({ createdAt: -1 })

@@ -223,6 +223,7 @@
       "chargesHint": "المخرجات خلال الفترة",
       "benefices": "الأرباح",
       "beneficesHint": "المدخلات − المخرجات خلال الفترة",
+      "beneficesInteretBL": "مجموع فوائد جميع البوالص",
       "creditClient": "الرصيد المستحق على العميل",
       "creditClientHint": "المبلغ المستحق من العملاء",
       "comptesDetailTitle": "تفاصيل الحسابات",
