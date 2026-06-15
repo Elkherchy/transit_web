@@ -420,27 +420,6 @@ function FactureClientPdfPage({
           );
         })}
 
-        <View style={styles.totalRow}>
-          <Text style={styles.totalRowLabel}>Total</Text>
-          <Text style={styles.totalRowVal}>{amountNum(model.totalOperations)}</Text>
-        </View>
-
-        {model.interet > 0 ? (
-          <>
-            <View style={{ flexDirection: 'row', marginTop: 4, paddingLeft: 4 }}>
-              <Text style={styles.interetLabel}>Intérêt :</Text>
-              <Text style={styles.interetBox}>
-                {formatCurrency(model.interet).replace('MRU', '').trim()}
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', marginTop: 4, paddingLeft: 4 }}>
-              <Text style={styles.interetLabel}>Total :</Text>
-              <Text style={{ ...styles.interetBox, fontWeight: 'bold' }}>
-                {model.total > 0 ? formatCurrency(model.total).replace('MRU', '').trim() : ''}
-              </Text>
-            </View>
-          </>
-        ) : null}
 
         <Text style={styles.sign}>Le Directeur</Text>
       </View>
@@ -486,7 +465,7 @@ export function buildFactureClientPdfModel(facture: IFacture): FactureClientPdfM
   const lines = [
     {
       produit: facture.transitObjet || '—',
-      montant: facture.totalOperations,
+      montant: facture.totalFinal ?? facture.totalOperations,
     },
   ];
 
