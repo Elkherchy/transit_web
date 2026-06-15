@@ -80,19 +80,16 @@ async function updateTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
       return res.status(404).json({ success: false, error: 'Dossier non trouvé' });
     }
 
-    // VALIDE = verrouillé pour tous.
-    // CLOTURE = verrouillé sauf pour ADMIN (correction désignations/intérêt).
+    // ADMIN peut modifier VALIDE et CLOTURE (correction désignations/intérêt).
+    // Les autres rôles restent bloqués sur ces statuts.
     const isAdminUser = req.user!.role === UserRole.ADMIN;
-    if (transit.statut === TransitStatus.VALIDE) {
+    const isLocked =
+      transit.statut === TransitStatus.VALIDE ||
+      transit.statut === TransitStatus.CLOTURE;
+    if (isLocked && !isAdminUser) {
       return res.status(400).json({
         success: false,
-        error: 'Ce dossier est validé et ne peut plus être modifié',
-      });
-    }
-    if (transit.statut === TransitStatus.CLOTURE && !isAdminUser) {
-      return res.status(400).json({
-        success: false,
-        error: 'Ce dossier est clôturé et ne peut être modifié que par un administrateur',
+        error: 'Ce dossier est clôturé ou validé et ne peut être modifié que par un administrateur',
       });
     }
 

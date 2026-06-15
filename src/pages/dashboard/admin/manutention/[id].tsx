@@ -550,12 +550,14 @@ export default function AdminFactureManutentionDetail() {
     const nom = newName.trim();
     if (!nom) return;
     const montant = Number(newMontant) || 0;
+    const statutDesignation =
+      nom === 'Autre' ? DesignationStatus.VALIDEE_ADMIN : DesignationStatus.LIBRE;
     setEditDesignations((prev) => [
       ...prev,
       {
         nom,
         montant,
-        statutDesignation: DesignationStatus.LIBRE,
+        statutDesignation,
       } as IDesignation,
     ]);
     setNewName('');

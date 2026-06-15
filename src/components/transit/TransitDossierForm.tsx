@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import {
   TransitStatus,
+  DesignationStatus,
   ITransit,
   IDesignation,
   UserRole,
@@ -366,12 +367,12 @@ export default function TransitDossierForm({
   const isAgentOrAdmin =
     user?.role === UserRole.ADMIN || user?.role === UserRole.AGENT_TRANSIT;
   const isReadOnlyView = mode === 'edit' && readOnly;
-  // ADMIN peut modifier même un BL CLOTURE (pour corriger désignations/intérêt).
-  // VALIDE reste verrouillé pour tous.
+  // ADMIN peut modifier VALIDE et CLOTURE (correction désignations/intérêt).
   const transitLocked =
     transit &&
+    !isAdmin &&
     (transit.statut === TransitStatus.VALIDE ||
-      (!isAdmin && transit.statut === TransitStatus.CLOTURE));
+      transit.statut === TransitStatus.CLOTURE);
   const canEdit =
     !readOnly &&
     (mode === 'create' ||
@@ -722,12 +723,15 @@ export default function TransitDossierForm({
   };
 
   const handleAddDesignation = () => {
-    if (!newDesignationName.trim()) return;
+    const nom = newDesignationName.trim();
+    if (!nom) return;
+    const statutDesignation =
+      nom === 'Autre' ? DesignationStatus.VALIDEE_ADMIN : DesignationStatus.LIBRE;
     setFormData((prev) => ({
       ...prev,
       designations: [
         ...prev.designations,
-        { nom: newDesignationName.trim(), montant: 0 },
+        { nom, montant: 0, statutDesignation },
       ],
     }));
     setNewDesignationName('');
