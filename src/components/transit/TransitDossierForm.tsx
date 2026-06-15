@@ -366,10 +366,12 @@ export default function TransitDossierForm({
   const isAgentOrAdmin =
     user?.role === UserRole.ADMIN || user?.role === UserRole.AGENT_TRANSIT;
   const isReadOnlyView = mode === 'edit' && readOnly;
+  // ADMIN peut modifier même un BL CLOTURE (pour corriger désignations/intérêt).
+  // VALIDE reste verrouillé pour tous.
   const transitLocked =
     transit &&
     (transit.statut === TransitStatus.VALIDE ||
-      transit.statut === TransitStatus.CLOTURE);
+      (!isAdmin && transit.statut === TransitStatus.CLOTURE));
   const canEdit =
     !readOnly &&
     (mode === 'create' ||
