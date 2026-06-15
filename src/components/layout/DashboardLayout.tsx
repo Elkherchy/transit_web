@@ -126,7 +126,7 @@ const navItemsFlat: NavItem[] = [
     label: 'Mouvement Transit',
     href: '/dashboard/admin/transit/mouvement-general',
     Icon: BriefcaseBusiness,
-    roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.AGENT_TRANSIT, UserRole.COMPTABLE],
+    roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.COMPTABLE],
   },
   {
     label: 'Liste BL Transit (Validé)',

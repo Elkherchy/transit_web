@@ -9,7 +9,6 @@ export default function AdminTransitMouvementGeneral() {
       allowedRoles={[
         UserRole.ADMIN,
         UserRole.ADMIN_TRANSIT,
-        UserRole.AGENT_TRANSIT,
         UserRole.COMPTABLE,
       ]}
       titleKey="dashboard.mouvement.titleTransit"

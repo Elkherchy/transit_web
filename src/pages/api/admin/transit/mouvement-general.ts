@@ -44,6 +44,5 @@ async function handler(
 export default withAuth(handler, [
   UserRole.ADMIN,
   UserRole.ADMIN_TRANSIT,
-  UserRole.AGENT_TRANSIT,
   UserRole.COMPTABLE,
 ]);
