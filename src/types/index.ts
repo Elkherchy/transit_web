@@ -477,6 +477,7 @@ export const DESIGNATIONS_ADMIN_ONLY = [
   'Ouvrier chargement',
   'Fédération',
   'Amende',
+  'Autre',
 ];
 
 /** Désignations publiques ajoutées automatiquement à tout nouveau dossier. */
