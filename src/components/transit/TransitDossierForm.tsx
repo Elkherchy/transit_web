@@ -21,6 +21,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   TransitStatus,
   ITransit,
   IDesignation,
@@ -351,6 +358,8 @@ export default function TransitDossierForm({
   const [generatingFacture, setGeneratingFacture] = useState(false);
   const [printModel, setPrintModel] = useState<PrintableTransitModel | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [editingTotal, setEditingTotal] = useState(false);
+  const [localTotalStr, setLocalTotalStr] = useState('');
 
   const isAdmin = user?.role === UserRole.ADMIN;
   const isAgentTransit = user?.role === UserRole.AGENT_TRANSIT;
@@ -420,6 +429,7 @@ export default function TransitDossierForm({
       void fetchTransit();
     }
   }, [mode, transitId, fetchTransit]);
+
 
   useEffect(() => {
     if (mode !== 'edit' || !transitId || typeof window === 'undefined') return;
@@ -1399,27 +1409,40 @@ export default function TransitDossierForm({
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
                     {!isAgentTransit && (
                     <div className="space-y-2">
-                      <Label htmlFor="interet" className="text-sm font-medium">
-                        Intérêts (MRU)
+                      <Label htmlFor="totalFinal" className="text-sm font-medium">
+                        Total final (MRU)
                       </Label>
                       <Input
-                        id="interet"
-                        name="interet"
+                        id="totalFinal"
                         type="number"
                         min={0}
                         step="any"
                         inputMode="decimal"
-                        className="h-11 w-full sm:w-36 text-right tabular-nums"
-                        value={formData.interet}
-                        onChange={(e) =>
+                        className="h-11 w-full sm:w-44 text-right tabular-nums"
+                        value={editingTotal ? localTotalStr : (calculateTotalFinal() || '')}
+                        onFocus={() => {
+                          setEditingTotal(true);
+                          setLocalTotalStr(String(calculateTotalFinal() || ''));
+                        }}
+                        onChange={(e) => {
+                          setLocalTotalStr(e.target.value);
+                          const newTotal = parseFloat(e.target.value) || 0;
+                          const totalOps = calculateTotalOperations();
                           setFormData((prev) => ({
                             ...prev,
-                            interet: parseFloat(e.target.value) || 0,
-                          }))
-                        }
+                            interet: Math.max(0, newTotal - totalOps),
+                          }));
+                        }}
+                        onBlur={() => setEditingTotal(false)}
                       />
+                      {formData.interet > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          dont intérêts : {formData.interet.toLocaleString('fr-FR')} MRU
+                        </p>
+                      )}
                     </div>
                     )}
+                    {isAgentTransit && (
                     <div className="sm:border-l sm:border-border/80 sm:pl-6">
                       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         Total final
@@ -1429,6 +1452,7 @@ export default function TransitDossierForm({
                         <span className="text-lg font-semibold text-primary/80">MRU</span>
                       </p>
                     </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1692,7 +1716,27 @@ export default function TransitDossierForm({
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="new-desig">Nom</Label>
+              <Label>Désignation prédéfinie</Label>
+              <Select
+                value=""
+                onValueChange={(val) => setNewDesignationName(val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir une désignation…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DESIGNATIONS_DEFAULT.filter(
+                    (nom) => !formData.designations.some((d) => d.nom === nom)
+                  ).map((nom) => (
+                    <SelectItem key={nom} value={nom}>
+                      {nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-desig">Ou saisir un nom libre</Label>
               <Input
                 id="new-desig"
                 value={newDesignationName}

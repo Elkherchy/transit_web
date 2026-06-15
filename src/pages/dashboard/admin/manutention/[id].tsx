@@ -138,6 +138,8 @@ export default function AdminFactureManutentionDetail() {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [editingTotalFinal, setEditingTotalFinal] = useState(false);
+  const [localTotalFinalStr, setLocalTotalFinalStr] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newMontant, setNewMontant] = useState('');
@@ -1168,36 +1170,59 @@ export default function AdminFactureManutentionDetail() {
                           </td>
                           <td />
                         </tr>
+                        {Number(editInteret) > 0 && (
                         <tr className="border-t">
-                          <td className="px-3 py-2 font-semibold">
-                            <Label htmlFor="edit-interet" className="text-sm">
-                              {t('dashboard.manutention.detail.editInteret')}
-                            </Label>
+                          <td className="px-3 py-2 text-muted-foreground text-sm">
+                            {t('dashboard.manutention.detail.editInteret')}
                           </td>
-                          <td className="px-3 py-2 text-right">
-                            <Input
-                              id="edit-interet"
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={editInteret}
-                              onChange={(e) => setEditInteret(e.target.value)}
-                              className="ml-auto h-8 w-32 text-right tabular-nums"
-                            />
+                          <td className="px-3 py-2 text-right text-sm tabular-nums text-muted-foreground">
+                            {fmt(Number(editInteret))} MRU
                           </td>
                           <td />
                         </tr>
+                        )}
                         <tr className="border-t bg-emerald-50">
-                          <td className="px-3 py-2 font-bold">{t('dashboard.manutention.detail.editTotalFinal')}</td>
-                          <td className="px-3 py-2 text-right font-bold tabular-nums text-emerald-700">
-                            {fmt(
-                              editDesignations.reduce(
+                          <td className="px-3 py-2 font-bold">
+                            <Label htmlFor="edit-total-final" className="text-sm font-bold">
+                              {t('dashboard.manutention.detail.editTotalFinal')}
+                            </Label>
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            {(() => {
+                              const totalOps = editDesignations.reduce(
                                 (s, d) => s + (Number(d.montant) || 0),
                                 0
-                              ) +
-                                (Number(editInteret) || 0)
-                            )}{' '}
-                            MRU
+                              );
+                              const totalFinal = totalOps + (Number(editInteret) || 0);
+                              return (
+                                <Input
+                                  id="edit-total-final"
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={editingTotalFinal ? localTotalFinalStr : (totalFinal || '')}
+                                  onFocus={() => {
+                                    const totalOps2 = editDesignations.reduce(
+                                      (s, d) => s + (Number(d.montant) || 0),
+                                      0
+                                    );
+                                    setEditingTotalFinal(true);
+                                    setLocalTotalFinalStr(String(totalOps2 + (Number(editInteret) || 0)));
+                                  }}
+                                  onChange={(e) => {
+                                    setLocalTotalFinalStr(e.target.value);
+                                    const newTotal = parseFloat(e.target.value) || 0;
+                                    const totalOps2 = editDesignations.reduce(
+                                      (s, d) => s + (Number(d.montant) || 0),
+                                      0
+                                    );
+                                    setEditInteret(String(Math.max(0, newTotal - totalOps2)));
+                                  }}
+                                  onBlur={() => setEditingTotalFinal(false)}
+                                  className="ml-auto h-8 w-36 text-right tabular-nums font-bold text-emerald-700"
+                                />
+                              );
+                            })()}
                           </td>
                           <td />
                         </tr>
