@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -18,8 +18,9 @@ import {
 import { DataTable, type DataTableColumnMeta } from '@/components/ui/data-table';
 import { ClientSubNav } from '@/components/dashboard/admin/clients/ClientSubNav';
 import { useClientDetail } from '@/components/dashboard/admin/clients/useClientDetail';
-import { type IFacture, FactureStatus, UserRole } from '@/types';
+import { type IFacture, type ICreditCompte, FactureStatus, UserRole } from '@/types';
 import { isAdminTransit } from '@/lib/roles';
+import { formatDate } from '@/lib/utils';
 import { ArrowLeft, Printer, RefreshCcw } from 'lucide-react';
 
 const fmt = (n: number) =>
@@ -54,6 +55,26 @@ export default function AdminClientFactures() {
   }, [status, user, isAdmin, router]);
 
   const { data, loading, error, reload } = useClientDetail(id, isAdmin);
+
+  const [creditComptes, setCreditComptes] = useState<ICreditCompte[]>([]);
+
+  const fetchCreditComptes = useCallback(async () => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/credit-compte?clientId=${id}`, { credentials: 'include' });
+      const d = await res.json();
+      if (d.success) setCreditComptes(d.data as ICreditCompte[]);
+    } catch { /* ignore */ }
+  }, [id]);
+
+  useEffect(() => {
+    if (isAdmin && id) void fetchCreditComptes();
+  }, [isAdmin, id, fetchCreditComptes]);
+
+  const totalFactures = data?.factures.reduce((s, f) => s + (f.totalFinal || 0), 0) ?? 0;
+  const totalCredits = creditComptes
+    .filter((cc) => cc.statut === 'ACTIF')
+    .reduce((s, cc) => s + cc.montant, 0);
 
   const [printFacture, setPrintFacture] = useState<IFacture | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
@@ -210,6 +231,24 @@ export default function AdminClientFactures() {
         <div className="space-y-6 max-w-7xl mx-auto">
           <ClientSubNav clientId={id} />
 
+          {/* Récap totaux */}
+          <div className="rounded-lg bg-white p-4 max-md:rounded-none max-md:bg-transparent max-md:px-4 max-md:py-3 border shadow-sm grid grid-cols-3 gap-3">
+            <div className="space-y-0.5">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Total Facturé</div>
+              <div className="text-lg font-semibold tabular-nums text-orange-600">{fmt(totalFactures)} MRU</div>
+            </div>
+            <div className="space-y-0.5">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Total Crédits</div>
+              <div className="text-lg font-semibold tabular-nums text-green-600">{fmt(totalCredits)} MRU</div>
+            </div>
+            <div className="space-y-0.5">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Net Dû</div>
+              <div className={`text-lg font-semibold tabular-nums ${totalFactures - totalCredits > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {fmt(totalFactures - totalCredits)} MRU
+              </div>
+            </div>
+          </div>
+
           <div className="rounded-lg bg-white p-4 max-md:rounded-none max-md:bg-transparent max-md:px-4 max-md:py-3 border shadow-sm space-y-3">
             <CardHeader className="text-base font-semibold text-primary p-0">
               {t('dashboard.clients.facturesCount', { count: data.factures.length })}
@@ -220,6 +259,40 @@ export default function AdminClientFactures() {
               emptyMessage={t('dashboard.clients.facturesEmpty')}
             />
           </div>
+
+          {/* Crédits Compte */}
+          {creditComptes.length > 0 && (
+            <div className="rounded-lg bg-white border shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b bg-green-50">
+                <h3 className="text-sm font-semibold text-green-800">
+                  Crédits Compte ({creditComptes.length})
+                </h3>
+              </div>
+              <div className="divide-y">
+                {creditComptes.map((cc) => (
+                  <div key={cc._id} className="px-4 py-3 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="font-mono text-xs text-muted-foreground shrink-0">{cc.numero}</span>
+                      <span className="text-sm truncate">{cc.reference || cc.description || '—'}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{formatDate(cc.date) || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className={`font-semibold tabular-nums ${cc.statut === 'ACTIF' ? 'text-green-700' : cc.statut === 'EN_ATTENTE' ? 'text-yellow-700' : 'text-red-500'}`}>
+                        {fmt(cc.montant)} MRU
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        cc.statut === 'ACTIF'      ? 'bg-green-100 text-green-800' :
+                        cc.statut === 'EN_ATTENTE' ? 'bg-yellow-100 text-yellow-800' :
+                                                     'bg-red-100 text-red-800'
+                      }`}>
+                        {cc.statut === 'ACTIF' ? 'Validé' : cc.statut === 'EN_ATTENTE' ? 'En attente' : 'Annulé'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </PageContent>
       {/* ── Print dialog ── */}

@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DataTable } from '@/components/ui/data-table';
-import { UserRole, type IFacture, type ICaisse, type ITransitClient } from '@/types';
+import { UserRole, type IFacture, type ICaisse, type ITransitClient, type ICreditCompte } from '@/types';
 import { Plus, Eye, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 
@@ -91,17 +91,31 @@ export default function FacturesClientList() {
     setLoading(true);
     setError(null);
     try {
-      const [facturesRes, banquesRes] = await Promise.all([
+      const [facturesRes, banquesRes, creditRes] = await Promise.all([
         fetch('/api/transit/factures', { credentials: 'include' }).then((r) =>
           r.json()
         ),
         fetch('/api/caisse/caisses', {
           credentials: 'include',
         }).then((r) => r.json()),
+        fetch('/api/credit-compte?limit=500', { credentials: 'include' }).then((r) =>
+          r.json()
+        ),
       ]);
 
       if (facturesRes.success) {
         const factures: IFacture[] = facturesRes.data.data || [];
+
+        // Build credit totals per client (ACTIF only)
+        const creditByClient = new Map<string, number>();
+        if (creditRes.success) {
+          for (const cc of (creditRes.data as ICreditCompte[])) {
+            if (cc.statut !== 'ACTIF') continue;
+            const cid = String(cc.clientId);
+            creditByClient.set(cid, (creditByClient.get(cid) ?? 0) + cc.montant);
+          }
+        }
+
         const grouped = new Map<string, ClientFactureSummary>();
 
         factures.forEach((f) => {
@@ -120,12 +134,15 @@ export default function FacturesClientList() {
           }
           const summary = grouped.get(clientId)!;
           summary.totalOperations += 1;
-          summary.totalDebit += f.montantPaye || 0;
-          summary.totalCredit += Math.max(
-            0,
-            (f.totalFinal || 0) - (f.montantPaye || 0)
-          );
+          summary.totalDebit += f.totalFinal || 0;
         });
+
+        // Apply credit totals
+        for (const [cid, total] of creditByClient.entries()) {
+          if (grouped.has(cid)) {
+            grouped.get(cid)!.totalCredit = total;
+          }
+        }
 
         setClients(Array.from(grouped.values()));
       }
@@ -224,15 +241,27 @@ export default function FacturesClientList() {
       accessorKey: 'totalDebit',
       header: t('dashboard.caissier.facturesClient.colTotalDebit'),
       cell: ({ row }) => (
-        <span className="font-medium text-green-600">{row.original.totalDebit.toFixed(2)} MRU</span>
+        <span className="font-medium text-orange-600">{row.original.totalDebit.toFixed(2)} MRU</span>
       ),
     },
     {
       accessorKey: 'totalCredit',
       header: t('dashboard.caissier.facturesClient.colTotalCredit'),
       cell: ({ row }) => (
-        <span className="font-medium text-orange-600">{row.original.totalCredit.toFixed(2)} MRU</span>
+        <span className="font-medium text-green-600">{row.original.totalCredit.toFixed(2)} MRU</span>
       ),
+    },
+    {
+      id: 'restant',
+      header: 'Restant',
+      cell: ({ row }) => {
+        const restant = row.original.totalDebit - row.original.totalCredit;
+        return (
+          <span className={`font-semibold ${restant > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {restant.toFixed(2)} MRU
+          </span>
+        );
+      },
     },
     {
       id: 'actions',

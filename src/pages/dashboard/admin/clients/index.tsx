@@ -102,6 +102,7 @@ export default function AdminClientsList() {
   };
 
   const [rows, setRows] = useState<ClientRow[]>([]);
+  const [financials, setFinancials] = useState<Map<string, { debit: number; credit: number }>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -252,6 +253,35 @@ export default function AdminClientsList() {
     if (canAccess) void reload();
   }, [canAccess, reload]);
 
+  useEffect(() => {
+    if (!canAccess) return;
+    Promise.all([
+      fetch('/api/transit/factures', { credentials: 'include' }).then((r) => r.json()),
+      fetch('/api/credit-compte?limit=500', { credentials: 'include' }).then((r) => r.json()),
+    ]).then(([facturesRes, creditRes]) => {
+      const map = new Map<string, { debit: number; credit: number }>();
+      if (facturesRes.success) {
+        for (const f of (facturesRes.data.data || [])) {
+          const cid = String(f.clientId || '').trim();
+          if (!cid) continue;
+          const cur = map.get(cid) ?? { debit: 0, credit: 0 };
+          cur.debit += f.totalFinal || 0;
+          map.set(cid, cur);
+        }
+      }
+      if (creditRes.success) {
+        for (const cc of (creditRes.data || [])) {
+          if (cc.statut !== 'ACTIF') continue;
+          const cid = String(cc.clientId);
+          const cur = map.get(cid) ?? { debit: 0, credit: 0 };
+          cur.credit += cc.montant || 0;
+          map.set(cid, cur);
+        }
+      }
+      setFinancials(map);
+    }).catch(() => {/* ignore */});
+  }, [canAccess]);
+
   const openCreate = () => {
     setFormNom('');
     setFormTelephone('');
@@ -347,6 +377,41 @@ export default function AdminClientsList() {
         },
       },
       {
+        id: 'totalDebit',
+        header: 'Total Débits',
+        meta: { align: 'right' } satisfies DataTableColumnMeta,
+        cell: ({ row }) => {
+          const f = financials.get(row.original._id);
+          if (!f) return <span className="text-muted-foreground text-sm">—</span>;
+          return <span className="font-medium text-orange-600 tabular-nums">{f.debit.toFixed(2)} MRU</span>;
+        },
+      },
+      {
+        id: 'totalCredit',
+        header: 'Total Crédits',
+        meta: { align: 'right' } satisfies DataTableColumnMeta,
+        cell: ({ row }) => {
+          const f = financials.get(row.original._id);
+          if (!f) return <span className="text-muted-foreground text-sm">—</span>;
+          return <span className="font-medium text-green-600 tabular-nums">{f.credit.toFixed(2)} MRU</span>;
+        },
+      },
+      {
+        id: 'restant',
+        header: 'Restant',
+        meta: { align: 'right' } satisfies DataTableColumnMeta,
+        cell: ({ row }) => {
+          const f = financials.get(row.original._id);
+          if (!f) return <span className="text-muted-foreground text-sm">—</span>;
+          const restant = f.debit - f.credit;
+          return (
+            <span className={`font-semibold tabular-nums ${restant > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {restant.toFixed(2)} MRU
+            </span>
+          );
+        },
+      },
+      {
         id: 'actions',
         meta: { align: 'right' } satisfies DataTableColumnMeta,
         header: t('dashboard.clients.list.colActions'),
@@ -436,7 +501,7 @@ export default function AdminClientsList() {
         },
       },
     ],
-    [t, isAdminValidator]
+    [t, isAdminValidator, financials]
   );
 
   if (status === 'loading' || loading) {

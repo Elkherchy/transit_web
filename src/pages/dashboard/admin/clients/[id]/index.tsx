@@ -22,8 +22,9 @@ import {
 import { ClientSubNav } from '@/components/dashboard/admin/clients/ClientSubNav';
 import { useClientDetail } from '@/components/dashboard/admin/clients/useClientDetail';
 import { isAdminTransit } from '@/lib/roles';
-import { UserRole } from '@/types';
+import { UserRole, type ICreditCompte } from '@/types';
 import { ArrowLeft, RefreshCcw, Pencil, FileDown, Loader2 } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 const fmt = (n: number) =>
   Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
@@ -45,6 +46,16 @@ export default function AdminClientDetails() {
   }, [status, user, isAdmin, router]);
 
   const { data, loading, error, reload } = useClientDetail(id, isAdmin);
+
+  const [creditComptes, setCreditComptes] = useState<ICreditCompte[]>([]);
+
+  useEffect(() => {
+    if (!id || !isAdmin) return;
+    fetch(`/api/credit-compte?clientId=${id}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setCreditComptes(d.data as ICreditCompte[]); })
+      .catch(() => {/* ignore */});
+  }, [id, isAdmin]);
 
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   const [pdfDateDebut, setPdfDateDebut] = useState<string>('');
@@ -119,6 +130,8 @@ export default function AdminClientDetails() {
 
   const { client, caisse, factures } = data;
   const totalFactures = factures.reduce((s, f) => s + (f.totalFinal || 0), 0);
+  const creditComptesActif = creditComptes.filter((cc) => cc.statut === 'ACTIF');
+  const totalCredits = creditComptesActif.reduce((s, cc) => s + cc.montant, 0);
 
   return (
     <DashboardLayout>
@@ -204,19 +217,60 @@ export default function AdminClientDetails() {
           </div>
 
           {/* Récap caisse */}
-          <div className="rounded-lg bg-white p-4 max-md:rounded-none max-md:bg-transparent max-md:px-4 max-md:py-3 border shadow-sm grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-lg bg-white p-4 max-md:rounded-none max-md:bg-transparent max-md:px-4 max-md:py-3 border shadow-sm grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field label={t('dashboard.clients.detail.fieldCaisseClient')} value={caisse?.nom || '—'} />
             <Field
-              label={t('dashboard.clients.detail.fieldSoldeCaisse')}
-              value={`${fmt(caisse?.solde ?? 0)} MRU`}
+              label={t('dashboard.clients.detail.fieldTotalFacture')}
+              value={<span className="text-orange-600">{fmt(totalFactures)} MRU</span>}
               strong
             />
             <Field
-              label={t('dashboard.clients.detail.fieldTotalFacture')}
-              value={`${fmt(totalFactures)} MRU`}
+              label="Total Crédits Compte"
+              value={<span className="text-green-600">{fmt(totalCredits)} MRU</span>}
+              strong
+            />
+            <Field
+              label="Net Dû"
+              value={
+                <span className={totalFactures - totalCredits > 0 ? 'text-red-600' : 'text-green-600'}>
+                  {fmt(totalFactures - totalCredits)} MRU
+                </span>
+              }
               strong
             />
           </div>
+
+          {/* Crédits Compte */}
+          {creditComptes.length > 0 && (
+            <div className="rounded-lg bg-white border shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b bg-green-50">
+                <h3 className="text-sm font-semibold text-green-800">Crédits Compte</h3>
+              </div>
+              <div className="divide-y">
+                {creditComptes.map((cc) => (
+                  <div key={cc._id} className="px-4 py-3 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="font-mono text-xs text-muted-foreground shrink-0">{cc.numero}</span>
+                      <span className="text-sm truncate">{cc.reference || cc.description || '—'}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{formatDate(cc.date) || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className={`font-semibold tabular-nums ${cc.statut === 'ACTIF' ? 'text-green-700' : cc.statut === 'EN_ATTENTE' ? 'text-yellow-700' : 'text-red-500'}`}>
+                        {fmt(cc.montant)} MRU
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        cc.statut === 'ACTIF'      ? 'bg-green-100 text-green-800' :
+                        cc.statut === 'EN_ATTENTE' ? 'bg-yellow-100 text-yellow-800' :
+                                                     'bg-red-100 text-red-800'
+                      }`}>
+                        {cc.statut === 'ACTIF' ? 'Validé' : cc.statut === 'EN_ATTENTE' ? 'En attente' : 'Annulé'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </PageContent>
 

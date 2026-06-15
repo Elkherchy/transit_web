@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
-import { UserRole, type IFacture, FactureStatus } from '@/types';
+import { UserRole, type IFacture, FactureStatus, type ICreditCompte } from '@/types';
 import { ArrowLeft, Eye } from 'lucide-react';
 
 type FactureRow = IFacture;
@@ -25,6 +25,7 @@ export default function FacturesClientDetailPage() {
   const { clientId } = router.query;
 
   const [factures, setFactures] = useState<IFacture[]>([]);
+  const [creditComptes, setCreditComptes] = useState<ICreditCompte[]>([]);
   const [clientNom, setClientNom] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,15 +68,26 @@ export default function FacturesClientDetailPage() {
     }
   }, [clientId, t]);
 
-  useEffect(() => {
-    if (isAllowed && clientId) void fetchFactures();
-  }, [isAllowed, clientId, fetchFactures]);
+  const fetchCreditComptes = useCallback(async () => {
+    if (!clientId) return;
+    try {
+      const res = await fetch(`/api/credit-compte?clientId=${clientId}`, { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) setCreditComptes(data.data as ICreditCompte[]);
+    } catch { /* ignore */ }
+  }, [clientId]);
 
-  const totalDebit = factures.reduce((sum, f) => sum + (f.montantPaye || 0), 0);
-  const totalCredit = factures.reduce(
-    (sum, f) => sum + Math.max(0, (f.totalFinal || 0) - (f.montantPaye || 0)),
-    0
-  );
+  useEffect(() => {
+    if (isAllowed && clientId) {
+      void fetchFactures();
+      void fetchCreditComptes();
+    }
+  }, [isAllowed, clientId, fetchFactures, fetchCreditComptes]);
+
+  const totalFactures = factures.reduce((sum, f) => sum + (f.totalFinal || 0), 0);
+  const totalCreditsActif = creditComptes
+    .filter((cc) => cc.statut === 'ACTIF')
+    .reduce((sum, cc) => sum + cc.montant, 0);
 
   const getStatusBadge = (status: FactureStatus) => {
     const statusMap: Record<
@@ -194,21 +206,21 @@ export default function FacturesClientDetailPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('dashboard.caissier.facturesClient.summaryDebit') || 'Débits'}
+                {t('dashboard.caissier.facturesClient.summaryDebit') || 'Débit (Factures)'}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{totalDebit.toFixed(2)} MRU</div>
+              <div className="text-2xl font-bold text-orange-600">{totalFactures.toFixed(2)} MRU</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('dashboard.caissier.facturesClient.summaryCredit') || 'Crédits'}
+                {t('dashboard.caissier.facturesClient.summaryCredit') || 'Crédit Compte'}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{totalCredit.toFixed(2)} MRU</div>
+              <div className="text-2xl font-bold text-green-600">{totalCreditsActif.toFixed(2)} MRU</div>
             </CardContent>
           </Card>
         </div>
