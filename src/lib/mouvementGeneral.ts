@@ -6,7 +6,6 @@ import {
   Caisse,
   Facture,
   Transaction,
-  Transit,
 } from '@/models';
 import {
   CaisseType,
@@ -22,7 +21,7 @@ export interface MouvementGeneral {
   solde: number;
   charges: number;
   benefices: number;
-  /** Somme des intérêts de tous les BL (Transit.interet). */
+  /** Somme des intérêts de toutes les factures client (Facture.interet). */
   interetBL: number;
   creditClient: number;
   /** Détail des comptes du domaine pour traçabilité. */
@@ -128,8 +127,8 @@ export async function computeMouvementGeneral(
   const charges = Math.round(debits * 100) / 100;
   const benefices = Math.round((credits - debits) * 100) / 100;
 
-  // 4. Intérêts BL : somme de Transit.interet sur tous les BL (sans filtre date).
-  const interetAgg = await Transit.aggregate<{ total: number }>([
+  // 4. Intérêts factures client : somme de Facture.interet (sans filtre date).
+  const interetAgg = await Facture.aggregate<{ total: number }>([
     { $match: { interet: { $gt: 0 } } },
     { $group: { _id: null, total: { $sum: '$interet' } } },
   ]);
