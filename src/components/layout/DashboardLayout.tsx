@@ -30,6 +30,7 @@ import {
   ShieldCheck,
   ChevronDown,
   Download,
+  CreditCard,
 } from 'lucide-react';
 import { getPwaInstallPrompt, clearPwaInstallPrompt } from '@/lib/pwa-install';
 
@@ -55,6 +56,7 @@ const NAV_I18N_BY_HREF: Record<string, string> = {
   '/dashboard/transit/bls/valides': 'nav.items.blsTransitValides',
   '/dashboard/transit/bls/non-valides': 'nav.items.blsTransitNonValides',
   '/dashboard/factures': 'nav.items.factures',
+  '/dashboard/factures/credit-compte': 'nav.items.creditsCompte',
   '/dashboard/admin/clients': 'nav.items.clients',
   '/dashboard/caisses': 'nav.items.comptes',
   '/dashboard/admin/transit/caisse': 'nav.items.caisseTransit',
@@ -96,6 +98,12 @@ const navItemsFlat: NavItem[] = [
     label: 'Factures Client',
     href: '/dashboard/factures',
     Icon: Receipt,
+    roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.AGENT_TRANSIT, UserRole.COMPTABLE],
+  },
+  {
+    label: 'Crédits Compte',
+    href: '/dashboard/factures/credit-compte',
+    Icon: CreditCard,
     roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.AGENT_TRANSIT, UserRole.COMPTABLE],
   },
   {
@@ -286,6 +294,7 @@ function buildNavSections(items: NavItem[]): NavSection[] {
     '/dashboard/transit/bls/valides',
     '/dashboard/transit/bls/non-valides',
     '/dashboard/factures',
+    '/dashboard/factures/credit-compte',
     '/dashboard/admin/clients',
     '/dashboard/admin/manutention',
     '/dashboard/transit/journees',

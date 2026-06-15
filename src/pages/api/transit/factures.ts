@@ -212,7 +212,7 @@ export default function handler(req: AuthenticatedRequest, res: NextApiResponse)
     case 'GET':
       return withTransitAccess(getFactures)(req, res);
     case 'POST':
-      return withAgentTransit(createFacture)(req, res);
+      return withAuth(createFacture, [UserRole.ADMIN, UserRole.ADMIN_TRANSIT])(req, res);
     default:
       return res.status(405).json({ success: false, error: 'Méthode non autorisée' });
   }

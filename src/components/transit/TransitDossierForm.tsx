@@ -385,7 +385,7 @@ export default function TransitDossierForm({
   const canGenerateFacture =
     mode === 'edit' &&
     !readOnly &&
-    isAgentOrAdmin &&
+    (isAdmin || user?.role === UserRole.ADMIN_TRANSIT) &&
     transit != null &&
     !hasFacture &&
     (transit.statut === TransitStatus.EN_COURS ||

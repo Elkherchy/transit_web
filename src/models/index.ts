@@ -17,4 +17,5 @@ export { default as ManutentionPaiement } from './ManutentionPaiement';
 export { default as JourneeCaisse } from './JourneeCaisse';
 export { default as Salarie } from './Salarie';
 export { default as BulletinSalaire } from './BulletinSalaire';
+export { default as CreditCompte } from './CreditCompte';
 

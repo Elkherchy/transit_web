@@ -52,8 +52,7 @@ export default function FactureEditInteretPage() {
 
   const isAgentOrAdmin =
     user?.role === UserRole.ADMIN ||
-    user?.role === UserRole.ADMIN_TRANSIT ||
-    user?.role === UserRole.AGENT_TRANSIT;
+    user?.role === UserRole.ADMIN_TRANSIT;
 
   const fetchFacture = useCallback(async () => {
     if (!factureId) return;

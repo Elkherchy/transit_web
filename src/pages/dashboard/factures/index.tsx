@@ -28,8 +28,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DataTable } from '@/components/ui/data-table';
-import { UserRole, type IFacture, type ICaisse } from '@/types';
-import { Plus, Eye } from 'lucide-react';
+import { UserRole, type IFacture, type ICaisse, type ITransitClient } from '@/types';
+import { Plus, Eye, CreditCard } from 'lucide-react';
+import Link from 'next/link';
 
 interface ClientFactureSummary {
   clientId: string;
@@ -55,6 +56,7 @@ export default function FacturesClientList() {
   const isMobile = useIsMobile();
 
   const [clients, setClients] = useState<ClientFactureSummary[]>([]);
+  const [allClients, setAllClients] = useState<ITransitClient[]>([]);
   const [banques, setBanques] = useState<ICaisse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -147,6 +149,14 @@ export default function FacturesClientList() {
   useEffect(() => {
     if (isAllowed) void fetchData();
   }, [isAllowed, fetchData]);
+
+  useEffect(() => {
+    if (!canCreateFacture) return;
+    fetch('/api/transit/clients?limit=500', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setAllClients(d.data as ITransitClient[]); })
+      .catch(() => {/* ignore */});
+  }, [canCreateFacture]);
 
   const handleCreateFacture = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -245,14 +255,22 @@ export default function FacturesClientList() {
       <PageHeader
         title={t('dashboard.caissier.facturesClient.title') || 'Factures Clients'}
         actions={
-          canCreateFacture ? (
-            <Button onClick={() => setCreateOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {t('dashboard.caissier.facturesClient.createButton') || 'Créer facture'}
-              </span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild className="gap-2">
+              <Link href="/dashboard/factures/credit-compte">
+                <CreditCard className="h-4 w-4" />
+                <span className="hidden sm:inline">Crédits Compte</span>
+              </Link>
             </Button>
-          ) : undefined
+            {canCreateFacture && (
+              <Button onClick={() => setCreateOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {t('dashboard.caissier.facturesClient.createButton') || 'Créer facture'}
+                </span>
+              </Button>
+            )}
+          </div>
         }
         sticky={isMobile}
       />
@@ -309,11 +327,11 @@ export default function FacturesClientList() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients
-                    .filter((c) => c.clientId && c.clientId.trim())
+                  {allClients
+                    .filter((c) => c._id && c._id.trim())
                     .map((c) => (
-                      <SelectItem key={c.clientId} value={c.clientId}>
-                        {c.clientNom}
+                      <SelectItem key={c._id} value={c._id}>
+                        {c.nom}
                       </SelectItem>
                     ))}
                 </SelectContent>

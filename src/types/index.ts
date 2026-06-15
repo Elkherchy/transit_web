@@ -273,6 +273,28 @@ export interface IFacture {
 }
 
 // ============================================
+// CREDIT COMPTE
+// ============================================
+
+export type CreditCompteStatut = 'EN_ATTENTE' | 'ACTIF' | 'ANNULE';
+
+export interface ICreditCompte {
+  _id: string;
+  clientId: string;
+  clientNom: string;
+  montant: number;
+  numero: string;
+  date: Date;
+  reference?: string;
+  description?: string;
+  caisseClientId?: string;
+  createdBy: string;
+  statut: CreditCompteStatut;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================
 // TRANSIT - Paiement
 // ============================================
 
