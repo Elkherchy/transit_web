@@ -52,6 +52,7 @@ export default function FactureDetail() {
   const [payError, setPayError] = useState<string | null>(null);
   const [pdfAction, setPdfAction] = useState<null | 'print' | 'download'>(null);
 
+  const isAgentTransit = user?.role === UserRole.AGENT_TRANSIT;
   const isAgentOrAdmin =
     user?.role === UserRole.ADMIN ||
     user?.role === UserRole.ADMIN_TRANSIT ||
@@ -155,6 +156,7 @@ export default function FactureDetail() {
     setPdfAction('print');
     try {
       const model = buildFactureClientPdfModel(facture);
+      if (isAgentTransit) { model.interet = 0; model.total = model.totalOperations; }
       await printFactureClientPdf(model, window.location.origin);
     } catch (err) {
       console.error('Impression facture client:', err);
@@ -168,6 +170,7 @@ export default function FactureDetail() {
     setPdfAction('download');
     try {
       const model = buildFactureClientPdfModel(facture);
+      if (isAgentTransit) { model.interet = 0; model.total = model.totalOperations; }
       await downloadFactureClientPdf(model, window.location.origin);
     } catch (err) {
       console.error('Téléchargement facture client:', err);
@@ -337,10 +340,12 @@ export default function FactureDetail() {
                 <span className="text-muted-foreground">{t('dashboard.factures.lblTotalOps')}</span>
                 <span>{facture.totalOperations.toLocaleString()} MRU</span>
               </div>
+              {!isAgentTransit && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('dashboard.factures.lblInteret')}</span>
                 <span>{facture.interet.toLocaleString()} MRU</span>
               </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('dashboard.factures.lblDejaPaye')}</span>
                 <span className="font-medium text-green-700">

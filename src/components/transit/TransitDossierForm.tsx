@@ -353,6 +353,7 @@ export default function TransitDossierForm({
   const [pdfLoading, setPdfLoading] = useState(false);
 
   const isAdmin = user?.role === UserRole.ADMIN;
+  const isAgentTransit = user?.role === UserRole.AGENT_TRANSIT;
   const isAgentOrAdmin =
     user?.role === UserRole.ADMIN || user?.role === UserRole.AGENT_TRANSIT;
   const isReadOnlyView = mode === 'edit' && readOnly;
@@ -1134,7 +1135,11 @@ export default function TransitDossierForm({
                     variant="outline"
                     size="sm"
                     className="no-print"
-                    onClick={() => setPrintModel(buildPrintableTransitModel(transit))}
+                    onClick={() => {
+                    const m = buildPrintableTransitModel(transit);
+                    if (isAgentTransit) { m.interet = 0; m.total = m.totalOperations; }
+                    setPrintModel(m);
+                  }}
                   >
                     <Printer className="mr-2 h-4 w-4" />
                     Imprimer
@@ -1392,6 +1397,7 @@ export default function TransitDossierForm({
                     </p>
                   </div>
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
+                    {!isAgentTransit && (
                     <div className="space-y-2">
                       <Label htmlFor="interet" className="text-sm font-medium">
                         Intérêts (MRU)
@@ -1413,6 +1419,7 @@ export default function TransitDossierForm({
                         }
                       />
                     </div>
+                    )}
                     <div className="sm:border-l sm:border-border/80 sm:pl-6">
                       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         Total final

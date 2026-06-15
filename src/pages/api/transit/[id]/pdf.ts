@@ -49,6 +49,11 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       facture,
     } as TransitDetailsForPrint);
 
+    if (req.user!.role === UserRole.AGENT_TRANSIT) {
+      payload.interet = 0;
+      payload.total = payload.totalOperations;
+    }
+
     const buffer = await generateTransitPdfBuffer(payload);
     const baseName = String(transit.bl || payload.factureNumber || id).replace(/[^\w.-]+/g, '_');
     const filename = `transit-${baseName}.pdf`;
