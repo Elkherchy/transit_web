@@ -1,14 +1,12 @@
 import type { NextApiResponse } from 'next';
 import connectDB from '@/lib/db';
-import { JourneeCaisse, Transit, User } from '@/models';
+import { Transit, User } from '@/models';
 import {
   ApiResponse,
   DesignationStatus,
-  JourneeCaisseStatus,
   UserRole,
 } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
-import { getOrCreateOpenJournee } from '@/lib/journee/journeeHelpers';
 
 export interface PayeurPaiementRow {
   designationId: string;
@@ -47,34 +45,11 @@ async function handler(
   try {
     await connectDB();
 
-    // Récupère la journée du jour pour récupérer la date à filtrer.
-    let journee;
-    try {
-      journee = await getOrCreateOpenJournee(req.user!.userId);
-    } catch {
-      // Admin sans caissier : prend simplement aujourd'hui à 00:00 UTC.
-      journee = null;
-    }
-
-    const target = journee?.date ? new Date(journee.date) : new Date();
-    const dayStart = new Date(target);
-    dayStart.setUTCHours(0, 0, 0, 0);
-    const dayEnd = new Date(dayStart);
-    dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
-
-    // Statut journée clôturée → on autorise quand même la lecture (historique).
-    if (
-      journee &&
-      journee.statut === JourneeCaisseStatus.CLOTUREE &&
-      journee.closedAt
-    ) {
-      // pas de filtre supplémentaire
-    }
-
-    // Cherche tous les transits ayant au moins une désignation payée dans la
-    // fenêtre temporelle de la journée.
+    // Toutes les désignations PAYEE (en attente de traitement caissier),
+    // sans filtre date — les paiements de 2-4 jours restent visibles
+    // jusqu'à leur validation ou rejet.
     const transits = await Transit.find({
-      'designations.paidAt': { $gte: dayStart, $lt: dayEnd },
+      'designations.statutDesignation': DesignationStatus.PAYEE,
     })
       .select('_id bl client designations')
       .lean();
@@ -100,9 +75,9 @@ async function handler(
       designations?: LeanDesignation[];
     }>) {
       for (const d of tr.designations || []) {
+        if (d.statutDesignation !== DesignationStatus.PAYEE) continue;
         if (!d.paidAt) continue;
         const paid = new Date(d.paidAt);
-        if (paid < dayStart || paid >= dayEnd) continue;
         const payeurId = d.payeurId ? String(d.payeurId) : undefined;
         if (payeurId) payeurIds.add(payeurId);
         // Agrège les reçus (multi-upload) + fallback champs legacy.

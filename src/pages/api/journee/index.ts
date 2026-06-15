@@ -23,12 +23,12 @@ async function handler(
 
   try {
     await connectDB();
-    const { statut, limit = '30' } = req.query;
+    const { statut, limit = '200' } = req.query;
     const query: Record<string, unknown> = {};
     if (statut && Object.values(JourneeCaisseStatus).includes(statut as JourneeCaisseStatus)) {
       query.statut = statut;
     }
-    const lim = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 30));
+    const lim = Math.min(200, Math.max(1, parseInt(limit as string, 10) || 200));
     const list = await JourneeCaisse.find(query)
       .sort({ date: -1, createdAt: -1 })
       .limit(lim)
