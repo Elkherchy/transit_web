@@ -81,7 +81,7 @@ async function handler(
     }
 
     designation.montant = montant;
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     return res.status(200).json({
       success: true,

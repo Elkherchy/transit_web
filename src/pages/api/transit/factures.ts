@@ -194,7 +194,7 @@ async function createFacture(req: AuthenticatedRequest, res: NextApiResponse<Api
     // Dossier avec facture générée : visible dans la liste des factures
     transit.statut = TransitStatus.FACTURE_EMISE;
     transit.interet = interetNum;
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     return res.status(201).json({
       success: true,

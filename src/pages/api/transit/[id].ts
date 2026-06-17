@@ -127,7 +127,7 @@ async function updateTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
       transit.interet = Math.max(0, Number(interet) || 0);
     }
 
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     const facture = await Facture.findOne({ transitId: id });
     if (facture && (designations || interet !== undefined)) {

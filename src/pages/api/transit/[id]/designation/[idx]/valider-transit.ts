@@ -80,7 +80,7 @@ async function handler(
       designation.statutDesignation = DesignationStatus.LIBRE;
     }
 
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     try {
       await syncFactureManutentionStatusFromTransit(String(transit._id));

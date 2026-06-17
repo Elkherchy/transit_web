@@ -73,7 +73,7 @@ async function handler(
       transit.documents = transit.documents?.filter(
         (d: { _id?: mongoose.Types.ObjectId }) => d._id?.toString() !== docId
       );
-      await transit.save();
+      await transit.save({ validateModifiedOnly: true });
 
       return res.status(200).json({
         success: true,
@@ -105,7 +105,7 @@ async function handler(
       }
 
       sub.set('name', name);
-      await transit.save();
+      await transit.save({ validateModifiedOnly: true });
 
       return res.status(200).json({
         success: true,
@@ -150,7 +150,7 @@ async function handler(
       sub.set('name', stored.name);
       sub.set('size', stored.size);
       sub.set('uploadedAt', new Date());
-      await transit.save();
+      await transit.save({ validateModifiedOnly: true });
 
       if (oldKey && oldKey !== stored.key) {
         await removeTransitStoredFile(oldKey);

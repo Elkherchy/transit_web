@@ -90,7 +90,7 @@ async function handler(
       transit.statut = TransitStatus.EN_VALIDATION;
     }
 
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     return res.status(200).json({
       success: true,

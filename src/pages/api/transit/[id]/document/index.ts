@@ -67,7 +67,7 @@ async function handler(
       transit.documents = [];
     }
     transit.documents.push(newDoc);
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     const savedDoc = transit.documents[transit.documents.length - 1];
 

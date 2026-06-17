@@ -78,7 +78,7 @@ async function handler(
     desig.recuUrl = null;
     desig.recuFilename = null;
     desig.recus = [] as unknown as typeof desig.recus;
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     // Recalcule le statut de la FactureManutention liée — la désignation
     // rejetée revient en RESERVEE donc le compteur "désignations payées"

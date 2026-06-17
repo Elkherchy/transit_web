@@ -73,7 +73,7 @@ async function handler(
     desig.commentaire = motif
       ? `Libéré par caissier : ${String(motif).trim()}`
       : 'Remis à LIBRE par caissier';
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     try {
       await syncFactureManutentionStatusFromTransit(String(transit._id));

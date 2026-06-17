@@ -281,7 +281,7 @@ async function handler(
     }
     designation.paidAt = datePaiement;
 
-    await transit.save();
+    await transit.save({ validateModifiedOnly: true });
 
     // Recalcule le statut de la FactureManutention liée (visible dans la
     // liste caissier + admin et propage l'avancement du dossier).

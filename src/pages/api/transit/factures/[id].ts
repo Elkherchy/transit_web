@@ -157,7 +157,7 @@ async function updateFacture(req: AuthenticatedRequest, res: NextApiResponse<Api
         const transit = await Transit.findById(facture.transitId);
         if (transit) {
           transit.statut = TransitStatus.FACTURE_EMISE;
-          await transit.save();
+          await transit.save({ validateModifiedOnly: true });
         }
       }
     }
@@ -167,7 +167,7 @@ async function updateFacture(req: AuthenticatedRequest, res: NextApiResponse<Api
     const transit = await Transit.findById(facture.transitId);
     if (transit && interet !== undefined) {
       transit.interet = facture.interet;
-      await transit.save();
+      await transit.save({ validateModifiedOnly: true });
     }
 
     const updated = await Facture.findById(id)
@@ -215,7 +215,7 @@ async function deleteFacture(req: AuthenticatedRequest, res: NextApiResponse<Api
     const transit = await Transit.findById(facture.transitId);
     if (transit) {
       transit.statut = TransitStatus.EN_COURS;
-      await transit.save();
+      await transit.save({ validateModifiedOnly: true });
     }
 
     await Facture.findByIdAndDelete(id);

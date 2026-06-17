@@ -110,7 +110,7 @@ async function updatePaiement(req: AuthenticatedRequest, res: NextApiResponse<Ap
             await facture.save();
             if (transit) {
               transit.statut = TransitStatus.VALIDE;
-              await transit.save();
+              await transit.save({ validateModifiedOnly: true });
             }
 
             const payeurUser = await User.findById(paiement.payeurId)
@@ -138,7 +138,7 @@ async function updatePaiement(req: AuthenticatedRequest, res: NextApiResponse<Ap
             await facture.save();
             if (transit && prevTransitStatut !== undefined) {
               transit.statut = prevTransitStatut;
-              await transit.save();
+              await transit.save({ validateModifiedOnly: true });
             }
             console.error('Caisse paiement validé:', caisseErr);
             return res.status(500).json({
@@ -159,7 +159,7 @@ async function updatePaiement(req: AuthenticatedRequest, res: NextApiResponse<Ap
           const transit = await Transit.findById(facture.transitId);
           if (transit) {
             transit.statut = TransitStatus.FACTURE_EMISE;
-            await transit.save();
+            await transit.save({ validateModifiedOnly: true });
           }
         }
       }

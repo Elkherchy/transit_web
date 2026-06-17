@@ -137,7 +137,7 @@ async function handler(
     const transit = await Transit.findById(facture.transitId);
     if (transit) {
       transit.statut = TransitStatus.EN_VALIDATION;
-      await transit.save();
+      await transit.save({ validateModifiedOnly: true });
     }
 
     return res.status(201).json({
