@@ -31,7 +31,7 @@ import {
   TransactionType,
   UserRole,
 } from '@/types';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { CardHeader } from '@/components/ui/card';
 
 
@@ -45,6 +45,7 @@ export default function CaissesHubPage() {
   const isStaff = user?.role === UserRole.ADMIN || user?.role === UserRole.COMPTABLE;
 
   const [rows, setRows] = useState<ICaisseListItem[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -262,32 +263,42 @@ export default function CaissesHubPage() {
 
       <PageContent padding={isMobile ? 'sm' : 'md'}>
 
-        <div className="space-y-6 rounded-lg bg-white p-4 max-md:rounded-none max-md:bg-transparent max-md:px-4 max-md:py-3 border shadow-sm">
-         <CardHeader className='text-xl font-bold text-primary'>
-          {t('dashboard.caisses.list')}
-        </CardHeader>
-        {error &&
-          !createOpen &&
-          !renameRow &&
-          !deactivateRow &&
-          !quickRow && (
+        <div className="space-y-4 rounded-lg bg-white p-4 max-md:rounded-none max-md:bg-transparent max-md:px-4 max-md:py-3 border shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <CardHeader className="text-xl font-bold text-primary p-0">
+              {t('dashboard.caisses.list')}
+            </CardHeader>
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder={t('common.search') || 'Rechercher…'}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 h-9 text-sm"
+              />
+            </div>
+          </div>
+
+          {error && !createOpen && !renameRow && !deactivateRow && !quickRow && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-        {loading ? (
-          <div className="flex justify-center overflow-hidden rounded-none border-0 bg-transparent py-16 md:rounded-md md:border md:bg-card">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
-        ) : (
-          <CaissesDataTable
-            data={rows}
-            openQuick={openQuick}
-            onRename={handleRenameCaisse}
-            onDeactivate={handleDeactivateRequest}
-          />
-        )}
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : (
+            <CaissesDataTable
+              data={rows.filter((r) =>
+                r.nom.toLowerCase().includes(search.toLowerCase())
+              )}
+              openQuick={openQuick}
+              onRename={handleRenameCaisse}
+              onDeactivate={handleDeactivateRequest}
+            />
+          )}
         </div>
       </PageContent>
 
