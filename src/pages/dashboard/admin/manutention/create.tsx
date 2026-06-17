@@ -42,6 +42,7 @@ export default function AdminCreateManutention() {
   const isMobile = useIsMobile();
 
   const [bl, setBl] = useState('');
+  const [numeroConteneur, setNumeroConteneur] = useState('');
   const [clientId, setClientId] = useState('');
   const [selectedClient, setSelectedClient] = useState<ClientOption | null>(
     null
@@ -86,6 +87,7 @@ export default function AdminCreateManutention() {
           client: selectedClient?.nom || '',
           clientId,
           objet: objet.trim(),
+          numeroConteneur: numeroConteneur.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -311,6 +313,17 @@ export default function AdminCreateManutention() {
                     onChange={(e) => setBl(e.target.value.toUpperCase())}
                     placeholder={t('dashboard.manutention.create.blPlaceholder')}
                     required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="numeroConteneur">
+                    Numéro Conteneur <span className="text-xs text-muted-foreground">(optionnel)</span>
+                  </Label>
+                  <Input
+                    id="numeroConteneur"
+                    value={numeroConteneur}
+                    onChange={(e) => setNumeroConteneur(e.target.value.toUpperCase())}
+                    placeholder="ex: MSCU1234567"
                   />
                 </div>
                 <div className="space-y-2">
