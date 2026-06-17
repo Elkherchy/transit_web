@@ -34,6 +34,7 @@ function serializeCaisse(
     type: resolveCompteType(doc),
     kind: doc.kind as CaisseKind,
     payeurId: doc.payeurId ? String(doc.payeurId) : undefined,
+    clientId: doc.clientId ? String(doc.clientId) : undefined,
     actif: Boolean(doc.actif),
     isDefaultGeneral: Boolean(doc.isDefaultGeneral),
     isDefaultBanque: Boolean(doc.isDefaultBanque),

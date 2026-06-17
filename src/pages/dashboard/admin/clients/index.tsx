@@ -256,7 +256,7 @@ export default function AdminClientsList() {
   useEffect(() => {
     if (!canAccess) return;
     Promise.all([
-      fetch('/api/transit/factures', { credentials: 'include' }).then((r) => r.json()),
+      fetch('/api/transit/factures?limit=1000', { credentials: 'include' }).then((r) => r.json()),
       fetch('/api/credit-compte?limit=500', { credentials: 'include' }).then((r) => r.json()),
     ]).then(([facturesRes, creditRes]) => {
       const map = new Map<string, { debit: number; credit: number }>();
@@ -383,7 +383,14 @@ export default function AdminClientsList() {
         cell: ({ row }) => {
           const f = financials.get(row.original._id);
           if (!f) return <span className="text-muted-foreground text-sm">—</span>;
-          return <span className="font-medium text-orange-600 tabular-nums">{f.debit.toFixed(2)} MRU</span>;
+          return (
+            <Link
+              href={`/dashboard/admin/clients/${row.original._id}/factures`}
+              className="font-medium text-orange-600 tabular-nums hover:underline"
+            >
+              {f.debit.toFixed(2)} MRU
+            </Link>
+          );
         },
       },
       {
@@ -393,7 +400,14 @@ export default function AdminClientsList() {
         cell: ({ row }) => {
           const f = financials.get(row.original._id);
           if (!f) return <span className="text-muted-foreground text-sm">—</span>;
-          return <span className="font-medium text-green-600 tabular-nums">{f.credit.toFixed(2)} MRU</span>;
+          return (
+            <Link
+              href={`/dashboard/admin/clients/${row.original._id}`}
+              className="font-medium text-green-600 tabular-nums hover:underline"
+            >
+              {f.credit.toFixed(2)} MRU
+            </Link>
+          );
         },
       },
       {
@@ -405,9 +419,12 @@ export default function AdminClientsList() {
           if (!f) return <span className="text-muted-foreground text-sm">—</span>;
           const restant = f.debit - f.credit;
           return (
-            <span className={`font-semibold tabular-nums ${restant > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            <Link
+              href={`/dashboard/admin/clients/${row.original._id}/operations`}
+              className={`font-semibold tabular-nums hover:underline ${restant > 0 ? 'text-red-600' : 'text-green-600'}`}
+            >
               {restant.toFixed(2)} MRU
-            </span>
+            </Link>
           );
         },
       },

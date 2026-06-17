@@ -1,11 +1,13 @@
 import type { NextApiResponse } from 'next';
 import connectDB from '@/lib/db';
-import { Transit, Facture, Paiement, Client } from '@/models';
+import { Transit, Facture, Paiement, Client, Transaction, Caisse } from '@/models';
+import { ensureClientCaisse } from '@/lib/caisse';
 import {
   ApiResponse,
   IFacture,
   FactureStatus,
   TransitStatus,
+  TransactionType,
   PaginatedResponse,
   PaiementStatus,
 } from '@/types';
@@ -80,13 +82,13 @@ async function getFactures(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
     );
     const transits = transitIds.length
       ? await Transit.find({ _id: { $in: transitIds } })
-          .select('bl client objet')
+          .select('bl client objet clientId')
           .lean()
       : [];
     const transitMap = new Map(
       transits.map((t) => [
         String(t._id),
-        { bl: t.bl, client: t.client, objet: t.objet },
+        { bl: t.bl, client: t.client, objet: t.objet, clientId: t.clientId ? String(t.clientId) : undefined },
       ])
     );
 
@@ -95,7 +97,11 @@ async function getFactures(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
     const clientIds = Array.from(
       new Set(
         facturesRaw
-          .map((f) => String((f as { clientId?: unknown }).clientId || ''))
+          .flatMap((f) => {
+            const direct = String((f as { clientId?: unknown }).clientId || '');
+            const fromTransit = transitMap.get(String(f.transitId || ''))?.clientId || '';
+            return [direct, fromTransit];
+          })
           .filter((v) => v && mongoose.isValidObjectId(v))
       )
     );
@@ -111,10 +117,14 @@ async function getFactures(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
     const factures = facturesRaw.map((f) => {
       const base = serializeFacture(f as Record<string, unknown>);
       const transitLinked = transitMap.get(String(f.transitId || ''));
-      const fClientId = String((f as { clientId?: unknown }).clientId || '');
+      const fClientId =
+        String((f as { clientId?: unknown }).clientId || '') ||
+        transitLinked?.clientId ||
+        '';
       const clientNom = fClientId ? clientMap.get(fClientId) : undefined;
       return {
         ...base,
+        clientId: fClientId || undefined,
         bl: base.bl || transitLinked?.bl,
         transitClient: transitLinked?.client || clientNom,
         transitObjet: transitLinked?.objet,
@@ -180,14 +190,19 @@ async function createFacture(req: AuthenticatedRequest, res: NextApiResponse<Api
 
     const interetNum = Math.max(0, Number(interet) || 0);
 
+    const totalFinal = totalOperations + interetNum;
+    const clientId = transit.clientId ? String(transit.clientId) : null;
+
     // Create facture
     const facture = await Facture.create({
       transitId,
       bl: transit.bl,
+      clientId: clientId ? new mongoose.Types.ObjectId(clientId) : null,
+      transitClient: transit.client || undefined,
       numero: generateFactureNumero(),
       totalOperations,
       interet: interetNum,
-      totalFinal: totalOperations + interetNum,
+      totalFinal,
       statut: FactureStatus.BROUILLON,
     });
 
@@ -195,6 +210,30 @@ async function createFacture(req: AuthenticatedRequest, res: NextApiResponse<Api
     transit.statut = TransitStatus.FACTURE_EMISE;
     transit.interet = interetNum;
     await transit.save({ validateModifiedOnly: true });
+
+    // DEBIT automatique sur la caisse client
+    if (clientId && totalFinal > 0) {
+      try {
+        const clientCaisseId = await ensureClientCaisse(clientId, transit.client || '');
+        const srcKey = `facture-${String(facture._id)}`;
+        const already = await Transaction.findOne({ sourcePaiementId: srcKey });
+        if (!already) {
+          await Transaction.create({
+            caisseId: clientCaisseId,
+            type: TransactionType.DEBIT,
+            montant: totalFinal,
+            description: `Facture ${String(facture.numero)} — BL ${transit.bl || String(transit._id)}`,
+            date: new Date(),
+            reference: String(facture._id),
+            userId: req.user!.userId,
+            sourcePaiementId: srcKey,
+          });
+          await Caisse.findByIdAndUpdate(clientCaisseId, { $inc: { solde: -totalFinal } });
+        }
+      } catch (txErr) {
+        console.error('DEBIT caisse client (createFacture transit):', txErr);
+      }
+    }
 
     return res.status(201).json({
       success: true,

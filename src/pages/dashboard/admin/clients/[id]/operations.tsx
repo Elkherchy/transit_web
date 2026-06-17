@@ -145,10 +145,16 @@ export default function AdminClientOperations() {
       },
       {
         accessorKey: 'type',
-        meta: { hideInMobileList: true } satisfies DataTableColumnMeta,
         header: t('dashboard.clients.operations.colType'),
         cell: ({ row }) => (
-          <Badge variant="outline" className="text-xs">
+          <Badge
+            className={`text-xs ${
+              row.original.type === TransactionType.CREDIT
+                ? 'bg-green-100 text-green-800 border-green-200'
+                : 'bg-red-100 text-red-800 border-red-200'
+            }`}
+            variant="outline"
+          >
             {row.original.type === TransactionType.CREDIT
               ? t('dashboard.clients.operations.typeCredit')
               : t('dashboard.clients.operations.typeDebit')}

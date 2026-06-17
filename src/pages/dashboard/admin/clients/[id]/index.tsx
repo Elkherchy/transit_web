@@ -22,7 +22,7 @@ import {
 import { ClientSubNav } from '@/components/dashboard/admin/clients/ClientSubNav';
 import { useClientDetail } from '@/components/dashboard/admin/clients/useClientDetail';
 import { isAdminTransit } from '@/lib/roles';
-import { UserRole, type ICreditCompte } from '@/types';
+import { UserRole, TransactionType, type ICreditCompte } from '@/types';
 import { ArrowLeft, RefreshCcw, Pencil, FileDown, Loader2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -128,10 +128,11 @@ export default function AdminClientDetails() {
     );
   }
 
-  const { client, caisse, factures } = data;
+  const { client, caisse, factures, transactions } = data;
   const totalFactures = factures.reduce((s, f) => s + (f.totalFinal || 0), 0);
   const creditComptesActif = creditComptes.filter((cc) => cc.statut === 'ACTIF');
   const totalCredits = creditComptesActif.reduce((s, cc) => s + cc.montant, 0);
+  const recentTx = transactions.slice(0, 10);
 
   return (
     <DashboardLayout>
@@ -230,15 +231,48 @@ export default function AdminClientDetails() {
               strong
             />
             <Field
-              label="Net Dû"
+              label="Solde Net"
               value={
-                <span className={totalFactures - totalCredits > 0 ? 'text-red-600' : 'text-green-600'}>
-                  {fmt(totalFactures - totalCredits)} MRU
+                <span className={caisse && caisse.solde < 0 ? 'text-red-600' : 'text-green-600'}>
+                  {fmt(caisse?.solde ?? 0)} MRU
                 </span>
               }
               strong
             />
           </div>
+
+          {/* Derniers mouvements caisse */}
+          {recentTx.length > 0 && (
+            <div className="rounded-lg bg-white border shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Derniers mouvements</h3>
+                <Link
+                  href={`/dashboard/admin/clients/${id}/operations`}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Voir tout ({transactions.length})
+                </Link>
+              </div>
+              <div className="divide-y">
+                {recentTx.map((tx) => {
+                  const isCredit = tx.type === TransactionType.CREDIT;
+                  return (
+                    <div key={String(tx._id)} className="px-4 py-2.5 flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-sm truncate">{tx.description || '—'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(tx.date).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                      <span className={`font-semibold tabular-nums shrink-0 text-sm ${isCredit ? 'text-green-700' : 'text-red-600'}`}>
+                        {isCredit ? '+' : '−'}{fmt(tx.montant)} MRU
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Crédits Compte */}
           {creditComptes.length > 0 && (

@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CompteType, ICaisseListItem } from '@/types';
+import { CaisseKind, CompteType, ICaisseListItem } from '@/types';
 import { MoreHorizontal } from 'lucide-react';
 
 export interface CaissesTableActions {
@@ -42,9 +42,20 @@ export function createCaissesColumns(
     {
       accessorKey: 'nom',
       header: () => t('dashboard.caisses.columns.nom'),
-      cell: ({ row }) => (
-        <span className="font-medium">{row.original.nom}</span>
-      ),
+      cell: ({ row }) => {
+        const r = row.original;
+        if (r.kind === CaisseKind.CLIENT && r.clientId) {
+          return (
+            <Link
+              href={`/dashboard/admin/clients/${r.clientId}`}
+              className="font-medium text-primary hover:underline"
+            >
+              {r.nom}
+            </Link>
+          );
+        }
+        return <span className="font-medium">{r.nom}</span>;
+      },
     },
     {
       id: 'type',
@@ -93,6 +104,11 @@ export function createCaissesColumns(
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {r.kind === CaisseKind.CLIENT && r.clientId && (
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/admin/clients/${r.clientId}`}>Voir client</Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                   <Link href={`/dashboard/caisses/${r._id}`}>{t('dashboard.caisses.columns.operations')}</Link>
                 </DropdownMenuItem>

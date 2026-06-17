@@ -242,9 +242,9 @@ export default function AdminClientFactures() {
               <div className="text-lg font-semibold tabular-nums text-green-600">{fmt(totalCredits)} MRU</div>
             </div>
             <div className="space-y-0.5">
-              <div className="text-xs uppercase tracking-wide text-muted-foreground">Net Dû</div>
-              <div className={`text-lg font-semibold tabular-nums ${totalFactures - totalCredits > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {fmt(totalFactures - totalCredits)} MRU
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Solde Net</div>
+              <div className={`text-lg font-semibold tabular-nums ${data.caisse && data.caisse.solde < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {fmt(data.caisse?.solde ?? 0)} MRU
               </div>
             </div>
           </div>
