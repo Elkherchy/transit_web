@@ -351,6 +351,7 @@ export interface IFactureManutention {
   clientId?: string;
   /** Objet du dossier — propagé au transit */
   objet?: string;
+  numeroConteneur?: string;
   lignesEntreprise: ILigneEntreprise[];
   bonLivret: number;
   documents?: IDocument[];
