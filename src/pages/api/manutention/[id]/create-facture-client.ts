@@ -79,23 +79,37 @@ async function handler(
         .json({ success: false, error: 'Transit lié introuvable' });
     }
 
-    // Idempotence : si une facture client existe déjà.
-    if (transit.factureClientId) {
-      const existing = await Facture.findById(transit.factureClientId)
+    // Idempotence : vérifie d'abord via transit.factureClientId, puis
+    // directement par l'index unique transitId (robuste si le save du transit
+    // a échoué après la création de la facture).
+    const existingFacture =
+      (transit.factureClientId
+        ? await Facture.findById(transit.factureClientId)
+            .select('_id numero totalFinal')
+            .lean()
+        : null) ??
+      (await Facture.findOne({ transitId: String(transit._id) })
         .select('_id numero totalFinal')
-        .lean();
-      if (existing) {
-        return res.status(200).json({
-          success: true,
-          data: {
-            factureId: String(existing._id),
-            numero: String((existing as { numero?: unknown }).numero || ''),
-            totalFinal:
-              Number((existing as { totalFinal?: unknown }).totalFinal) || 0,
-          },
-          message: 'Facture client déjà émise',
-        });
+        .lean());
+
+    if (existingFacture) {
+      // Répare transit.factureClientId si manquant
+      if (!transit.factureClientId) {
+        await Transit.updateOne(
+          { _id: transit._id },
+          { $set: { factureClientId: String(existingFacture._id) } }
+        );
       }
+      return res.status(200).json({
+        success: true,
+        data: {
+          factureId: String(existingFacture._id),
+          numero: String((existingFacture as { numero?: unknown }).numero || ''),
+          totalFinal:
+            Number((existingFacture as { totalFinal?: unknown }).totalFinal) || 0,
+        },
+        message: 'Facture client déjà émise',
+      });
     }
 
     // Vérifie que toutes les désignations sont VALIDEE_ADMIN (ou REJETEE).
@@ -155,8 +169,10 @@ async function handler(
       statut: FactureStatus.EMIS,
       dateEmission: new Date(),
     });
-    transit.factureClientId = String(factureClient._id);
-    await transit.save();
+    await Transit.updateOne(
+      { _id: transit._id },
+      { $set: { factureClientId: String(factureClient._id) } }
+    );
 
     // DEBIT caisse client (créance).
     if (clientId && totalFinal > 0) {
