@@ -9,7 +9,6 @@ export default function AdminTransitDebiteurs() {
       allowedRoles={[
         UserRole.ADMIN,
         UserRole.ADMIN_TRANSIT,
-        UserRole.AGENT_TRANSIT,
         UserRole.COMPTABLE,
       ]}
       titleKey="dashboard.debiteurs.titleTransit"

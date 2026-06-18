@@ -122,13 +122,13 @@ const navItemsFlat: NavItem[] = [
     label: 'Caisse Transit',
     href: '/dashboard/admin/transit/caisse',
     Icon: Wallet,
-    roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.AGENT_TRANSIT],
+    roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT],
   },
   {
     label: 'Débiteurs Transit',
     href: '/dashboard/admin/transit/debiteurs',
     Icon: UserRound,
-    roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.AGENT_TRANSIT, UserRole.COMPTABLE],
+    roles: [UserRole.ADMIN, UserRole.ADMIN_TRANSIT, UserRole.COMPTABLE],
   },
   {
     label: 'Mouvement Transit',

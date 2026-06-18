@@ -25,7 +25,7 @@ export interface ClientDebiteurTransit {
  *     seuls les débiteurs sont retournés)
  *   - search?       : filtre nom client (regex insensible à la casse)
  *
- * Auth : ADMIN, ADMIN_TRANSIT, AGENT_TRANSIT, COMPTABLE
+ * Auth : ADMIN, ADMIN_TRANSIT, COMPTABLE
  */
 async function handler(
   req: AuthenticatedRequest,
@@ -118,6 +118,5 @@ async function handler(
 export default withAuth(handler, [
   UserRole.ADMIN,
   UserRole.ADMIN_TRANSIT,
-  UserRole.AGENT_TRANSIT,
   UserRole.COMPTABLE,
 ]);
