@@ -94,7 +94,7 @@ export default function CaissierFacturesClientPage() {
         fetch('/api/caisse/caisses?type=BANQUE', {
           credentials: 'include',
         }).then((r) => r.json()),
-        fetch('/api/transit/clients', { credentials: 'include' }).then((r) =>
+        fetch('/api/transit/clients?limit=500', { credentials: 'include' }).then((r) =>
           r.json()
         ),
       ]);

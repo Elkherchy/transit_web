@@ -198,6 +198,7 @@ export default function AdminScopedCaisseView({
   const [clientOptions, setClientOptions] = useState<
     { _id: string; nom: string }[]
   >([]);
+  const [clientSearch, setClientSearch] = useState('');
   const [transferMontant, setTransferMontant] = useState('');
   const [transferDesc, setTransferDesc] = useState('');
   const [transferDate, setTransferDate] = useState(
@@ -217,9 +218,10 @@ export default function AdminScopedCaisseView({
     setTransferDate(new Date().toISOString().slice(0, 10));
     setTransferFile(null);
     setTransferError(null);
+    setClientSearch('');
     // Charge en arrière-plan la liste des clients validés (utilisée si
     // l'utilisateur choisit destination « Client »).
-    void fetch('/api/transit/clients', { credentials: 'include' })
+    void fetch('/api/transit/clients?limit=500', { credentials: 'include' })
       .then((x) => x.json())
       .then((r) => {
         if (r?.success) {
@@ -1413,27 +1415,32 @@ export default function AdminScopedCaisseView({
             ) : (
               <div className="space-y-1.5">
                 <Label htmlFor="transfer-client">{t('dashboard.adminScopedCaisse.transfer.labelClientDest')} *</Label>
-                <Select
-                  value={transferClientId || undefined}
-                  onValueChange={(v) => setTransferClientId(v)}
-                >
-                  <SelectTrigger id="transfer-client" className="w-full">
-                    <SelectValue placeholder={t('dashboard.adminScopedCaisse.transfer.selectClientPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-[60vh]">
-                    {clientOptions.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-muted-foreground">
-                        {t('dashboard.adminScopedCaisse.transfer.noClientAvailable')}
-                      </div>
-                    ) : (
-                      clientOptions.map((c) => (
-                        <SelectItem key={c._id} value={c._id}>
+                <Input
+                  placeholder="Rechercher un client..."
+                  value={clientSearch}
+                  onChange={(e) => { setClientSearch(e.target.value); setTransferClientId(''); }}
+                  className="h-8 text-sm"
+                />
+                <div className="max-h-48 overflow-y-auto rounded-md border bg-white">
+                  {clientOptions.filter((c) =>
+                    !clientSearch.trim() || c.nom.toLowerCase().includes(clientSearch.toLowerCase())
+                  ).length === 0 ? (
+                    <p className="px-3 py-2 text-xs text-muted-foreground">Aucun client trouvé</p>
+                  ) : (
+                    clientOptions
+                      .filter((c) => !clientSearch.trim() || c.nom.toLowerCase().includes(clientSearch.toLowerCase()))
+                      .map((c) => (
+                        <button
+                          key={c._id}
+                          type="button"
+                          onClick={() => { setTransferClientId(c._id); setClientSearch(c.nom); }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-muted/60 transition-colors ${transferClientId === c._id ? 'bg-primary/10 font-semibold text-primary' : ''}`}
+                        >
                           {c.nom}
-                        </SelectItem>
+                        </button>
                       ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  )}
+                </div>
               </div>
             )}
             <div className="space-y-1.5">

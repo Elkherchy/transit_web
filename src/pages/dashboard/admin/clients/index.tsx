@@ -139,7 +139,7 @@ export default function AdminClientsList() {
     setTransferError(null);
     setTransferSuccess(null);
     // Charge la liste filtrée strictement à VALIDE + actif depuis /api/transit/clients.
-    void fetch('/api/transit/clients', { credentials: 'include' })
+    void fetch('/api/transit/clients?limit=500', { credentials: 'include' })
       .then((x) => x.json())
       .then((r) => {
         if (r?.success) {
