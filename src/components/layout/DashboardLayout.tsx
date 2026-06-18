@@ -469,7 +469,7 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[#02389B]" />
           <p className="text-sm text-slate-500">Chargement…</p>
@@ -662,7 +662,7 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
   );
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-slate-50">
 
       {/* Mobile top bar */}
       <div className="lg:hidden">{mobileHeader}</div>
@@ -692,7 +692,7 @@ export default function DashboardLayout({ children, dataListSurface }: Dashboard
 
         {/* ── Mobile content ── */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden">
-          <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 px-0 py-4">
+          <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 px-0 py-4 pb-safe">
             <DataListSurfaceProvider value={dataListSurface ?? 'comfortable'}>
               {children}
             </DataListSurfaceProvider>
