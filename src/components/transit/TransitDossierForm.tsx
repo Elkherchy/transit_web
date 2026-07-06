@@ -82,6 +82,24 @@ const emptyForm = (designations: IDesignation[]) => ({
   interet: 0,
 });
 
+// Parse une saisie montant en nombre. Les champs montant utilisent
+// `type="text"` (et non `type="number"`) car, en interface arabe (lang="ar",
+// locale OS ar-MR), Chrome — surtout sur mobile — rend un `type="number"` en
+// chiffres arabo-indiens (٠١٢٣) malgré l'attribut `lang`. Un champ texte affiche
+// toujours la chaîne littérale (chiffres latins). On reconvertit ici
+// d'éventuels chiffres arabes tapés au clavier vers des chiffres latins.
+const parseMontant = (raw: string): number => {
+  const latin = String(raw ?? '')
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/٫/g, '.') // séparateur décimal arabe (U+066B)
+    .replace(/٬/g, '') // séparateur de milliers arabe (U+066C)
+    .replace(',', '.')
+    .replace(/[^0-9.]/g, '');
+  const n = parseFloat(latin);
+  return Number.isFinite(n) ? n : 0;
+};
+
 /** Dans la fenêtre d’impression, le contenu n’est plus positionné hors écran (cf. globals.css). */
 const TRANSIT_PRINT_POPUP_ROOT_FIX_CSS = `
 html,body{margin:0;background:#fff;}
@@ -1451,17 +1469,16 @@ export default function TransitDossierForm({
                           Montant (MRU)
                         </span>
                         <Input
-                          type="number"
-                          min={0}
-                          step="any"
+                          type="text"
                           inputMode="decimal"
+                          dir="ltr"
                           className="h-11 sm:h-10 text-right tabular-nums sm:max-w-[7rem]"
                           aria-label={`Montant ${designation.nom}`}
-                          value={designation.montant}
+                          value={String(designation.montant ?? 0)}
                           onChange={(e) =>
                             handleUpdateDesignationMontant(
                               index,
-                              parseFloat(e.target.value) || 0
+                              parseMontant(e.target.value)
                             )
                           }
                         />
@@ -1512,10 +1529,9 @@ export default function TransitDossierForm({
                       </Label>
                       <Input
                         id="totalFinal"
-                        type="number"
-                        min={0}
-                        step="any"
+                        type="text"
                         inputMode="decimal"
+                        dir="ltr"
                         className="h-11 w-full sm:w-44 text-right tabular-nums"
                         value={editingTotal ? localTotalStr : (calculateTotalFinal() || '')}
                         onFocus={() => {
@@ -1524,7 +1540,7 @@ export default function TransitDossierForm({
                         }}
                         onChange={(e) => {
                           setLocalTotalStr(e.target.value);
-                          const newTotal = parseFloat(e.target.value) || 0;
+                          const newTotal = parseMontant(e.target.value);
                           const totalOps = calculateTotalOperations();
                           setFormData((prev) => ({
                             ...prev,

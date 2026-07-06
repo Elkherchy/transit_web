@@ -571,7 +571,7 @@ export function isDesignationAdminOnly(nom: string | undefined | null): boolean 
  * elles passent directement en `VALIDEE_ADMIN` (cf. flux des désignations
  * ajoutées par l'admin) et sortent du pool réservable par les payeurs.
  */
-export const DESIGNATIONS_ADMIN_PAYABLE: ReadonlyArray<string> = ['TS', 'Camion'];
+export const DESIGNATIONS_ADMIN_PAYABLE: ReadonlyArray<string> = ['TS', 'Camion' , 'Escorte', 'Sogetrap'];
 
 /** Helper : true si l'admin peut fixer lui-même le montant de cette désignation. */
 export function isDesignationAdminPayable(

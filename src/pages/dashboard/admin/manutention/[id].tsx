@@ -100,6 +100,24 @@ function designationStatusBadge(s: DesignationStatus | undefined, t: (key: strin
 const fmt = (n: number) =>
   Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
 
+// Parse une saisie montant en nombre. Les champs montant utilisent
+// `type="text"` (et non `type="number"`) car, en interface arabe (lang="ar",
+// locale OS ar-MR), Chrome — surtout sur mobile — rend un `type="number"` avec
+// des chiffres arabo-indiens (٠١٢٣) en ignorant l'attribut `lang`. Un champ
+// texte affiche toujours la chaîne littérale (chiffres latins). On convertit
+// ici d'éventuels chiffres arabes tapés au clavier vers des chiffres latins.
+const parseMontant = (raw: string): number => {
+  const latin = String(raw ?? '')
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/٫/g, '.') // séparateur décimal arabe (U+066B)
+    .replace(/٬/g, '') // séparateur de milliers arabe (U+066C)
+    .replace(',', '.')
+    .replace(/[^0-9.]/g, '');
+  const n = parseFloat(latin);
+  return Number.isFinite(n) ? n : 0;
+};
+
 export default function AdminFactureManutentionDetail() {
   const { data: session, status } = useSession();
   const { t } = useTranslation();
@@ -566,7 +584,7 @@ export default function AdminFactureManutentionDetail() {
   const handleAddDesignation = useCallback(() => {
     const nom = newName.trim();
     if (!nom) return;
-    const montant = Number(newMontant) || 0;
+    const montant = parseMontant(newMontant);
     // Toute désignation ajoutée par l'admin est automatiquement validée
     // (statut VALIDEE_ADMIN) — pas de flux de validation ni d'attente payeur.
     const statutDesignation = DesignationStatus.VALIDEE_ADMIN;
@@ -588,7 +606,7 @@ export default function AdminFactureManutentionDetail() {
   }, []);
 
   const handleChangeMontant = useCallback((idx: number, value: string) => {
-    const montant = Number(value) || 0;
+    const montant = parseMontant(value);
     setEditDesignations((prev) =>
       prev.map((d, i) => (i === idx ? { ...d, montant } : d))
     );
@@ -1194,9 +1212,9 @@ export default function AdminFactureManutentionDetail() {
                               </td>
                               <td className="px-3 py-2 text-right">
                                 <Input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
+                                  type="text"
+                                  inputMode="decimal"
+                                  dir="ltr"
                                   value={String(d.montant ?? 0)}
                                   onChange={(e) =>
                                     handleChangeMontant(idx, e.target.value)
@@ -1267,9 +1285,9 @@ export default function AdminFactureManutentionDetail() {
                               return (
                                 <Input
                                   id="edit-total-final"
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
+                                  type="text"
+                                  inputMode="decimal"
+                                  dir="ltr"
                                   value={editingTotalFinal ? localTotalFinalStr : (totalFinal || '')}
                                   onFocus={() => {
                                     const totalOps2 = editDesignations.reduce(
@@ -1281,7 +1299,7 @@ export default function AdminFactureManutentionDetail() {
                                   }}
                                   onChange={(e) => {
                                     setLocalTotalFinalStr(e.target.value);
-                                    const newTotal = parseFloat(e.target.value) || 0;
+                                    const newTotal = parseMontant(e.target.value);
                                     const totalOps2 = editDesignations.reduce(
                                       (s, d) => s + (Number(d.montant) || 0),
                                       0
@@ -1475,9 +1493,9 @@ export default function AdminFactureManutentionDetail() {
                 <Label htmlFor="new-montant">{t('dashboard.manutention.detail.dialogMontantLabel')}</Label>
                 <Input
                   id="new-montant"
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  dir="ltr"
                   value={newMontant}
                   onChange={(e) => setNewMontant(e.target.value)}
                   placeholder="0.00"
