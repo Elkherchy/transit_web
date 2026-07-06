@@ -725,13 +725,9 @@ export default function TransitDossierForm({
   const handleAddDesignation = () => {
     const nom = newDesignationName.trim();
     if (!nom) return;
-    // Désignation ajoutée manuellement (frais supplémentaire) → considérée
-    // déjà payée (PAYEE), elle rejoint directement le flux de validation
-    // transit au lieu de rester LIBRE (en attente d'un payeur).
-    const statutDesignation =
-      nom === 'Autre'
-        ? DesignationStatus.VALIDEE_ADMIN
-        : DesignationStatus.PAYEE;
+    // Désignation ajoutée manuellement par l'admin → automatiquement validée
+    // (VALIDEE_ADMIN), sans flux de validation ni attente d'un payeur.
+    const statutDesignation = DesignationStatus.VALIDEE_ADMIN;
     setFormData((prev) => ({
       ...prev,
       designations: [

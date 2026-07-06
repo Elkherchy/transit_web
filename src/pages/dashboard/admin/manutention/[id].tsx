@@ -550,13 +550,9 @@ export default function AdminFactureManutentionDetail() {
     const nom = newName.trim();
     if (!nom) return;
     const montant = Number(newMontant) || 0;
-    // Toute désignation ajoutée par l'admin est considérée déjà payée
-    // (statut PAYEE) — elle passe directement au flux de validation transit,
-    // au lieu de rester LIBRE (en attente d'un payeur).
-    const statutDesignation =
-      nom === 'Autre'
-        ? DesignationStatus.VALIDEE_ADMIN
-        : DesignationStatus.PAYEE;
+    // Toute désignation ajoutée par l'admin est automatiquement validée
+    // (statut VALIDEE_ADMIN) — pas de flux de validation ni d'attente payeur.
+    const statutDesignation = DesignationStatus.VALIDEE_ADMIN;
     setEditDesignations((prev) => [
       ...prev,
       {
