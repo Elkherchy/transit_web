@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { parseMontant } from '@/lib/montant';
 import {
   Dialog,
   DialogContent,
@@ -193,7 +194,7 @@ export default function FacturesClientList() {
         body: JSON.stringify({
           clientId: formData.clientId,
           banqueId: formData.banqueId,
-          montant: parseFloat(formData.montant),
+          montant: parseMontant(formData.montant),
         }),
       });
 
@@ -401,9 +402,9 @@ export default function FacturesClientList() {
               </Label>
               <Input
                 id="montant-input"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
                 placeholder="0.00"
                 value={formData.montant}
                 onChange={(e) => setFormData({ ...formData, montant: e.target.value })}

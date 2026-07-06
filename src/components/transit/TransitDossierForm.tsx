@@ -53,6 +53,7 @@ import {
   FileDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { parseMontant } from '@/lib/montant';
 import { ClientCombobox } from '@/components/transit/ClientCombobox';
 import {
   PrintableTransitDoc,
@@ -82,23 +83,6 @@ const emptyForm = (designations: IDesignation[]) => ({
   interet: 0,
 });
 
-// Parse une saisie montant en nombre. Les champs montant utilisent
-// `type="text"` (et non `type="number"`) car, en interface arabe (lang="ar",
-// locale OS ar-MR), Chrome — surtout sur mobile — rend un `type="number"` en
-// chiffres arabo-indiens (٠١٢٣) malgré l'attribut `lang`. Un champ texte affiche
-// toujours la chaîne littérale (chiffres latins). On reconvertit ici
-// d'éventuels chiffres arabes tapés au clavier vers des chiffres latins.
-const parseMontant = (raw: string): number => {
-  const latin = String(raw ?? '')
-    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
-    .replace(/٫/g, '.') // séparateur décimal arabe (U+066B)
-    .replace(/٬/g, '') // séparateur de milliers arabe (U+066C)
-    .replace(',', '.')
-    .replace(/[^0-9.]/g, '');
-  const n = parseFloat(latin);
-  return Number.isFinite(n) ? n : 0;
-};
 
 /** Dans la fenêtre d’impression, le contenu n’est plus positionné hors écran (cf. globals.css). */
 const TRANSIT_PRINT_POPUP_ROOT_FIX_CSS = `

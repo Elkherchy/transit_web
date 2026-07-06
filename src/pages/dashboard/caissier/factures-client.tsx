@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DataTable } from '@/components/ui/data-table';
+import { parseMontant } from '@/lib/montant';
 import {
   UserRole,
   FactureStatus,
@@ -185,7 +186,7 @@ export default function CaissierFacturesClientPage() {
       const fd = new FormData();
       fd.append('clientId', formData.clientId);
       fd.append('banqueId', formData.banqueId);
-      fd.append('montant', String(parseFloat(formData.montant)));
+      fd.append('montant', String(parseMontant(formData.montant)));
       if (formData.justification) {
         fd.append('justification', formData.justification);
       }
@@ -394,9 +395,9 @@ export default function CaissierFacturesClientPage() {
               </Label>
               <Input
                 id="montant-input"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
                 placeholder="0.00"
                 value={formData.montant}
                 onChange={(e) =>

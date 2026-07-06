@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DataTable, type DataTableColumnMeta } from '@/components/ui/data-table';
 import { isAdminTransit } from '@/lib/roles';
+import { parseMontant } from '@/lib/montant';
 import { UserRole } from '@/types';
 import {
   Plus,
@@ -162,7 +163,7 @@ export default function AdminClientsList() {
       setTransferError(t('dashboard.clients.transfer.errorSameDest'));
       return;
     }
-    const m = parseFloat(transferMontant.replace(',', '.'));
+    const m = parseMontant(transferMontant);
     if (!Number.isFinite(m) || m <= 0) {
       setTransferError('Montant invalide');
       return;
@@ -700,9 +701,9 @@ export default function AdminClientsList() {
               <Label htmlFor="t-mont">{t('dashboard.clients.transfer.labelMontant')}</Label>
               <Input
                 id="t-mont"
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
                 value={transferMontant}
                 onChange={(e) => setTransferMontant(e.target.value)}
                 placeholder="0.00"

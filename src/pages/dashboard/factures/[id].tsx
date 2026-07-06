@@ -338,12 +338,12 @@ export default function FactureDetail() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('dashboard.factures.lblTotalOps')}</span>
-                <span>{facture.totalOperations.toLocaleString()} MRU</span>
+                <span>{facture.totalOperations.toLocaleString('fr-FR')} MRU</span>
               </div>
               {!isAgentTransit && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('dashboard.factures.lblInteret')}</span>
-                <span>{facture.interet.toLocaleString()} MRU</span>
+                <span>{facture.interet.toLocaleString('fr-FR')} MRU</span>
               </div>
               )}
               <div className="flex justify-between">
@@ -370,7 +370,7 @@ export default function FactureDetail() {
               </div>
               <div className="flex justify-between border-t pt-4">
                 <span className="font-bold">{t('dashboard.factures.lblTotalFinal')}</span>
-                <span className="font-bold text-lg">{facture.totalFinal.toLocaleString()} MRU</span>
+                <span className="font-bold text-lg">{facture.totalFinal.toLocaleString('fr-FR')} MRU</span>
               </div>
               {facture.dateEmission && (
                 <div className="flex justify-between">

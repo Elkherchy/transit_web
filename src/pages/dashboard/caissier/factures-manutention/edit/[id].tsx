@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { UserRole, type IFactureManutention, type ILigneEntreprise, FactureManutentionStatus, type IUserResponse, type IManutentionPaiement } from '@/types';
+import { parseMontant } from '@/lib/montant';
 import { ArrowLeft, Plus, Trash2, Loader2, CheckCircle2, MoreHorizontal, FileText } from 'lucide-react';
 
 interface LigneForm {
@@ -237,7 +238,7 @@ export default function EditFactureManutention() {
         setError(t('dashboard.caissier.errLigneFieldsRequired'));
         return;
       }
-      const montant = parseFloat(ligne.montant);
+      const montant = parseMontant(ligne.montant);
       if (isNaN(montant) || montant < 0) {
         setError(t('dashboard.caissier.errMontantInvalid'));
         return;
@@ -527,9 +528,9 @@ export default function EditFactureManutention() {
                     <div className="col-span-4 space-y-2">
                       <Label>{t('dashboard.caissier.montantLabel')}</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        type="text"
+                        inputMode="decimal"
+                        dir="ltr"
                         value={ligne.montant}
                         onChange={(e) => updateLigne(ligne.id, 'montant', e.target.value)}
                         placeholder="0.00"
@@ -560,7 +561,7 @@ export default function EditFactureManutention() {
                   {t('dashboard.caissier.bonLabel')}{' '}
                   <span className="font-medium text-foreground">
                     {lignes
-                      .reduce((sum, l) => sum + (parseFloat(l.montant) || 0), 0)
+                      .reduce((sum, l) => sum + parseMontant(l.montant), 0)
                       .toFixed(2)}{' '}
                     {t('common.mru')}
                   </span>

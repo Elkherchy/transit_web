@@ -37,6 +37,7 @@ import {
   type DataTableColumnMeta,
 } from '@/components/ui/data-table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { parseMontant } from '@/lib/montant';
 import {
   CaisseKind,
   CaisseType,
@@ -136,7 +137,7 @@ export default function AdminScopedCaisseView({
     e.preventDefault();
     if (!corrRow) return;
     setCorrError(null);
-    const newSolde = parseFloat(corrSolde.replace(',', '.'));
+    const newSolde = parseMontant(corrSolde);
     if (!Number.isFinite(newSolde)) {
       setCorrError('Solde invalide');
       return;
@@ -249,7 +250,7 @@ export default function AdminScopedCaisseView({
       setTransferError('Sélectionnez un client destination');
       return;
     }
-    const m = parseFloat(transferMontant.replace(',', '.'));
+    const m = parseMontant(transferMontant);
     if (!Number.isFinite(m) || m <= 0) {
       setTransferError(t('dashboard.adminScopedCaisse.errMontantInvalid'));
       return;
@@ -347,7 +348,7 @@ export default function AdminScopedCaisseView({
     e.preventDefault();
     if (!soldeRow) return;
     setSoldeError(null);
-    const m = parseFloat(soldeMontant.replace(',', '.'));
+    const m = parseMontant(soldeMontant);
     if (!Number.isFinite(m) || m <= 0) {
       setSoldeError(t('dashboard.adminScopedCaisse.errMontantInvalid'));
       return;
@@ -1171,10 +1172,9 @@ export default function AdminScopedCaisseView({
               </Label>
               <Input
                 id="solde-montant"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                step="0.01"
-                min="0"
+                dir="ltr"
                 value={soldeMontant}
                 onChange={(e) => setSoldeMontant(e.target.value)}
                 required
@@ -1283,9 +1283,9 @@ export default function AdminScopedCaisseView({
               </Label>
               <Input
                 id="set-solde-value"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                step="0.01"
+                dir="ltr"
                 value={corrSolde}
                 onChange={(e) => setCorrSolde(e.target.value)}
                 required
@@ -1447,9 +1447,9 @@ export default function AdminScopedCaisseView({
               <Label htmlFor="transfer-montant">Montant ({t('common.mru')}) *</Label>
               <Input
                 id="transfer-montant"
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
                 value={transferMontant}
                 onChange={(e) => setTransferMontant(e.target.value)}
                 placeholder="0.00"

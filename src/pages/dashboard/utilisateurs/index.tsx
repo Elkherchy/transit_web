@@ -56,6 +56,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { parseMontant } from '@/lib/montant';
 
 export default function UtilisateursPage() {
   const { data: session, status } = useSession();
@@ -322,7 +323,7 @@ export default function UtilisateursPage() {
 
   const submitDebit = async () => {
     if (!debitTarget) return;
-    const m = parseFloat(debitMontant.replace(',', '.'));
+    const m = parseMontant(debitMontant);
     if (!Number.isFinite(m) || m <= 0) {
       setDebitError(t('dashboard.utilisateurs.debit.errMontant'));
       return;
@@ -364,7 +365,7 @@ export default function UtilisateursPage() {
 
   const submitSetSolde = async () => {
     if (!setSoldeTarget) return;
-    const v = parseFloat(setSoldeValue.replace(',', '.'));
+    const v = parseMontant(setSoldeValue);
     if (!Number.isFinite(v)) {
       setSetSoldeError(t('dashboard.utilisateurs.setSolde.errSolde'));
       return;
@@ -930,8 +931,9 @@ export default function UtilisateursPage() {
               <Label htmlFor="setSoldeV">{t('dashboard.utilisateurs.setSolde.labelNouveauSolde')}</Label>
               <Input
                 id="setSoldeV"
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
                 value={setSoldeValue}
                 onChange={(e) => setSetSoldeValue(e.target.value)}
                 placeholder="0.00"
@@ -990,9 +992,9 @@ export default function UtilisateursPage() {
               <Label htmlFor="debitM">{t('dashboard.utilisateurs.debit.labelMontant')}</Label>
               <Input
                 id="debitM"
-                type="number"
-                step="0.01"
-                min="0.01"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
                 value={debitMontant}
                 onChange={(e) => setDebitMontant(e.target.value)}
                 placeholder="0.00"

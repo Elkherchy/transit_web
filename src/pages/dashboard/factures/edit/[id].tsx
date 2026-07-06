@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { parseMontant } from '@/lib/montant';
 import { FactureStatus, IFacture, IPaiement, UserRole } from '@/types';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import Link from 'next/link';
@@ -87,7 +88,7 @@ export default function FactureEditInteretPage() {
   const totalOperations = facture?.totalOperations ?? 0;
 
   const interetNum = useMemo(() => {
-    const n = parseFloat(String(interetInput).replace(',', '.'));
+    const n = parseMontant(interetInput);
     return Number.isFinite(n) ? Math.max(0, n) : 0;
   }, [interetInput]);
 
@@ -263,10 +264,9 @@ export default function FactureEditInteretPage() {
               </Label>
               <Input
                 id="interet-edit"
-                type="number"
-                min={0}
-                step="any"
+                type="text"
                 inputMode="decimal"
+                dir="ltr"
                 className="h-11 tabular-nums max-w-xs"
                 value={interetInput}
                 onChange={(e) => setInteretInput(e.target.value)}

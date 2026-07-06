@@ -37,6 +37,7 @@ import {
   printCreditComptePdf,
 } from '@/components/factures/credit-compte-pdf';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { parseMontant } from '@/lib/montant';
 
 interface FormData {
   clientId: string;
@@ -110,7 +111,7 @@ export default function CreditComptePage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!form.clientId || !form.montant || parseFloat(form.montant) <= 0) {
+    if (!form.clientId || !form.montant || parseMontant(form.montant) <= 0) {
       setError(T('errorClientMontant'));
       return;
     }
@@ -122,7 +123,7 @@ export default function CreditComptePage() {
         credentials: 'include',
         body: JSON.stringify({
           clientId:    form.clientId,
-          montant:     parseFloat(form.montant),
+          montant:     parseMontant(form.montant),
           reference:   form.reference.trim() || undefined,
           description: form.description.trim() || undefined,
         }),
@@ -390,7 +391,7 @@ export default function CreditComptePage() {
               <Label htmlFor="cc-montant">{T('createDialog.montantLabel')}</Label>
               <Input
                 id="cc-montant"
-                type="number" step="0.01" min="0" placeholder="0.00"
+                type="text" inputMode="decimal" dir="ltr" placeholder="0.00"
                 value={form.montant}
                 onChange={(e) => setForm((f) => ({ ...f, montant: e.target.value }))}
               />

@@ -42,6 +42,7 @@ import {
   isDesignationAdminPayable,
 } from '@/types';
 import { isAdminTransit } from '@/lib/roles';
+import { parseMontant } from '@/lib/montant';
 import {
   ArrowLeft,
   RefreshCcw,
@@ -99,24 +100,6 @@ function designationStatusBadge(s: DesignationStatus | undefined, t: (key: strin
 
 const fmt = (n: number) =>
   Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
-
-// Parse une saisie montant en nombre. Les champs montant utilisent
-// `type="text"` (et non `type="number"`) car, en interface arabe (lang="ar",
-// locale OS ar-MR), Chrome — surtout sur mobile — rend un `type="number"` avec
-// des chiffres arabo-indiens (٠١٢٣) en ignorant l'attribut `lang`. Un champ
-// texte affiche toujours la chaîne littérale (chiffres latins). On convertit
-// ici d'éventuels chiffres arabes tapés au clavier vers des chiffres latins.
-const parseMontant = (raw: string): number => {
-  const latin = String(raw ?? '')
-    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
-    .replace(/٫/g, '.') // séparateur décimal arabe (U+066B)
-    .replace(/٬/g, '') // séparateur de milliers arabe (U+066C)
-    .replace(',', '.')
-    .replace(/[^0-9.]/g, '');
-  const n = parseFloat(latin);
-  return Number.isFinite(n) ? n : 0;
-};
 
 export default function AdminFactureManutentionDetail() {
   const { data: session, status } = useSession();

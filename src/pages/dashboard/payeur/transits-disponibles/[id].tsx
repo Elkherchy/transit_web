@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { parseMontant } from '@/lib/montant';
 import {
   UserRole,
   type ITransit,
@@ -332,7 +333,7 @@ export default function PayeurTransitDetail() {
 
   const submitEditMontant = async () => {
     if (!editDialog || !transit) return;
-    const m = parseFloat(editMontant.replace(',', '.'));
+    const m = parseMontant(editMontant);
     if (!Number.isFinite(m) || m <= 0) {
       setEditError(t('dashboard.payeur.errMontantPositif'));
       return;
@@ -372,7 +373,7 @@ export default function PayeurTransitDetail() {
     // Reçu non obligatoire pour TS, Bonne de Sortie Douanes, Camion, Sogetrap.
     if (!recuOptional && recuFiles.length === 0)
       return setPayError(t('dashboard.payeur.errRecuRequis'));
-    const m = parseFloat(montant.replace(',', '.'));
+    const m = parseMontant(montant);
     if (!Number.isFinite(m) || m <= 0) {
       return setPayError(t('dashboard.payeur.errMontantPositif'));
     }
@@ -585,9 +586,9 @@ export default function PayeurTransitDetail() {
                       </Label>
                       <Input
                         id="m"
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        type="text"
+                        inputMode="decimal"
+                        dir="ltr"
                         value={montant}
                         onChange={(e) => setMontant(e.target.value)}
                         placeholder={t(
@@ -758,9 +759,9 @@ export default function PayeurTransitDetail() {
                 <Label htmlFor="editM">{t('dashboard.payeur.montantPaye')}</Label>
                 <Input
                   id="editM"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  dir="ltr"
                   value={editMontant}
                   onChange={(e) => setEditMontant(e.target.value)}
                   placeholder={t('dashboard.payeur.saisissezMontant')}

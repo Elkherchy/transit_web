@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { UserRole, type ICaisseListItem } from '@/types';
+import { parseMontant } from '@/lib/montant';
 import { Plus, CheckCircle2, RefreshCcw, Receipt } from 'lucide-react';
 
 const fmt = (n: number) =>
@@ -139,7 +140,7 @@ export default function CaissierDepensesPage() {
       return setError(t('dashboard.depenses.errCategorieRequired'));
     if (!formCaisseId)
       return setError(t('dashboard.depenses.errCaisseRequired'));
-    const m = parseFloat(formMontant.replace(',', '.'));
+    const m = parseMontant(formMontant);
     if (!Number.isFinite(m) || m <= 0)
       return setError(t('dashboard.depenses.errMontantInvalid'));
     setSubmitting(true);
@@ -446,9 +447,9 @@ export default function CaissierDepensesPage() {
                 </Label>
                 <Input
                   id="dep-montant"
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  dir="ltr"
                   value={formMontant}
                   onChange={(e) => setFormMontant(e.target.value)}
                   placeholder="0.00"

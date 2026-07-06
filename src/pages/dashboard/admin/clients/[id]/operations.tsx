@@ -22,6 +22,7 @@ import { ClientSubNav } from '@/components/dashboard/admin/clients/ClientSubNav'
 import { useClientDetail } from '@/components/dashboard/admin/clients/useClientDetail';
 import { type ITransaction, TransactionType, UserRole } from '@/types';
 import { isAdminTransit } from '@/lib/roles';
+import { parseMontant } from '@/lib/montant';
 import { ArrowLeft, Minus, RefreshCcw, Search, X as XIcon } from 'lucide-react';
 
 const fmt = (n: number) =>
@@ -59,7 +60,7 @@ export default function AdminClientOperations() {
 
   const handleDebit = async () => {
     setDebitError(null);
-    const montant = Number(debitMontant);
+    const montant = parseMontant(debitMontant);
     if (!montant || montant <= 0) { setDebitError(t('dashboard.clients.operations.debitErrMontant')); return; }
     if (!debitDesc.trim()) { setDebitError(t('dashboard.clients.operations.debitErrDesc')); return; }
     setDebitLoading(true);
@@ -327,9 +328,9 @@ export default function AdminClientOperations() {
               </Label>
               <Input
                 id="debit-montant"
-                type="number"
-                min="0.01"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
                 placeholder={t('dashboard.clients.operations.debitMontantPlaceholder')}
                 value={debitMontant}
                 onChange={(e) => setDebitMontant(e.target.value)}

@@ -30,6 +30,7 @@ import {
   type IUserResponse,
   type IJourneeCaisse,
 } from '@/types';
+import { parseMontant } from '@/lib/montant';
 import { ArrowLeft, ArrowRight, ArrowRightLeft, Plus } from 'lucide-react';
 
 function todayISODate(): string {
@@ -113,7 +114,7 @@ export default function CaissierAlimentations() {
       return;
     }
 
-    const m = parseFloat(montant.replace(',', '.'));
+    const m = parseMontant(montant);
     if (!Number.isFinite(m) || m <= 0) {
       setError(t('dashboard.caissier.alimentations.errInvalidAmount'));
       return;
@@ -155,7 +156,7 @@ export default function CaissierAlimentations() {
 
   const submitRetour = async () => {
     if (!reassignRow) return;
-    const m = parseFloat(retourMontant.replace(',', '.'));
+    const m = parseMontant(retourMontant);
     if (!Number.isFinite(m) || m <= 0 || m > reassignRow.montant) {
       setReassignError(t('dashboard.caissier.alimentations.errInvalidAmount'));
       return;
@@ -439,9 +440,9 @@ export default function CaissierAlimentations() {
               <Label htmlFor="montant">{t('dashboard.caissier.alimentations.amount')}</Label>
               <Input
                 id="montant"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
+                inputMode="decimal"
+                dir="ltr"
                 value={montant}
                 onChange={(e) => setMontant(e.target.value)}
                 required
@@ -515,10 +516,9 @@ export default function CaissierAlimentations() {
                 <Label htmlFor="retour-montant">{t('dashboard.caissier.alimentations.retourMontantLabel')}</Label>
                 <Input
                   id="retour-montant"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  max={reassignRow?.montant}
+                  type="text"
+                  inputMode="decimal"
+                  dir="ltr"
                   value={retourMontant}
                   onChange={(e) => setRetourMontant(e.target.value)}
                   disabled={returning || reassigning}
