@@ -128,7 +128,7 @@ export default function CaissierHistoriquePage() {
         sticky={isMobile}
       />
       <PageContent padding={isMobile ? 'sm' : 'md'}>
-        <div className="mx-auto max-w-5xl space-y-4">
+        <div className="mx-auto max-w-7xl space-y-4">
           {/* KPI cards */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Card>

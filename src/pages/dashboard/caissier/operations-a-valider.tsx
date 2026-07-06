@@ -3,11 +3,12 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'react-i18next';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { PageHeader, PageContent, PageSkeleton } from '@/components/ui';
+import { PageHeader, PageContent, PageSkeleton, MobilePagination } from '@/components/ui';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -15,6 +16,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { UserRole } from '@/types';
 import {
   RefreshCcw,
@@ -26,6 +35,7 @@ import {
   Eye,
   XCircle,
   Unlock,
+  MoreHorizontal,
 } from 'lucide-react';
 
 interface PayeurPaiementRow {
@@ -45,6 +55,8 @@ interface PayeurPaiementRow {
 const fmt = (n: number) =>
   Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
 
+const PAGE_SIZE = 10;
+
 /** Clé d'opération identifiant un paiement payeur unique. */
 function opKey(p: PayeurPaiementRow): string {
   return `PAYEUR_PAIEMENT:${p.designationId}`;
@@ -62,6 +74,11 @@ export default function CaissierOperationsAValiderPage() {
     user?.role === UserRole.ADMIN ||
     user?.role === UserRole.ADMIN_TRANSIT;
 
+  // Seuls les admins peuvent effectuer une validation COMPLÈTE (directe en
+  // VALIDEE_ADMIN, sans passer par l'agent transit).
+  const isAdminFull =
+    user?.role === UserRole.ADMIN || user?.role === UserRole.ADMIN_TRANSIT;
+
   const [rows, setRows] = useState<PayeurPaiementRow[]>([]);
   /** Map clé op → statut côté OperationValidation (envoyée à l'agent). */
   const [sentMap, setSentMap] = useState<Map<string, string>>(new Map());
@@ -69,6 +86,24 @@ export default function CaissierOperationsAValiderPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [actingKey, setActingKey] = useState<string | null>(null);
+
+  // Pagination (10/page) indépendante par section.
+  const [pages, setPages] = useState<Record<string, number>>({});
+  const setSectionPage = useCallback((key: string, p: number) => {
+    setPages((prev) => ({ ...prev, [key]: p }));
+  }, []);
+
+  // Sélection multiple + validation groupée (section « À valider »).
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const toggleOne = useCallback((key: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
 
   // Receipt viewer state
   const [viewerRow, setViewerRow] = useState<PayeurPaiementRow | null>(null);
@@ -266,25 +301,88 @@ export default function CaissierOperationsAValiderPage() {
     [reload, t]
   );
 
-  const { pending, sentToAgent, agentValidated, rejected } = useMemo(() => {
+  const validerComplet = useCallback(
+    async (row: PayeurPaiementRow) => {
+      const key = opKey(row);
+      setActingKey(key);
+      setError(null);
+      setSuccess(null);
+      try {
+        const r = await fetch('/api/operations-validation/valider-complet', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ designationId: row.designationId }),
+        });
+        const data = await r.json().catch(() => null);
+        if (r.ok && data?.success) {
+          setSuccess(t('dashboard.caissier.opsValider.successValideComplet'));
+          void reload();
+        } else {
+          setError(data?.error || `Erreur ${r.status}`);
+        }
+      } catch {
+        setError(t('dashboard.caissier.opsValider.errNetwork'));
+      } finally {
+        setActingKey(null);
+      }
+    },
+    [reload, t]
+  );
+
+  // Envoie un lot d'opérations à l'agent transit en UNE seule requête.
+  const validerLot = useCallback(
+    async (list: PayeurPaiementRow[]) => {
+      if (list.length === 0) return;
+      setBulkBusy(true);
+      setError(null);
+      setSuccess(null);
+      try {
+        const items = list.map((row) => ({
+          opType: 'PAYEUR_PAIEMENT' as const,
+          opId: row.designationId,
+          snapshot: {
+            libelle: `Paiement ${row.designationNom}${row.bl ? ` · BL ${row.bl}` : ''}`,
+            montant: Number(row.montant) || 0,
+            contrepartie: row.payeurNom || row.payeurEmail,
+            date: new Date(row.paidAt),
+          },
+        }));
+        const r = await fetch('/api/operations-validation', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items }),
+        });
+        const data = await r.json().catch(() => null);
+        if (r.ok && data?.success) {
+          setSuccess(data.message || t('dashboard.caissier.opsValider.successValide'));
+          setSelected(new Set());
+          void reload();
+        } else {
+          setError(data?.error || `Erreur ${r.status}`);
+        }
+      } catch {
+        setError(t('dashboard.caissier.opsValider.errNetwork'));
+      } finally {
+        setBulkBusy(false);
+      }
+    },
+    [reload, t]
+  );
+
+  const { pending, rejected } = useMemo(() => {
     const p: PayeurPaiementRow[] = [];
-    const s: PayeurPaiementRow[] = [];
-    const v: PayeurPaiementRow[] = [];
     const r: PayeurPaiementRow[] = [];
     for (const row of rows) {
       const k = opKey(row);
       const st = sentMap.get(k);
       if (!st) p.push(row);
-      else if (st === 'EN_ATTENTE_AGENT' || st === 'EN_ATTENTE_ADMIN') s.push(row);
-      // VALIDEE_ADMIN / VALIDEE_AGENT → opération clôturée, ne plus afficher
+      // EN_ATTENTE_AGENT / EN_ATTENTE_ADMIN / VALIDEE_* → opération déjà envoyée
+      // ou clôturée, ne plus afficher côté caissier.
       else if (st === 'REJETEE') r.push(row);
     }
-    return {
-      pending: p,
-      sentToAgent: s,
-      agentValidated: v,
-      rejected: r,
-    };
+    return { pending: p, rejected: r };
   }, [rows, sentMap]);
 
   if (status === 'loading' || loading) {
@@ -301,19 +399,67 @@ export default function CaissierOperationsAValiderPage() {
   if (!canAccess) return null;
 
   const renderTable = (
+    pageKey: string,
     label: string,
     icon: React.ReactNode,
     badge: React.ReactNode,
     data: PayeurPaiementRow[],
-    options: { withValiderBtn?: boolean; withRejectedActions?: boolean; tone?: 'pending' | 'sent' | 'valid' | 'rejected' } = {}
-  ) => (
+    options: { withValiderBtn?: boolean; withRejectedActions?: boolean; withSelection?: boolean; tone?: 'pending' | 'sent' | 'valid' | 'rejected' } = {}
+  ) => {
+    const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+    const page = Math.min(pages[pageKey] || 1, totalPages);
+    const pageData = data.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const pageIds = pageData.map((r) => opKey(r));
+    const allPageSelected =
+      pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+    const togglePage = () => {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (allPageSelected) pageIds.forEach((id) => next.delete(id));
+        else pageIds.forEach((id) => next.add(id));
+        return next;
+      });
+    };
+    const selectedInData = data.filter((r) => selected.has(opKey(r)));
+    return (
     <Card>
-      <CardHeader>
+      <CardHeader className={options.withSelection ? 'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between' : undefined}>
         <CardTitle className="flex items-center gap-2 text-base">
           {icon}
           {label}
           {badge}
         </CardTitle>
+        {options.withSelection && data.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs"
+              disabled={bulkBusy || selectedInData.length === 0}
+              onClick={() => void validerLot(selectedInData)}
+            >
+              {bulkBusy ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              {t('dashboard.caissier.opsValider.btnValiderSelection', { count: selectedInData.length })}
+            </Button>
+            <Button
+              size="sm"
+              className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700"
+              disabled={bulkBusy}
+              onClick={() => void validerLot(data)}
+            >
+              {bulkBusy ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              {t('dashboard.caissier.opsValider.btnValiderTout', { count: data.length })}
+            </Button>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="px-0 sm:px-6">
         {data.length === 0 ? (
@@ -325,6 +471,15 @@ export default function CaissierOperationsAValiderPage() {
             <table className="w-full text-sm">
               <thead className="border-b bg-slate-50 text-left text-xs uppercase text-muted-foreground">
                 <tr>
+                  {options.withSelection && (
+                    <th className="px-4 py-2.5 w-10">
+                      <Checkbox
+                        checked={allPageSelected}
+                        onCheckedChange={togglePage}
+                        aria-label={t('dashboard.caissier.opsValider.ariaSelectAll')}
+                      />
+                    </th>
+                  )}
                   <th className="px-4 py-2.5 font-medium">{t('dashboard.caissier.opsValider.colDate')}</th>
                   <th className="px-4 py-2.5 font-medium">{t('dashboard.caissier.opsValider.colDesignation')}</th>
                   <th className="px-4 py-2.5 font-medium">{t('dashboard.caissier.opsValider.colBlClient')}</th>
@@ -336,8 +491,11 @@ export default function CaissierOperationsAValiderPage() {
                 </tr>
               </thead>
               <tbody>
-                {data.map((r) => {
+                {pageData.map((r) => {
                   const k = opKey(r);
+                  const hasRecus = !!(r.recus && r.recus.length > 0);
+                  const hasMenu =
+                    hasRecus || !!options.withValiderBtn || !!options.withRejectedActions;
                   return (
                     <tr
                       key={k}
@@ -347,6 +505,15 @@ export default function CaissierOperationsAValiderPage() {
                           : 'border-b last:border-0 hover:bg-slate-50'
                       }
                     >
+                      {options.withSelection && (
+                        <td className="px-4 py-2.5">
+                          <Checkbox
+                            checked={selected.has(k)}
+                            onCheckedChange={() => toggleOne(k)}
+                            aria-label={t('dashboard.caissier.opsValider.ariaSelect')}
+                          />
+                        </td>
+                      )}
                       <td className="px-4 py-2.5 tabular-nums text-xs text-muted-foreground">
                         {new Date(r.paidAt).toLocaleString('fr-FR')}
                       </td>
@@ -365,107 +532,102 @@ export default function CaissierOperationsAValiderPage() {
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex justify-end gap-1.5">
-                          {r.recus && r.recus.length > 0 && (
+                          {/* Action principale visible : Valider (pending). */}
+                          {options.withValiderBtn && (
                             <Button
                               size="sm"
-                              variant="outline"
-                              className="h-7 px-2 text-xs"
-                              disabled={viewerLoading && viewerRow?.designationId === r.designationId}
-                              onClick={() => void openViewer(r)}
-                              title={t('dashboard.caissier.opsValider.titleVoirRecus', { count: r.recus.length })}
+                              className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
+                              disabled={actingKey === k}
+                              onClick={() => void valider(r)}
                             >
-                              {viewerLoading && viewerRow?.designationId === r.designationId ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
+                              {actingKey === k ? (
+                                <Loader2 className="h-3 w-3 animate-spin sm:mr-1" />
                               ) : (
-                                <Eye className="h-3 w-3 sm:mr-1" />
+                                <ShieldCheck className="h-3 w-3 sm:mr-1" />
                               )}
                               <span className="hidden sm:inline">
-                                {r.recus.length > 1
-                                  ? t('dashboard.caissier.opsValider.btnVoirCount', { count: r.recus.length })
-                                  : t('dashboard.caissier.opsValider.btnVoir')}
+                                {t('dashboard.caissier.opsValider.btnValider')}
                               </span>
                             </Button>
                           )}
-                          {options.withValiderBtn && (
-                            <>
+
+                          {/* Actions secondaires regroupées dans un menu ⋯ */}
+                          {hasMenu && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
                               <Button
-                                size="sm"
-                                className="h-7 px-2 text-xs bg-emerald-600 hover:bg-emerald-700"
+                                variant="ghost"
+                                className="h-7 w-7 p-0"
                                 disabled={actingKey === k}
-                                onClick={() => void valider(r)}
+                                aria-label={t('dashboard.caissier.opsValider.colActions')}
                               >
                                 {actingKey === k ? (
-                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                  <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
-                                  <ShieldCheck className="mr-1 h-3 w-3" />
+                                  <MoreHorizontal className="h-4 w-4 rtl:rotate-180" />
                                 )}
-                                {t('dashboard.caissier.opsValider.btnValider')}
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                className="h-7 px-2 text-xs"
-                                disabled={actingKey === k}
-                                onClick={() => void rejeter(r)}
-                              >
-                                <XCircle className="mr-1 h-3 w-3" />
-                                {t('dashboard.caissier.opsValider.btnRejeter')}
-                              </Button>
-                            </>
-                          )}
-                          {options.withRejectedActions && (
-                            <>
-                              <Button
-                                size="sm"
-                                className="h-7 px-2 text-xs bg-emerald-600 hover:bg-emerald-700"
-                                disabled={actingKey === k}
-                                onClick={() => void valider(r)}
-                                title={t('dashboard.caissier.opsValider.btnRevalider')}
-                              >
-                                {actingKey === k ? (
-                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                ) : (
-                                  <ShieldCheck className="mr-1 h-3 w-3" />
-                                )}
-                                <span className="hidden sm:inline">
-                                  {t('dashboard.caissier.opsValider.btnRevalider')}
-                                </span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                className="h-7 px-2 text-xs"
-                                disabled={actingKey === k}
-                                onClick={() => void rejeter(r)}
-                                title={t('dashboard.caissier.opsValider.btnRejeterDef')}
-                              >
-                                {actingKey === k ? (
-                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                ) : (
-                                  <XCircle className="mr-1 h-3 w-3" />
-                                )}
-                                <span className="hidden sm:inline">
-                                  {t('dashboard.caissier.opsValider.btnRejeterDef')}
-                                </span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 px-2 text-xs border-amber-500 text-amber-700 hover:bg-amber-50"
-                                disabled={actingKey === k}
-                                onClick={() => void liberer(r)}
-                                title={t('dashboard.caissier.opsValider.btnLiberer')}
-                              >
-                                {actingKey === k ? (
-                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                ) : (
-                                  <Unlock className="mr-1 h-3 w-3" />
-                                )}
-                                <span className="hidden sm:inline">
-                                  {t('dashboard.caissier.opsValider.btnLiberer')}
-                                </span>
-                              </Button>
-                            </>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52">
+                              <DropdownMenuLabel>
+                                {t('dashboard.caissier.opsValider.colActions')}
+                              </DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+
+                              {r.recus && r.recus.length > 0 && (
+                                <DropdownMenuItem onSelect={() => void openViewer(r)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  {r.recus.length > 1
+                                    ? t('dashboard.caissier.opsValider.btnVoirCount', { count: r.recus.length })
+                                    : t('dashboard.caissier.opsValider.btnVoir')}
+                                </DropdownMenuItem>
+                              )}
+
+                              {options.withValiderBtn && isAdminFull && (
+                                <DropdownMenuItem onSelect={() => void validerComplet(r)}>
+                                  <CheckCircle2 className="mr-2 h-4 w-4 text-blue-700" />
+                                  {t('dashboard.caissier.opsValider.btnValiderComplet')}
+                                </DropdownMenuItem>
+                              )}
+
+                              {options.withValiderBtn && (
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onSelect={() => void rejeter(r)}
+                                >
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  {t('dashboard.caissier.opsValider.btnRejeter')}
+                                </DropdownMenuItem>
+                              )}
+
+                              {options.withRejectedActions && (
+                                <>
+                                  <DropdownMenuItem onSelect={() => void valider(r)}>
+                                    <ShieldCheck className="mr-2 h-4 w-4 text-emerald-600" />
+                                    {t('dashboard.caissier.opsValider.btnRevalider')}
+                                  </DropdownMenuItem>
+                                  {isAdminFull && (
+                                    <DropdownMenuItem onSelect={() => void validerComplet(r)}>
+                                      <CheckCircle2 className="mr-2 h-4 w-4 text-blue-700" />
+                                      {t('dashboard.caissier.opsValider.btnValiderComplet')}
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem onSelect={() => void liberer(r)}>
+                                    <Unlock className="mr-2 h-4 w-4 text-amber-600" />
+                                    {t('dashboard.caissier.opsValider.btnLiberer')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onSelect={() => void rejeter(r)}
+                                  >
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    {t('dashboard.caissier.opsValider.btnRejeterDef')}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                           )}
                         </div>
                       </td>
@@ -476,9 +638,21 @@ export default function CaissierOperationsAValiderPage() {
             </table>
           </div>
         )}
+        {totalPages > 1 && (
+          <div className="mt-4 px-4 sm:px-0">
+            <MobilePagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(p) => setSectionPage(pageKey, p)}
+              totalItems={data.length}
+              itemsPerPage={PAGE_SIZE}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
-  );
+    );
+  };
 
   return (
     <DashboardLayout>
@@ -513,26 +687,18 @@ export default function CaissierOperationsAValiderPage() {
           )}
 
           {renderTable(
+            'pending',
             t('dashboard.caissier.opsValider.sectionPending'),
             <Clock className="h-4 w-4 text-amber-600" />,
             <Badge className="bg-amber-500 text-white hover:bg-amber-500">
               {pending.length}
             </Badge>,
             pending,
-            { withValiderBtn: true, tone: 'pending' }
+            { withValiderBtn: true, withSelection: true, tone: 'pending' }
           )}
-          {sentToAgent.length > 0 &&
-            renderTable(
-              t('dashboard.caissier.opsValider.sectionAgent'),
-              <Clock className="h-4 w-4 text-orange-500" />,
-              <Badge className="bg-orange-500 text-white hover:bg-orange-500">
-                {sentToAgent.length}
-              </Badge>,
-              sentToAgent,
-              { tone: 'sent' }
-            )}
           {rejected.length > 0 &&
             renderTable(
+              'rejected',
               t('dashboard.caissier.opsValider.sectionRejected'),
               <AlertCircle className="h-4 w-4 text-red-600" />,
               <Badge variant="destructive">{rejected.length}</Badge>,

@@ -134,7 +134,7 @@ export default function CaissierPayeurHistoriquePage() {
         sticky={isMobile}
       />
       <PageContent padding={isMobile ? 'sm' : 'md'}>
-        <div className="mx-auto max-w-5xl space-y-4">
+        <div className="mx-auto max-w-7xl space-y-4">
           {/* Card payeur + totaux */}
           <Card>
             <CardContent className="p-4 sm:p-5">

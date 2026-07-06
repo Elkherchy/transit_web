@@ -1063,11 +1063,16 @@ export default function CaissierCloturerJournee() {
       montant: Number(d.montant) || 0,
     }));
 
+    // Les paiements payeur (désignations) ne sont PAS affichés ici : ils sont
+    // gérés/validés dans /dashboard/caissier/operations-a-valider afin d'éviter
+    // le doublon. On garde `payeurPaiementRows` calculé pour compatibilité mais
+    // on ne l'inclut plus dans le tableau de clôture.
+    void payeurPaiementRows;
+
     return [
       ...kpiRows,
       ...clientFactureRows,
       ...clientPaiementRows,
-      ...payeurPaiementRows,
       ...depenseRows,
       ...alimentRows,
     ];
