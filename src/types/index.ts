@@ -228,6 +228,8 @@ export enum FactureStatus {
   EN_PAYE = 'EN_PAYE',
   /** Facture complètement payée */
   PAYE = 'PAYE',
+  /** Facture rejetée par l'agent transit (dépôt caissier refusé) */
+  REJETEE = 'REJETEE',
 }
 
 /** Métadonnées facture payeur sur une ligne de liste transit (GET /api/transit, USER_PAYEUR) */
@@ -258,6 +260,11 @@ export interface IFacture {
   dateEmission?: Date;
   /** Client (référence Client) — utilisé pour la facturation côté client */
   clientId?: string;
+  /** Banque cible d'un dépôt caissier (créditée uniquement à la validation agent transit) */
+  banqueId?: string;
+  /** Justificatif du dépôt (clé S3) + nom d'origine */
+  justificationUrl?: string;
+  justificationFilename?: string;
   /** Utilisateur USER_PAYEUR responsable du règlement */
   payeurId?: string;
   payeur?: IFacturePayeur;
@@ -556,6 +563,22 @@ export function isDesignationAdminOnly(nom: string | undefined | null): boolean 
   if (!nom) return false;
   const norm = String(nom).trim();
   return DESIGNATIONS_ADMIN_ONLY.includes(norm);
+}
+
+/**
+ * Désignations publiques dont l'admin / admin_transit peut, au cas par cas,
+ * saisir lui-même le montant à la place du payeur. En les « prenant en charge »,
+ * elles passent directement en `VALIDEE_ADMIN` (cf. flux des désignations
+ * ajoutées par l'admin) et sortent du pool réservable par les payeurs.
+ */
+export const DESIGNATIONS_ADMIN_PAYABLE: ReadonlyArray<string> = ['TS', 'Camion'];
+
+/** Helper : true si l'admin peut fixer lui-même le montant de cette désignation. */
+export function isDesignationAdminPayable(
+  nom: string | undefined | null
+): boolean {
+  if (!nom) return false;
+  return DESIGNATIONS_ADMIN_PAYABLE.includes(String(nom).trim());
 }
 
 // ============================================

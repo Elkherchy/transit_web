@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CardHeader } from '@/components/ui/card';
@@ -38,6 +39,7 @@ import {
   FactureManutentionStatus,
   UserRole,
   DESIGNATIONS_ADMIN_ONLY,
+  isDesignationAdminPayable,
 } from '@/types';
 import { isAdminTransit } from '@/lib/roles';
 import {
@@ -396,6 +398,21 @@ export default function AdminFactureManutentionDetail() {
 
   const handleSaveDesignations = useCallback(async () => {
     if (!facture) return;
+    // Une désignation TS / Camion prise en charge par l'admin (VALIDEE_ADMIN
+    // sans payeur) doit avoir un montant strictement positif.
+    const invalidAdminCharge = editDesignations.find(
+      (d) =>
+        isDesignationAdminPayable(d.nom) &&
+        !d.payeurId &&
+        d.statutDesignation === DesignationStatus.VALIDEE_ADMIN &&
+        !((Number(d.montant) || 0) > 0)
+    );
+    if (invalidAdminCharge) {
+      setError(
+        `Renseignez un montant pour « ${invalidAdminCharge.nom} » avant de le prendre en charge.`
+      );
+      return;
+    }
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -576,6 +593,28 @@ export default function AdminFactureManutentionDetail() {
       prev.map((d, i) => (i === idx ? { ...d, montant } : d))
     );
   }, []);
+
+  // Prise en charge admin d'une désignation TS / Camion : l'admin_transit fixe
+  // lui-même le montant à la place du payeur. La désignation passe alors
+  // directement en VALIDEE_ADMIN (comme les désignations ajoutées par l'admin)
+  // et quitte le pool réservable par les payeurs. Décocher la remet LIBRE.
+  const handleToggleAdminCharge = useCallback(
+    (idx: number, checked: boolean) => {
+      setEditDesignations((prev) =>
+        prev.map((d, i) =>
+          i === idx
+            ? {
+                ...d,
+                statutDesignation: checked
+                  ? DesignationStatus.VALIDEE_ADMIN
+                  : DesignationStatus.LIBRE,
+              }
+            : d
+        )
+      );
+    },
+    []
+  );
 
   const designationColumns = useMemo<ColumnDef<IDesignation>[]>(
     () => [
@@ -1106,9 +1145,29 @@ export default function AdminFactureManutentionDetail() {
                       </thead>
                       <tbody>
                         {editDesignations.map((d, idx) => {
-                          const lock =
-                            d.statutDesignation &&
-                            d.statutDesignation !== DesignationStatus.LIBRE;
+                          const st = d.statutDesignation;
+                          const hasPayeur = !!d.payeurId;
+                          const isAdminPayable = isDesignationAdminPayable(d.nom);
+                          // TS / Camion pris en charge par l'admin (montant fixé
+                          // par l'admin, sans payeur).
+                          const isAdminCharged =
+                            isAdminPayable &&
+                            !hasPayeur &&
+                            st === DesignationStatus.VALIDEE_ADMIN;
+                          // La case « prise en charge admin » est proposée tant
+                          // qu'aucun payeur n'a pris la ligne.
+                          const canAdminCharge =
+                            isAdminPayable &&
+                            !hasPayeur &&
+                            (st === undefined ||
+                              st === DesignationStatus.LIBRE ||
+                              isAdminCharged);
+                          const lock = st && st !== DesignationStatus.LIBRE;
+                          // Montant éditable pour une prise en charge admin ;
+                          // verrouillé pour les autres lignes VALIDEE_ADMIN.
+                          const montantDisabled =
+                            st === DesignationStatus.VALIDEE_ADMIN &&
+                            !isAdminCharged;
                           return (
                             <tr
                               key={d._id || `new-${idx}`}
@@ -1116,10 +1175,21 @@ export default function AdminFactureManutentionDetail() {
                             >
                               <td className="px-3 py-2 font-medium">
                                 {d.nom}
-                                {lock && (
+                                {lock && !canAdminCharge && (
                                   <span className="ml-2 text-xs text-muted-foreground">
                                     ({d.statutDesignation})
                                   </span>
+                                )}
+                                {canAdminCharge && (
+                                  <label className="mt-1 flex items-center gap-2 text-xs font-normal text-muted-foreground">
+                                    <Checkbox
+                                      checked={isAdminCharged}
+                                      onCheckedChange={(v) =>
+                                        handleToggleAdminCharge(idx, v === true)
+                                      }
+                                    />
+                                    Payé par l’admin (montant fixé par l’admin, pas le payeur)
+                                  </label>
                                 )}
                               </td>
                               <td className="px-3 py-2 text-right">
@@ -1132,10 +1202,7 @@ export default function AdminFactureManutentionDetail() {
                                     handleChangeMontant(idx, e.target.value)
                                   }
                                   className="ml-auto h-8 w-32 text-right tabular-nums"
-                                  disabled={
-                                    d.statutDesignation ===
-                                    DesignationStatus.VALIDEE_ADMIN
-                                  }
+                                  disabled={montantDisabled}
                                 />
                               </td>
                               <td className="px-3 py-2">

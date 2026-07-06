@@ -1,8 +1,7 @@
 import type { NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
-import { Caisse, OperationValidation, Transaction, User } from '@/models';
-import { OperationType } from '@/models/OperationValidation';
+import { Caisse, Transaction, User } from '@/models';
 import {
   ApiResponse,
   CaisseKind,
@@ -162,50 +161,38 @@ async function getTransactions(
       }
     }
 
-    // Pour la caisse GÉNÉRALE, on filtre en plus les opérations payeurs :
-    // seules celles validées par le caissier (existence d'une OperationValidation
-    // PAYEUR_PAIEMENT, quel que soit son statut) apparaissent. Les paiements
-    // de désignations non encore validés par le caissier restent invisibles
-    // dans la liste de la générale.
+    // Pour la caisse GÉNÉRALE, on inclut les paiements de désignations réglés
+    // par les payeurs. Ces transactions (référence
+    // `transit-{transitId}-des-{designationId}`) ne sont créées QUE lorsque le
+    // caissier valide le paiement (cf. POST /api/operations-validation) : leur
+    // simple existence prouve donc qu'elles ont été validées. On les identifie
+    // par le format de leur référence, avec une regex CONSTANTE.
+    //
+    // Auparavant on chargeait la liste de toutes les désignations passées par
+    // un flux PAYEUR_PAIEMENT pour construire une regex `-des-(?:id1|id2|…)$`.
+    // Cette liste grossissant sans limite, la requête finissait par dépasser la
+    // taille acceptée par le proxy Atlas (« Unable to parse body section as
+    // bson: bufio: buffer full »). La regex constante ci-dessous donne
+    // exactement le même résultat sans embarquer de liste.
+    //
+    // NB : les alimentations des caisses payeurs apparaissent déjà dans la
+    // générale via leurs transactions miroir ; on ne réintègre donc ici que les
+    // paiements de désignations.
+    const PAYEUR_PAIEMENT_REF = /^transit-[a-f0-9]{24}-des-[a-f0-9]{24}$/;
     let query: Record<string, unknown>;
     if (isGeneral && caisseIds.length > 1) {
       const payeurCaisseIds = caisseIds.slice(1); // [0] = générale
       const generalCaisseId = caisseIds[0];
 
-      const validatedOps = await OperationValidation.find({
-        opType: OperationType.PAYEUR_PAIEMENT,
-      })
-        .select('opId')
-        .lean();
-      const validatedIds = Array.from(
-        new Set(
-          validatedOps
-            .map((v) => String((v as { opId?: unknown }).opId || ''))
-            .filter(Boolean)
-        )
-      );
-
-      if (validatedIds.length === 0) {
-        // Aucun paiement payeur validé → on ne renvoie que la générale.
-        query = { caisseId: generalCaisseId };
-      } else {
-        // Regex anchored sur la fin du `reference` (format
-        // `transit-{transitId}-des-{designationId}`) pour matcher uniquement
-        // les paiements de désignations validées par le caissier.
-        const escaped = validatedIds.map((id) =>
-          id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        );
-        const refRegex = new RegExp(`-des-(?:${escaped.join('|')})$`);
-        query = {
-          $or: [
-            { caisseId: generalCaisseId },
-            {
-              caisseId: { $in: payeurCaisseIds },
-              reference: refRegex,
-            },
-          ],
-        };
-      }
+      query = {
+        $or: [
+          { caisseId: generalCaisseId },
+          {
+            caisseId: { $in: payeurCaisseIds },
+            reference: PAYEUR_PAIEMENT_REF,
+          },
+        ],
+      };
     } else {
       query =
         caisseIds.length === 1

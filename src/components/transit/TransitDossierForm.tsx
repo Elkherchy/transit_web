@@ -12,6 +12,7 @@ import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -34,6 +35,7 @@ import {
   IDesignation,
   UserRole,
   DESIGNATIONS_DEFAULT,
+  isDesignationAdminPayable,
 } from '@/types';
 import {
   ArrowLeft,
@@ -377,6 +379,11 @@ export default function TransitDossierForm({
     !readOnly &&
     (mode === 'create' ||
       (transit != null && isAgentOrAdmin && !transitLocked));
+  // Seuls ADMIN / ADMIN_TRANSIT peuvent « prendre en charge » TS/Camion
+  // (fixer le montant à la place du payeur).
+  const canManageAdminCharge =
+    canEdit &&
+    (isAdmin || user?.role === UserRole.ADMIN_TRANSIT);
   const hasFacture = Boolean(
     transit?.facture &&
       typeof transit.facture === 'object' &&
@@ -533,8 +540,29 @@ export default function TransitDossierForm({
 
   const calculateTotalFinal = () => calculateTotalOperations() + formData.interet;
 
+  // Une désignation TS / Camion prise en charge par l'admin (VALIDEE_ADMIN sans
+  // payeur) doit avoir un montant strictement positif. Retourne un message
+  // d'erreur à afficher, ou null si tout est valide.
+  const validateAdminChargedDesignations = (): string | null => {
+    const invalid = formData.designations.find(
+      (d) =>
+        isDesignationAdminPayable(d.nom) &&
+        !d.payeurId &&
+        d.statutDesignation === DesignationStatus.VALIDEE_ADMIN &&
+        !((Number(d.montant) || 0) > 0)
+    );
+    return invalid
+      ? `Renseignez un montant pour « ${invalid.nom} » avant de le prendre en charge.`
+      : null;
+  };
+
   const handleSave = async () => {
     if (mode !== 'edit' || !transitId || readOnly) return;
+    const adminChargeError = validateAdminChargedDesignations();
+    if (adminChargeError) {
+      setFeedback({ type: 'err', text: adminChargeError });
+      return;
+    }
     setSaving(true);
     setFeedback(null);
     try {
@@ -576,6 +604,11 @@ export default function TransitDossierForm({
         type: 'err',
         text: 'Choisissez ou créez un client, puis renseignez BL et objet.',
       });
+      return;
+    }
+    const adminChargeError = validateAdminChargedDesignations();
+    if (adminChargeError) {
+      setFeedback({ type: 'err', text: adminChargeError });
       return;
     }
     setCreating(true);
@@ -648,6 +681,11 @@ export default function TransitDossierForm({
       setFeedback({ type: 'err', text: 'Ajoutez au moins une désignation.' });
       return;
     }
+    const adminChargeError = validateAdminChargedDesignations();
+    if (adminChargeError) {
+      setFeedback({ type: 'err', text: adminChargeError });
+      return;
+    }
     setConfirming(true);
     setFeedback(null);
     try {
@@ -718,6 +756,28 @@ export default function TransitDossierForm({
       ...prev,
       designations: prev.designations.map((d, i) =>
         i === index ? { ...d, montant } : d
+      ),
+    }));
+  };
+
+  // Prise en charge admin d'une désignation TS / Camion : l'admin fixe le
+  // montant à la place du payeur. La désignation passe directement en
+  // VALIDEE_ADMIN et sort du pool réservable. Décocher la remet LIBRE.
+  const handleToggleDesignationAdminCharge = (
+    index: number,
+    checked: boolean
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      designations: prev.designations.map((d, i) =>
+        i === index
+          ? {
+              ...d,
+              statutDesignation: checked
+                ? DesignationStatus.VALIDEE_ADMIN
+                : DesignationStatus.LIBRE,
+            }
+          : d
       ),
     }));
   };
@@ -1345,7 +1405,23 @@ export default function TransitDossierForm({
                   <span />
                 </div>
                 <ul className="divide-y divide-border/80">
-                  {formData.designations.map((designation, index) => (
+                  {formData.designations.map((designation, index) => {
+                    const st = designation.statutDesignation;
+                    const hasPayeur = !!designation.payeurId;
+                    const isAdminCharged =
+                      isDesignationAdminPayable(designation.nom) &&
+                      !hasPayeur &&
+                      st === DesignationStatus.VALIDEE_ADMIN;
+                    // Case « payé par l'admin » proposée pour TS/Camion tant
+                    // qu'aucun payeur n'a pris la ligne.
+                    const showAdminCharge =
+                      canManageAdminCharge &&
+                      isDesignationAdminPayable(designation.nom) &&
+                      !hasPayeur &&
+                      (st === undefined ||
+                        st === DesignationStatus.LIBRE ||
+                        isAdminCharged);
+                    return (
                     <li
                       key={`${designation.nom}-${index}`}
                       className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-[1fr_8rem_6rem_2.75rem] sm:items-center sm:gap-2 sm:px-3 sm:py-3 bg-background/50"
@@ -1355,6 +1431,20 @@ export default function TransitDossierForm({
                           Libellé
                         </span>
                         {designation.nom}
+                        {showAdminCharge && (
+                          <label className="mt-1 flex items-center gap-2 text-xs font-normal text-muted-foreground">
+                            <Checkbox
+                              checked={isAdminCharged}
+                              onCheckedChange={(v) =>
+                                handleToggleDesignationAdminCharge(
+                                  index,
+                                  v === true
+                                )
+                              }
+                            />
+                            Payé par l’admin (montant fixé par l’admin, pas le payeur)
+                          </label>
+                        )}
                       </span>
                       <div className="flex items-center gap-2 sm:justify-end">
                         <span className="text-muted-foreground text-xs sm:hidden shrink-0">
@@ -1396,7 +1486,8 @@ export default function TransitDossierForm({
                         <span className="hidden sm:block" />
                       )}
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             )}

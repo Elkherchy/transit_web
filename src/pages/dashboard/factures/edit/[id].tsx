@@ -162,6 +162,7 @@ export default function FactureEditInteretPage() {
     [FactureStatus.EN_VALIDATION]: 'bg-orange-500',
     [FactureStatus.EN_PAYE]: 'bg-blue-500',
     [FactureStatus.PAYE]: 'bg-green-500',
+    [FactureStatus.REJETEE]: 'bg-red-600',
   };
 
   const statusLabels: Record<FactureStatus, string> = {
@@ -170,6 +171,7 @@ export default function FactureEditInteretPage() {
     [FactureStatus.EN_VALIDATION]: t('dashboard.factures.statusEnValidation'),
     [FactureStatus.EN_PAYE]: t('dashboard.factures.statusEnPaye'),
     [FactureStatus.PAYE]: t('dashboard.factures.statusPaye'),
+    [FactureStatus.REJETEE]: t('dashboard.factures.statusRejetee', { defaultValue: 'Rejetée' }),
   };
 
   return (

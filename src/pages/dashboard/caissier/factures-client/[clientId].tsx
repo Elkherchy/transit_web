@@ -49,7 +49,10 @@ export default function CaissierFacturesClientDetailPage() {
       const data = await res.json();
 
       if (data.success) {
-        const facturesList: IFacture[] = data.data.data || [];
+        // Les dépôts rejetés sont supprimés ; on exclut tout REJETEE résiduel.
+        const facturesList: IFacture[] = (data.data.data || []).filter(
+          (f: IFacture) => f.statut !== FactureStatus.REJETEE
+        );
         setFactures(facturesList);
         if (facturesList.length > 0) {
           setClientNom(facturesList[0].transitClient || 'Inconnu');
@@ -57,7 +60,7 @@ export default function CaissierFacturesClientDetailPage() {
       } else {
         setError(data.error || t('common.error'));
       }
-    } catch (err) {
+    } catch {
       setError(t('common.errorNetwork'));
     } finally {
       setLoading(false);
@@ -68,11 +71,28 @@ export default function CaissierFacturesClientDetailPage() {
     if (isCaissier && clientId) void fetchFactures();
   }, [isCaissier, clientId, fetchFactures]);
 
-  const totalDebit = factures.reduce((sum, f) => sum + (f.montantPaye || 0), 0);
-  const totalCredit = factures.reduce(
-    (sum, f) => sum + Math.max(0, (f.totalFinal || 0) - (f.montantPaye || 0)),
-    0
-  );
+  // Total Dépôt = uniquement les dépôts VALIDÉS par l'agent transit (PAYE).
+  const totalDepot = factures
+    .filter((f) => f.statut === FactureStatus.PAYE)
+    .reduce((sum, f) => sum + (f.totalFinal || 0), 0);
+  const pendingCount = factures.filter(
+    (f) => f.statut === FactureStatus.EN_VALIDATION
+  ).length;
+
+  // Ouvre le justificatif (reçu) d'un dépôt : récupère l'URL signée S3 puis
+  // ouvre dans un nouvel onglet.
+  const openRecu = useCallback(async (f: IFacture) => {
+    const key = (f as { justificationUrl?: string }).justificationUrl;
+    if (!key) return;
+    try {
+      const r = await fetch(`/api/documents/${encodeURIComponent(key)}`, {
+        credentials: 'include',
+      }).then((x) => x.json());
+      if (r?.url) window.open(r.url, '_blank', 'noopener');
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const getStatusBadge = (status: FactureStatus) => {
     const statusMap: Record<
@@ -102,6 +122,10 @@ export default function CaissierFacturesClientDetailPage() {
         variant: 'default',
         label: t('dashboard.factures.statusPaye'),
       },
+      [FactureStatus.REJETEE]: {
+        variant: 'destructive',
+        label: t('dashboard.factures.statusRejetee', { defaultValue: 'Rejetée' }),
+      },
     };
 
     const config = statusMap[status] || {
@@ -124,17 +148,10 @@ export default function CaissierFacturesClientDetailPage() {
     },
     {
       accessorKey: 'totalFinal',
-      header: t('dashboard.caissier.facturesClient.colTotal') || 'Total',
+      header: t('dashboard.caissier.facturesClient.colTotalDepot', { defaultValue: 'Total Dépôt' }),
       cell: ({ row }) => (
-        <span>{(row.original.totalFinal || 0).toFixed(2)} MRU</span>
-      ),
-    },
-    {
-      accessorKey: 'montantPaye',
-      header: t('dashboard.caissier.facturesClient.colPaid') || 'Payé',
-      cell: ({ row }) => (
-        <span className="text-green-600 font-medium">
-          {(row.original.montantPaye || 0).toFixed(2)} MRU
+        <span className="font-medium tabular-nums">
+          {(row.original.totalFinal || 0).toFixed(2)} MRU
         </span>
       ),
     },
@@ -146,18 +163,25 @@ export default function CaissierFacturesClientDetailPage() {
     {
       id: 'actions',
       header: t('common.actions') || 'Actions',
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() =>
-            void router.push(`/dashboard/factures/${row.original._id}`)
-          }
-        >
-          <Eye className="h-4 w-4 mr-2" />
-          {t('common.view') || 'Voir'}
-        </Button>
-      ),
+      cell: ({ row }) => {
+        const hasRecu = !!(row.original as { justificationUrl?: string }).justificationUrl;
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!hasRecu}
+            onClick={() => void openRecu(row.original)}
+            title={
+              hasRecu
+                ? t('dashboard.caissier.facturesClient.viewRecu', { defaultValue: 'Voir le reçu' })
+                : t('dashboard.caissier.facturesClient.noRecu', { defaultValue: 'Aucun reçu' })
+            }
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            {t('dashboard.caissier.facturesClient.viewRecu', { defaultValue: 'Voir le reçu' })}
+          </Button>
+        );
+      },
     },
   ];
 
@@ -210,25 +234,24 @@ export default function CaissierFacturesClientDetailPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('dashboard.caissier.facturesClient.summaryDebit') || 'Débits'}
+                {t('dashboard.caissier.facturesClient.colTotalDepot', { defaultValue: 'Total Dépôt' })}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {totalDebit.toFixed(2)} MRU
+              <div className="text-2xl font-bold text-green-600 tabular-nums">
+                {totalDepot.toFixed(2)} MRU
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('dashboard.caissier.facturesClient.summaryCredit') ||
-                  'Crédits'}
+                {t('dashboard.factures.statusEnValidation') || 'En validation'}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {totalCredit.toFixed(2)} MRU
+              <div className="text-2xl font-bold text-amber-600 tabular-nums">
+                {pendingCount}
               </div>
             </CardContent>
           </Card>

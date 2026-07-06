@@ -30,19 +30,20 @@ import {
 import { DataTable } from '@/components/ui/data-table';
 import {
   UserRole,
+  FactureStatus,
   type IFacture,
   type ICaisse,
   type ITransitClient,
 } from '@/types';
-import { Plus, Eye, FileText } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Plus, Eye, Upload } from 'lucide-react';
 
 interface ClientFactureSummary {
   clientId: string;
   clientNom: string;
+  /** Nombre total de dépôts visibles (hors rejetés — supprimés). */
   totalOperations: number;
-  totalDebit: number;
-  totalCredit: number;
+  /** Somme des dépôts VALIDÉS par l'agent transit (statut PAYE) — réellement en caisse. */
+  totalDepot: number;
   factures: IFacture[];
 }
 
@@ -50,6 +51,7 @@ interface CreateFactureFormData {
   clientId: string;
   banqueId: string;
   montant: string;
+  justification: File | null;
 }
 
 type Row = ClientFactureSummary;
@@ -71,6 +73,7 @@ export default function CaissierFacturesClientPage() {
     clientId: '',
     banqueId: '',
     montant: '',
+    justification: null,
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -108,6 +111,10 @@ export default function CaissierFacturesClientPage() {
         const grouped = new Map<string, ClientFactureSummary>();
 
         factures.forEach((f) => {
+          // Les dépôts rejetés sont supprimés côté serveur ; par sécurité on
+          // exclut aussi tout statut REJETEE résiduel.
+          if (f.statut === FactureStatus.REJETEE) return;
+
           const clientId = String(f.clientId || '').trim();
           const clientNom =
             String(f.transitClient || '').trim() ||
@@ -121,8 +128,7 @@ export default function CaissierFacturesClientPage() {
               clientId,
               clientNom,
               totalOperations: 0,
-              totalDebit: 0,
-              totalCredit: 0,
+              totalDepot: 0,
               factures: [],
             });
           }
@@ -133,8 +139,11 @@ export default function CaissierFacturesClientPage() {
           }
 
           summary.totalOperations += 1;
-          summary.totalDebit += f.montantPaye || 0;
-          summary.totalCredit += Math.max(0, (f.totalFinal || 0) - (f.montantPaye || 0));
+          // Total Dépôt = uniquement les dépôts VALIDÉS par l'agent transit
+          // (statut PAYE) — ceux réellement en caisse client.
+          if (f.statut === FactureStatus.PAYE) {
+            summary.totalDepot += Number(f.totalFinal || 0);
+          }
           summary.factures.push(f);
         });
 
@@ -145,15 +154,12 @@ export default function CaissierFacturesClientPage() {
       }
 
       if (banquesPayload.success) {
-        const banquesList = (banquesPayload.data || [])
-          .filter((b: any) => b.type === 'BANQUE')
-          .map((b: any) => ({
-            ...b,
-            _id: String(b._id), // Convertir ObjectId en string
-          }));
+        const banquesList = ((banquesPayload.data || []) as ICaisse[])
+          .filter((b) => (b as { type?: string }).type === 'BANQUE')
+          .map((b) => ({ ...b, _id: String(b._id) }));
         setBanques(banquesList);
       }
-    } catch (err) {
+    } catch {
       setError(t('common.errorNetwork'));
     } finally {
       setLoading(false);
@@ -175,26 +181,30 @@ export default function CaissierFacturesClientPage() {
 
     setSubmitting(true);
     try {
+      // multipart/form-data — permet de joindre le justificatif du dépôt.
+      const fd = new FormData();
+      fd.append('clientId', formData.clientId);
+      fd.append('banqueId', formData.banqueId);
+      fd.append('montant', String(parseFloat(formData.montant)));
+      if (formData.justification) {
+        fd.append('justification', formData.justification);
+      }
+
       const res = await fetch('/api/factures/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          clientId: formData.clientId,
-          banqueId: formData.banqueId,
-          montant: parseFloat(formData.montant),
-        }),
+        body: fd,
       });
 
       const data = await res.json();
       if (data.success) {
         setCreateOpen(false);
-        setFormData({ clientId: '', banqueId: '', montant: '' });
+        setFormData({ clientId: '', banqueId: '', montant: '', justification: null });
         void fetchData();
       } else {
         setError(data.error || t('common.error'));
       }
-    } catch (err) {
+    } catch {
       setError(t('common.errorNetwork'));
     } finally {
       setSubmitting(false);
@@ -231,20 +241,11 @@ export default function CaissierFacturesClientPage() {
       ),
     },
     {
-      accessorKey: 'totalDebit',
-      header: t('dashboard.caissier.facturesClient.colTotalDebit'),
+      accessorKey: 'totalDepot',
+      header: t('dashboard.caissier.facturesClient.colTotalDepot', { defaultValue: 'Total Dépôt' }),
       cell: ({ row }) => (
-        <span className="text-green-600 font-medium">
-          {row.original.totalDebit.toFixed(2)} MRU
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'totalCredit',
-      header: t('dashboard.caissier.facturesClient.colTotalCredit'),
-      cell: ({ row }) => (
-        <span className="text-orange-600 font-medium">
-          {row.original.totalCredit.toFixed(2)} MRU
+        <span className="text-green-600 font-medium tabular-nums">
+          {row.original.totalDepot.toFixed(2)} MRU
         </span>
       ),
     },
@@ -402,6 +403,29 @@ export default function CaissierFacturesClientPage() {
                   setFormData({ ...formData, montant: e.target.value })
                 }
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="justif-input">
+                {t('dashboard.caissier.facturesClient.formJustificationLabel', { defaultValue: 'Justificatif (PDF/JPG/PNG)' })}
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="justif-input"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) =>
+                    setFormData({ ...formData, justification: e.target.files?.[0] || null })
+                  }
+                  className="cursor-pointer"
+                />
+                <Upload className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </div>
+              {formData.justification && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {formData.justification.name}
+                </p>
+              )}
             </div>
 
             {error && (

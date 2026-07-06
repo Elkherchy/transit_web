@@ -33,6 +33,7 @@ function factureBadge(s: FactureStatus, t: (key: string) => string) {
     [FactureStatus.EN_VALIDATION]: { label: t('dashboard.clients.factures.statusEnValidation'), className: 'bg-amber-500 text-white' },
     [FactureStatus.EN_PAYE]: { label: t('dashboard.clients.factures.statusPaiementPartiel'), className: 'bg-violet-500 text-white' },
     [FactureStatus.PAYE]: { label: t('dashboard.clients.factures.statusPayee'), className: 'bg-green-600 text-white' },
+    [FactureStatus.REJETEE]: { label: t('dashboard.clients.factures.statusRejetee'), className: 'bg-red-600 text-white' },
   };
   const m = map[s] || { label: s, className: '' };
   return <Badge className={`${m.className} text-xs`}>{m.label}</Badge>;

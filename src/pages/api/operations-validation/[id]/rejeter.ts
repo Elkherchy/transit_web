@@ -1,8 +1,8 @@
 import type { NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
-import { OperationValidation } from '@/models';
-import { OperationValidationStatus } from '@/models/OperationValidation';
+import { Facture, OperationValidation } from '@/models';
+import { OperationType, OperationValidationStatus } from '@/models/OperationValidation';
 import { ApiResponse, UserRole } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 
@@ -43,6 +43,18 @@ async function handler(
     op.validatedAt = new Date();
     op.rejectMotif = motif ? String(motif).trim() : null;
     await op.save();
+
+    // Dépôt client (CLIENT_FACTURE) rejeté par l'agent transit : la facture
+    // est SUPPRIMÉE (aucun impact caisse n'a eu lieu à la création, donc rien
+    // à annuler). L'opération disparaît de la file du caissier.
+    if (op.opType === OperationType.CLIENT_FACTURE) {
+      try {
+        await Facture.findByIdAndDelete(String(op.opId));
+      } catch (delErr) {
+        console.error('CLIENT_FACTURE → suppression facture rejetée:', delErr);
+      }
+    }
+
     return res
       .status(200)
       .json({

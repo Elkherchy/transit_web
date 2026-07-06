@@ -24,6 +24,15 @@ const FactureSchema = new Schema(
       ref: 'Client',
       default: null,
     },
+    // Banque cible d'un dépôt caissier — stockée à la création mais créditée
+    // uniquement à la validation par l'agent transit.
+    banqueId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Caisse',
+      default: null,
+    },
+    justificationUrl: { type: String, default: null },
+    justificationFilename: { type: String, default: null },
     numero: {
       type: String,
       required: [true, 'Le numéro de facture est requis'],

@@ -41,59 +41,7 @@ interface PendingPaiement {
   payeurEmail?: string;
   factureBl?: string;
 }
-import { Lock, LockOpen, CheckCircle2, FileCheck2, Send, ShieldCheck, XCircle, Clock, Loader2 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-
-/**
- * Types d'opérations soumises à validation côté agent transit.
- * Doivent matcher l'enum côté serveur (src/models/OperationValidation.ts).
- */
-type OpType =
-  | 'CLIENT_FACTURE'
-  | 'CLIENT_PAIEMENT'
-  | 'PAYEUR_PAIEMENT'
-  | 'ALIMENTATION'
-  | 'DEPENSE';
-type OpKey = `${OpType}:${string}`;
-
-/** Construit l'OpKey unique d'une ligne, ou null si l'opération n'est pas
- *  soumettable (KPI, etc.). */
-function rowOpRef(
-  r: { kind: string; id?: string; designationId?: string }
-):
-  | { opType: OpType; opId: string; key: OpKey }
-  | null {
-  let opType: OpType | null = null;
-  let opId: string | null = null;
-  switch (r.kind) {
-    case 'client-facture':
-      opType = 'CLIENT_FACTURE';
-      // id format: `facture-${factureId}` → strip prefix
-      opId = (r.id || '').replace(/^facture-/, '');
-      break;
-    case 'client-paiement':
-      opType = 'CLIENT_PAIEMENT';
-      opId = (r.id || '').replace(/^paiement-/, '');
-      break;
-    case 'payeur-paiement':
-      opType = 'PAYEUR_PAIEMENT';
-      // Pas d'id propre sur le paiement payeur — fallback designationId
-      opId = r.designationId || r.id || '';
-      break;
-    case 'aliment':
-      opType = 'ALIMENTATION';
-      opId = (r.id || '').replace(/^aliment-/, '');
-      break;
-    case 'depense':
-      opType = 'DEPENSE';
-      opId = (r.id || '').replace(/^depense-/, '');
-      break;
-    default:
-      return null;
-  }
-  if (!opType || !opId) return null;
-  return { opType, opId, key: `${opType}:${opId}` as OpKey };
-}
+import { Lock, LockOpen, CheckCircle2, FileCheck2 } from 'lucide-react';
 
 /**
  * Ligne unifiée affichée dans la DataTable :
@@ -178,75 +126,8 @@ interface PayeurPaiementApi {
 }
 
 function buildColumns(
-  t: (k: string, opts?: Record<string, unknown>) => string,
-  ctx: {
-    sentMap: Map<OpKey, string>;
-    selectedKeys: Set<OpKey>;
-    onToggle: (k: OpKey) => void;
-    onValiderOne: (row: Row) => void;
-    submittingKey: OpKey | null;
-  }
+  t: (k: string, opts?: Record<string, unknown>) => string
 ): ColumnDef<Row>[] {
-  const validationCol: ColumnDef<Row> = {
-    id: 'validation',
-    header: t('dashboard.caissier.cloturer.validationCol'),
-    meta: { align: 'right' } satisfies DataTableColumnMeta,
-    cell: ({ row }) => {
-      const r = row.original;
-      const ref = rowOpRef(
-        r as { kind: string; id?: string; designationId?: string }
-      );
-      if (!ref) return <span className="text-xs text-muted-foreground">—</span>;
-      const sent = ctx.sentMap.get(ref.key);
-      if (sent === 'EN_ATTENTE_AGENT' || sent === 'EN_ATTENTE_ADMIN') {
-        return (
-          <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-[10px]">
-            {t('dashboard.caissier.cloturer.statusPendingAgent')}
-          </Badge>
-        );
-      }
-      if (sent === 'VALIDEE_ADMIN' || sent === 'VALIDEE_AGENT') {
-        return (
-          <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 text-[10px]">
-            {t('dashboard.caissier.cloturer.statusValideeAgent')}
-          </Badge>
-        );
-      }
-      if (sent === 'REJETEE') {
-        return (
-          <Badge variant="destructive" className="text-[10px]">
-            {t('dashboard.caissier.cloturer.statusRejetee')}
-          </Badge>
-        );
-      }
-      const checked = ctx.selectedKeys.has(ref.key);
-      const acting = ctx.submittingKey === ref.key;
-      return (
-        <div className="flex items-center justify-end gap-1.5">
-          <Checkbox
-            checked={checked}
-            onCheckedChange={() => ctx.onToggle(ref.key)}
-            aria-label={t('dashboard.caissier.cloturer.ariaSelect')}
-          />
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 px-2 text-xs"
-            disabled={acting}
-            onClick={() => ctx.onValiderOne(r)}
-            title={t('dashboard.caissier.cloturer.titleValider')}
-          >
-            {acting ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <ShieldCheck className="h-3 w-3 sm:mr-1" />
-            )}
-            <span className="hidden sm:inline">{t('dashboard.caissier.cloturer.valider')}</span>
-          </Button>
-        </div>
-      );
-    },
-  };
   return [
     {
       id: 'libelle',
@@ -429,7 +310,6 @@ function buildColumns(
         );
       },
     },
-    validationCol,
   ];
 }
 
@@ -457,13 +337,6 @@ export default function CaissierCloturerJournee() {
     PendingPaiement[]
   >([]);
   const [actingPaiementId, setActingPaiementId] = useState<string | null>(null);
-
-  // Soumission individuelle des opérations à l'agent transit pour validation.
-  // sentMap : clé OpKey → statut (EN_ATTENTE_AGENT / VALIDEE_AGENT / REJETEE)
-  // selectedKeys : ensemble des OpKey cochées dans le tableau
-  const [sentMap, setSentMap] = useState<Map<OpKey, string>>(new Map());
-  const [selectedKeys, setSelectedKeys] = useState<Set<OpKey>>(new Set());
-  const [submittingOps, setSubmittingOps] = useState(false);
 
   useEffect(() => {
     if (status !== 'loading' && user && !isAllowed) {
@@ -508,37 +381,6 @@ export default function CaissierCloturerJournee() {
         setDepenses((depensesRes.data || []) as DepenseApi[]);
       }
 
-      // Charge les validations déjà soumises pour cette journée (tous statuts)
-      // pour afficher leur état (En attente / Validée / Rejetée) dans la table.
-      try {
-        const validations = await Promise.all([
-          fetch('/api/operations-validation?statut=EN_ATTENTE_AGENT&limit=500', {
-            credentials: 'include',
-          }).then((x) => x.json()),
-          fetch('/api/operations-validation?statut=EN_ATTENTE_ADMIN&limit=500', {
-            credentials: 'include',
-          }).then((x) => x.json()),
-          fetch('/api/operations-validation?statut=VALIDEE_ADMIN&limit=500', {
-            credentials: 'include',
-          }).then((x) => x.json()),
-          fetch('/api/operations-validation?statut=VALIDEE_AGENT&limit=500', {
-            credentials: 'include',
-          }).then((x) => x.json()),
-          fetch('/api/operations-validation?statut=REJETEE&limit=500', {
-            credentials: 'include',
-          }).then((x) => x.json()),
-        ]);
-        const map = new Map<OpKey, string>();
-        for (const r of validations) {
-          if (!r?.success) continue;
-          for (const v of r.data || []) {
-            map.set(`${v.opType}:${v.opId}` as OpKey, v.statut);
-          }
-        }
-        setSentMap(map);
-      } catch (e) {
-        console.warn('Fetch operations-validation failed:', e);
-      }
       if (journeeRes.success) setJournee(journeeRes.data);
       if (payeursRes.success) {
         const list = (payeursRes.data?.data ||
@@ -660,229 +502,7 @@ export default function CaissierCloturerJournee() {
     }
   };
 
-  const submitSelectedOps = useCallback(async () => {
-    if (selectedKeys.size === 0) return;
-    setSubmittingOps(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      // Construit les payload depuis les rows existants
-      const allRows: Array<{ kind: string; id?: string; designationId?: string; bl?: string; client?: string; payeurLabel?: string; designationNom?: string; categorieNom?: string; caisseNom?: string; montant?: number; date?: Date }> = [];
-      for (const f of journee?.clientFactures || []) {
-        const fAny = f as unknown as Record<string, unknown>;
-        allRows.push({
-          kind: 'client-facture',
-          id: `facture-${f.factureId}`,
-          client: f.clientNom,
-          bl: f.factureNumero,
-          montant: f.montant,
-          date: (fAny.createdAt as Date) || undefined,
-        });
-      }
-      for (const p of journee?.clientPaiements || []) {
-        const pAny = p as unknown as Record<string, unknown>;
-        allRows.push({
-          kind: 'client-paiement',
-          id: `paiement-${p.paiementId}`,
-          client: p.clientNom,
-          montant: p.montant,
-          date: (pAny.createdAt as Date) || undefined,
-        });
-      }
-      for (const p of payeurPaiements) {
-        allRows.push({
-          kind: 'payeur-paiement',
-          id: `payeur-paiement-${p.designationId}`,
-          designationId: p.designationId,
-          payeurLabel: p.payeurNom,
-          designationNom: p.designationNom,
-          bl: p.bl,
-          montant: p.montant,
-          date: new Date(p.paidAt),
-        });
-      }
-      for (const d of depenses) {
-        allRows.push({
-          kind: 'depense',
-          id: `depense-${d._id}`,
-          categorieNom: d.categorieNom,
-          caisseNom: d.caisseNom,
-          montant: d.montant,
-          date: new Date(d.date),
-        });
-      }
-      for (const a of journee?.alimentationsPayeurs || []) {
-        const aAny = a as unknown as Record<string, unknown>;
-        allRows.push({
-          kind: 'aliment',
-          id: `aliment-${a.transactionId || ''}`,
-          payeurLabel: (aAny.payeurNom as string) || '',
-          montant: a.montant,
-          date: (aAny.createdAt as Date) || undefined,
-        });
-      }
-
-      const items: Array<{
-        opType: OpType;
-        opId: string;
-        snapshot: { libelle?: string; montant?: number; contrepartie?: string; date?: Date };
-      }> = [];
-      for (const r of allRows) {
-        const ref = rowOpRef(r);
-        if (!ref) continue;
-        if (!selectedKeys.has(ref.key)) continue;
-        const libelle =
-          r.kind === 'client-facture'
-            ? `Facture ${r.bl || ''}`
-            : r.kind === 'client-paiement'
-              ? 'Paiement client'
-              : r.kind === 'payeur-paiement'
-                ? `Paiement ${r.designationNom || ''}`
-                : r.kind === 'depense'
-                  ? `Dépense ${r.categorieNom || ''}`
-                  : 'Alimentation payeur';
-        const contrepartie =
-          r.kind === 'client-facture' || r.kind === 'client-paiement'
-            ? r.client
-            : r.kind === 'payeur-paiement' || r.kind === 'aliment'
-              ? r.payeurLabel
-              : r.caisseNom;
-        items.push({
-          opType: ref.opType,
-          opId: ref.opId,
-          snapshot: {
-            libelle,
-            montant: Number(r.montant) || 0,
-            contrepartie,
-            date: r.date instanceof Date ? r.date : undefined,
-          },
-        });
-      }
-
-      if (items.length === 0) {
-        setError('Aucune opération valide à envoyer');
-        return;
-      }
-
-      const res = await fetch('/api/operations-validation', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-      });
-      const data = await res.json().catch(() => null);
-      if (res.ok && data?.success) {
-        setSuccess(data.message || `${items.length} opération(s) envoyée(s)`);
-        setSelectedKeys(new Set());
-        void reload();
-      } else {
-        setError(data?.error || `Erreur ${res.status}`);
-      }
-    } catch (err) {
-      console.error('submitSelectedOps:', err);
-      setError(t('common.errorNetwork'));
-    } finally {
-      setSubmittingOps(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedKeys, journee, payeurPaiements, depenses, t]);
-
-  const toggleOpSelected = useCallback((k: OpKey) => {
-    setSelectedKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
-      return next;
-    });
-  }, []);
-
-  // Validation rapide d'UNE seule ligne (sans passer par la sélection +
-  // bouton bulk). Crée une OperationValidation EN_ATTENTE_AGENT qui devra
-  // ENSUITE être validée par l'agent transit depuis sa page dédiée.
-  const [submittingKey, setSubmittingKey] = useState<OpKey | null>(null);
-  const validerUnRow = useCallback(
-    async (row: Row) => {
-      const ref = rowOpRef(
-        row as { kind: string; id?: string; designationId?: string }
-      );
-      if (!ref) return;
-      setSubmittingKey(ref.key);
-      setError(null);
-      setSuccess(null);
-      try {
-        let libelle = '';
-        let contrepartie: string | undefined;
-        let montant = 0;
-        let date: Date | undefined;
-        if (row.kind === 'client-facture') {
-          libelle = `Facture ${row.factureNumero || ''}`;
-          contrepartie = row.clientLabel;
-          montant = Number(row.montant) || 0;
-          date = row.date instanceof Date ? row.date : new Date();
-        } else if (row.kind === 'client-paiement') {
-          libelle = 'Paiement client';
-          contrepartie = row.clientLabel;
-          montant = Number(row.montant) || 0;
-          date = row.date instanceof Date ? row.date : new Date();
-        } else if (row.kind === 'payeur-paiement') {
-          libelle = `Paiement ${row.designationNom || ''}`;
-          contrepartie = row.payeurLabel;
-          montant = Number(row.montant) || 0;
-          date = row.date instanceof Date ? row.date : new Date();
-        } else if (row.kind === 'depense') {
-          libelle = `Dépense ${row.categorieNom || ''}`;
-          contrepartie = row.caisseNom;
-          montant = Number(row.montant) || 0;
-          date = row.date instanceof Date ? row.date : new Date();
-        } else if (row.kind === 'aliment') {
-          libelle = 'Alimentation payeur';
-          contrepartie = row.payeurLabel;
-          montant = Number(row.montant) || 0;
-          date = row.date instanceof Date ? row.date : new Date();
-        }
-        const res = await fetch('/api/operations-validation', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: [
-              {
-                opType: ref.opType,
-                opId: ref.opId,
-                snapshot: { libelle, montant, contrepartie, date },
-              },
-            ],
-          }),
-        });
-        const data = await res.json().catch(() => null);
-        if (res.ok && data?.success) {
-          setSuccess(
-            'Opération validée — en attente de validation par l\'agent transit'
-          );
-          void reload();
-        } else {
-          setError(data?.error || `Erreur ${res.status}`);
-        }
-      } catch {
-        setError(t('common.errorNetwork'));
-      } finally {
-        setSubmittingKey(null);
-      }
-    },
-    [reload, t]
-  );
-
-  const columns = useMemo(
-    () =>
-      buildColumns(t, {
-        sentMap,
-        selectedKeys,
-        onToggle: toggleOpSelected,
-        onValiderOne: validerUnRow,
-        submittingKey,
-      }),
-    [t, sentMap, selectedKeys, toggleOpSelected, validerUnRow, submittingKey]
-  );
+  const columns = useMemo(() => buildColumns(t), [t]);
 
   const rows = useMemo<Row[]>(() => {
     if (!journee) return [];
@@ -1105,24 +725,6 @@ export default function CaissierCloturerJournee() {
         actions={
           journee && !isClosed ? (
             <div className="flex gap-2">
-              {selectedKeys.size > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={() => void submitSelectedOps()}
-                  disabled={submittingOps}
-                  className={isMobile ? 'h-10 px-3' : ''}
-                >
-                  <Send className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">
-                    {submittingOps
-                      ? 'Envoi…'
-                      : `Envoyer ${selectedKeys.size} à l'agent`}
-                  </span>
-                  <span className="sm:hidden">
-                    {submittingOps ? '…' : `→ ${selectedKeys.size}`}
-                  </span>
-                </Button>
-              )}
             <Button
               onClick={cloturer}
               disabled={submitting || pendingPaiements.length > 0}

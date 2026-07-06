@@ -17,7 +17,22 @@ import {
   type ITransaction,
   TransactionType,
 } from '@/types';
-import { ArrowLeft, RefreshCcw, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import {
+  ArrowLeft,
+  RefreshCcw,
+  ArrowUpRight,
+  ArrowDownRight,
+  Printer,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from 'lucide-react';
+import {
+  printCaisseHistoriquePdf,
+  type CaisseHistoriquePdfModel,
+} from '@/components/caisse/caisse-historique-pdf';
+
+const PAGE_SIZE = 10;
 
 const fmt = (n: number) =>
   Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
@@ -32,6 +47,8 @@ export default function CaissierHistoriquePage() {
   const [caisse, setCaisse] = useState<ICaisseListItem | null>(null);
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [printing, setPrinting] = useState(false);
 
   const isAllowed = user?.role === UserRole.CAISSIER || user?.role === UserRole.ADMIN;
 
@@ -43,6 +60,7 @@ export default function CaissierHistoriquePage() {
 
   const reload = useCallback(async () => {
     setLoading(true);
+    setPage(1);
     try {
       const caisseRes = await fetch('/api/caisse/caisses', {
         credentials: 'include',
@@ -101,6 +119,50 @@ export default function CaissierHistoriquePage() {
     .filter((t) => t.type === TransactionType.DEBIT)
     .reduce((s, t) => s + Number(t.montant || 0), 0);
 
+  const pageCount = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const startIdx = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = transactions.slice(startIdx, startIdx + PAGE_SIZE);
+
+  const handlePrint = async () => {
+    if (transactions.length === 0 || printing) return;
+    setPrinting(true);
+    try {
+      const model: CaisseHistoriquePdfModel = {
+        badge: 'Opérations de caisse',
+        titre: caisse?.nom
+          ? `Opérations de caisse — ${caisse.nom}`
+          : 'Opérations de caisse',
+        sousTitre: caisse ? `Solde actuel : ${fmt(caisse.solde ?? 0)} MRU` : undefined,
+        genereLe: new Date().toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        kpis: [
+          { label: 'Solde actuel', value: `${fmt(caisse?.solde ?? 0)} MRU` },
+          { label: 'Entrées', value: `+${fmt(totalCredit)} MRU`, tone: 'credit' },
+          { label: 'Sorties', value: `−${fmt(totalDebit)} MRU`, tone: 'debit' },
+        ],
+        showType: true,
+        rows: transactions.map((tx) => ({
+          date: new Date(tx.date).toLocaleDateString('fr-FR'),
+          type: tx.type === TransactionType.CREDIT ? 'CREDIT' : 'DEBIT',
+          description: tx.description || '',
+          reference: tx.reference,
+          montant: Number(tx.montant || 0),
+        })),
+        totalLabel: 'Solde net des opérations',
+        totalMontant: totalCredit - totalDebit,
+      };
+      await printCaisseHistoriquePdf(model, window.location.origin);
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <PageHeader
@@ -115,15 +177,31 @@ export default function CaissierHistoriquePage() {
           </Button>
         }
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void reload()}
-            className={isMobile ? 'h-10 px-3' : ''}
-          >
-            <RefreshCcw className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Actualiser</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void handlePrint()}
+              disabled={printing || transactions.length === 0}
+              className={isMobile ? 'h-10 px-3' : ''}
+            >
+              {printing ? (
+                <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
+              ) : (
+                <Printer className="h-4 w-4 sm:mr-2" />
+              )}
+              <span className="hidden sm:inline">Imprimer PDF</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void reload()}
+              className={isMobile ? 'h-10 px-3' : ''}
+            >
+              <RefreshCcw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Actualiser</span>
+            </Button>
+          </div>
         }
         sticky={isMobile}
       />
@@ -174,7 +252,7 @@ export default function CaissierHistoriquePage() {
             <>
               {/* Vue mobile : cards empilées */}
               <div className="space-y-2 sm:hidden">
-                {transactions.map((tx) => {
+                {pageItems.map((tx) => {
                   const isCredit = tx.type === TransactionType.CREDIT;
                   return (
                     <Card key={tx._id} className="overflow-hidden">
@@ -232,7 +310,7 @@ export default function CaissierHistoriquePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((tx) => {
+                    {pageItems.map((tx) => {
                       const isCredit = tx.type === TransactionType.CREDIT;
                       return (
                         <tr
@@ -275,6 +353,40 @@ export default function CaissierHistoriquePage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination 10 par page */}
+              {pageCount > 1 && (
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <div className="text-xs text-muted-foreground tabular-nums">
+                    {startIdx + 1}–
+                    {Math.min(startIdx + PAGE_SIZE, transactions.length)} sur{' '}
+                    {transactions.length}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+                      <span className="ml-1 hidden sm:inline">Précédent</span>
+                    </Button>
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      Page {currentPage} / {pageCount}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage >= pageCount}
+                      onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                    >
+                      <span className="mr-1 hidden sm:inline">Suivant</span>
+                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
