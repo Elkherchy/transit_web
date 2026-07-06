@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { DataTableColumnMeta } from '@/components/ui/data-table';
 import { FactureManutentionStatus, type IFactureManutention } from '@/types';
+import { ManutentionStatusBadge } from '@/components/dashboard/ManutentionStatusBadge';
 import { Eye, MoreHorizontal, Pencil, ShieldCheck } from 'lucide-react';
 
 export interface ManutentionRow extends IFactureManutention {
@@ -70,28 +70,9 @@ export function createManutentionColumns(
     {
       accessorKey: 'statut',
       header: () => t('dashboard.admin.manutention.columns.statut'),
-      cell: ({ row }) => {
-        const s = row.original.statut;
-        if (s === FactureManutentionStatus.BROUILLON) {
-          return (
-            <Badge className="bg-slate-500 text-white hover:bg-slate-500 text-xs">
-              Brouillon
-            </Badge>
-          );
-        }
-        if (s === FactureManutentionStatus.EN_ATTENTE_VALIDATION) {
-          return (
-            <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-xs">
-              En attente validation
-            </Badge>
-          );
-        }
-        return (
-          <Badge variant="outline" className="text-xs">
-            {s}
-          </Badge>
-        );
-      },
+      cell: ({ row }) => (
+        <ManutentionStatusBadge statut={row.original.statut} t={t} />
+      ),
     },
     {
       id: 'actions',

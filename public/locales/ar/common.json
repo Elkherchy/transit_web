@@ -777,6 +777,14 @@
         "validated": "مُصادَق (مغلق)",
         "notValidated": "غير مُصادَق (قيد المعالجة)"
       },
+      "statutBadge": {
+        "brouillon": "مسودة",
+        "enAttenteValidation": "في انتظار المصادقة",
+        "enAttentePaiement": "في انتظار الدفع",
+        "paiementPartiel": "دفع جزئي",
+        "payeEnAttenteValidation": "مدفوع في انتظار المصادقة",
+        "cloture": "مغلق"
+      },
       "infoCard": "معلومات الملف",
       "detailTitle": "فاتورة {{bl}}",
       "detailFallback": "تفاصيل فاتورة المناولة",

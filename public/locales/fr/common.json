@@ -769,6 +769,14 @@
         "validated": "Validé (clôturé)",
         "notValidated": "Non validé (en cours)"
       },
+      "statutBadge": {
+        "brouillon": "Brouillon",
+        "enAttenteValidation": "En attente validation",
+        "enAttentePaiement": "En attente paiement",
+        "paiementPartiel": "Paiement partiel",
+        "payeEnAttenteValidation": "Payé en attente validation",
+        "cloture": "Clôturé"
+      },
       "infoCard": "Informations dossier",
       "detailTitle": "Facture {{bl}}",
       "detailFallback": "Détail facture BL",

@@ -37,6 +37,10 @@ import {
   IFactureManutention,
   UserRole,
 } from '@/types';
+import {
+  ManutentionStatusBadge,
+  manutentionStatusLabel,
+} from '@/components/dashboard/ManutentionStatusBadge';
 
 /** Étend IFactureManutention avec les totaux des factures client liées
  *  et le compteur des désignations du transit lié (= lignes entreprise réelles). */
@@ -46,7 +50,6 @@ interface BLTransitRow extends IFactureManutention {
   designationsCount: number;
   designationsTotal: number;
 }
-import type { TFunction } from 'i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Eye, FileText, RefreshCcw } from 'lucide-react';
 
@@ -68,47 +71,6 @@ const STATUS_OPTIONS: Array<{ value: string; key: string }> = [
   { value: FactureManutentionStatus.PAYE_EN_ATTENTE_VALIDATION, key: 'payeEnAttenteValidation' },
   { value: FactureManutentionStatus.CLOTURE, key: 'cloture' },
 ];
-
-function statusBadge(s: FactureManutentionStatus | undefined, t: TFunction) {
-  switch (s) {
-    case FactureManutentionStatus.CLOTURE:
-      return (
-        <Badge className="bg-green-600 text-white hover:bg-green-600 text-xs">
-          {t('dashboard.transit.bls.status.cloture')}
-        </Badge>
-      );
-    case FactureManutentionStatus.PAYE_EN_ATTENTE_VALIDATION:
-      return (
-        <Badge className="bg-amber-500 text-white hover:bg-amber-500 text-xs">
-          {t('dashboard.transit.bls.status.payeEnAttenteValidation')}
-        </Badge>
-      );
-    case FactureManutentionStatus.PAIEMENT_PARTIEL:
-      return (
-        <Badge className="bg-orange-500 text-white hover:bg-orange-500 text-xs">
-          {t('dashboard.transit.bls.status.paiementPartiel')}
-        </Badge>
-      );
-    case FactureManutentionStatus.EN_ATTENTE_PAIEMENT:
-      return (
-        <Badge className="bg-blue-500 text-white hover:bg-blue-500 text-xs">
-          {t('dashboard.transit.bls.status.enAttentePaiement')}
-        </Badge>
-      );
-    case FactureManutentionStatus.BROUILLON:
-      return (
-        <Badge variant="outline" className="text-xs">
-          {t('dashboard.transit.bls.status.brouillon')}
-        </Badge>
-      );
-    default:
-      return (
-        <Badge variant="outline" className="text-xs">
-          {s || '—'}
-        </Badge>
-      );
-  }
-}
 
 const fmt = (n: number) =>
   Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 });
@@ -276,7 +238,9 @@ export default function BLsTransitListPage({
       {
         id: 'statut',
         header: t('dashboard.transit.bls.colStatut'),
-        cell: ({ row }) => statusBadge(row.original.statut, t),
+        cell: ({ row }) => (
+          <ManutentionStatusBadge statut={row.original.statut} t={t} />
+        ),
       },
       {
         id: 'date',
@@ -422,6 +386,15 @@ export default function BLsTransitListPage({
                             title={f.bl || '—'}
                             subtitle={f.client || f.objet || '—'}
                             fields={[
+                              {
+                                label: t('dashboard.transit.bls.colStatut'),
+                                value: (
+                                  <ManutentionStatusBadge
+                                    statut={f.statut}
+                                    t={t}
+                                  />
+                                ),
+                              },
                               {
                                 label: t('dashboard.transit.bls.colObjet'),
                                 value: f.objet || '—',
