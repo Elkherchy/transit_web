@@ -365,11 +365,13 @@ export default function UtilisateursPage() {
 
   const submitSetSolde = async () => {
     if (!setSoldeTarget) return;
-    const v = parseMontant(setSoldeValue);
-    if (!Number.isFinite(v)) {
+    // Saisie vide interdite (parseMontant renvoie 0 pour une chaîne vide, ce qui
+    // fixerait le solde à 0 par inadvertance) — on garde sur la saisie brute.
+    if (!setSoldeValue.trim()) {
       setSetSoldeError(t('dashboard.utilisateurs.setSolde.errSolde'));
       return;
     }
+    const v = parseMontant(setSoldeValue);
     setSubmittingSetSolde(true);
     setSetSoldeError(null);
     try {

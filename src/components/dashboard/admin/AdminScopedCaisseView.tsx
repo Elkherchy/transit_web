@@ -137,11 +137,13 @@ export default function AdminScopedCaisseView({
     e.preventDefault();
     if (!corrRow) return;
     setCorrError(null);
-    const newSolde = parseMontant(corrSolde);
-    if (!Number.isFinite(newSolde)) {
+    // Saisie vide interdite (éviter de fixer un solde à 0 par inadvertance) —
+    // parseMontant renvoie 0 pour une chaîne vide, d'où le garde sur la saisie.
+    if (!corrSolde.trim()) {
       setCorrError('Solde invalide');
       return;
     }
+    const newSolde = parseMontant(corrSolde);
     setSubmittingCorr(true);
     try {
       const r = await fetch(`/api/admin/caisses/${corrRow._id}/set-solde`, {
