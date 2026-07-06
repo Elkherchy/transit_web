@@ -406,7 +406,7 @@ export default function BLsTransitListPage({
             ) : (
               <>
                 <ResponsiveTableArea
-                  table={<DataTable columns={columns} data={rows} />}
+                  table={<DataTable columns={columns} data={rows} pageSize={0} />}
                   mobileList={
                     <div className="space-y-3">
                       {rows.map((f) => {

@@ -145,6 +145,23 @@ export default function TransitJourneeDetail() {
     }
   };
 
+  const validerBl = async (transitId: string) => {
+    setBusy(`bl:${transitId}`);
+    setError(null);
+    try {
+      const r = await fetch(
+        `/api/transit/${transitId}/valider-designations-transit`,
+        { method: 'POST', credentials: 'include' }
+      ).then((x) => x.json());
+      if (!r.success) setError(r.error || t('common.error'));
+      void reload();
+    } catch {
+      setError(t('common.errorNetwork'));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const validerJournee = async () => {
     setValidating(true);
     setError(null);
@@ -303,21 +320,40 @@ export default function TransitJourneeDetail() {
             </CardContent>
           </Card>
 
-          {transits.map((tr) => (
+          {transits.map((tr) => {
+            const nbAValider = (tr.designations || []).filter(
+              (d) => d.statutDesignation === DesignationStatus.PAYEE
+            ).length;
+            return (
             <Card key={tr._id}>
               <CardHeader>
-                <CardTitle className="text-base flex items-center justify-between">
+                <CardTitle className="text-base flex items-center justify-between gap-2">
                   <span>
                     {tr.client} — BL {tr.bl}
                   </span>
-                  {tr.factureClientId && (
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/factures/${tr.factureClientId}`}>
-                        <Receipt className="mr-2 h-4 w-4" />
-                        {t('dashboard.transit.journees.factureClient')}
-                      </Link>
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {nbAValider > 0 && (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                        disabled={busy === `bl:${tr._id}`}
+                        onClick={() => void validerBl(tr._id)}
+                      >
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        {busy === `bl:${tr._id}`
+                          ? t('dashboard.transit.journees.btnValidating')
+                          : `${t('dashboard.transit.journees.btnValider')} (${nbAValider})`}
+                      </Button>
+                    )}
+                    {tr.factureClientId && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/dashboard/factures/${tr.factureClientId}`}>
+                          <Receipt className="mr-2 h-4 w-4" />
+                          {t('dashboard.transit.journees.factureClient')}
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">{tr.objet}</p>
               </CardHeader>
@@ -374,7 +410,8 @@ export default function TransitJourneeDetail() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
 
           {journee.statut === JourneeCaisseStatus.CLOTUREE && (
             <div className="flex justify-end">

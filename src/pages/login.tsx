@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { signIn, useSession } from 'next-auth/react';
 import { useTranslation } from 'react-i18next';
 import { withI18n } from '@/lib/withI18n';
@@ -11,9 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-/** Fichier servi depuis `public/bg-login.png` → URL `/bg-login.png` */
-const LOGIN_BG_URL = '/bg-login.png';
 
 /** Dernier e-mail utilisé pour une connexion réussie (réaffiché après déconnexion, modifiable). */
 const LAST_LOGIN_EMAIL_KEY = 'emama_last_login_email';
@@ -87,38 +83,12 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white lg:flex-row">
-      {/* Panneau gauche — desktop uniquement (image public/bg-login.png) */}
-      <aside
-        className="relative hidden min-h-0 w-[60%] shrink-0 flex-col justify-center overflow-hidden bg-[#030711] xl:w-[62%] lg:flex"
-        aria-hidden={false}
-      >
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${LOGIN_BG_URL})` }}
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/20 lg:bg-gradient-to-r lg:from-black/55 lg:via-black/25 lg:to-transparent rtl:lg:bg-gradient-to-l"
-          aria-hidden
-        />
-        <div className="relative z-10 px-6 py-10 sm:px-10 lg:px-14 xl:px-20 text-start rtl:text-right">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/90">
-            SNTS
-          </p>
-          <h1 className="mt-3 max-w-xl text-2xl font-bold leading-tight tracking-tight text-white sm:text-3xl xl:text-4xl rtl:me-auto">
-            {t('dashboard.login.tagline')}
-          </h1>
-          <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-300 sm:text-base rtl:me-auto">
-            {t('dashboard.login.description')}
-          </p>
-        </div>
-      </aside>
-
-      {/* Formulaire — plein écran sur mobile, colonne droite sur lg+ */}
-      <main className="flex min-h-dvh w-full flex-1 flex-col justify-center px-6 py-10 sm:px-10 lg:min-h-0 lg:w-[40%] lg:min-w-0 lg:shrink-0 lg:px-12 xl:w-[38%] xl:px-16">
-        <div className="mx-auto w-full max-w-md">
-          <div className="mb-8 space-y-2 text-center lg:space-y-1 lg:text-start">
-            <div className="flex justify-center lg:justify-start rtl:lg:justify-end">
+    <div className="flex min-h-dvh items-center justify-center bg-slate-50 px-4 py-10">
+      {/* Formulaire centré */}
+      <main className="w-full max-w-md">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+          <div className="mb-8 space-y-2 text-center">
+            <div className="flex justify-center">
               <div className="relative h-14 w-36 shrink-0 sm:h-12 sm:w-32 lg:h-11 lg:w-28">
                 <Image
                   src="/emama-favorie.png"
@@ -222,10 +192,8 @@ export default function Login() {
             </Button>
           </form>
 
-          <footer className="mt-12 border-t border-slate-100 pt-8 text-center text-xs text-slate-500">
-            <p>
-              © {new Date().getFullYear()} SNTS
-            </p>
+          <footer className="mt-10 border-t border-slate-100 pt-6 text-center text-xs text-slate-500">
+            <p>© {new Date().getFullYear()} SNTS</p>
           </footer>
         </div>
       </main>

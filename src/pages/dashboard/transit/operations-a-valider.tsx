@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'react-i18next';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { PageHeader, PageContent, PageSkeleton } from '@/components/ui';
+import { PageHeader, PageContent, PageSkeleton, MobilePagination } from '@/components/ui';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -24,7 +25,10 @@ import {
   Clock,
   Loader2,
   Eye,
+  ListChecks,
 } from 'lucide-react';
+
+const PAGE_SIZE = 10;
 
 interface OperationValidationRow {
   _id: string;
@@ -84,6 +88,11 @@ export default function OperationsAValiderPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
+
+  // Pagination + sélection multiple
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   // Receipt viewer state
   const [viewerRow, setViewerRow] = useState<OperationValidationRow | null>(null);
@@ -219,6 +228,69 @@ export default function OperationsAValiderPage() {
     }
   };
 
+  // ── Pagination (10/page) ──
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageRows = useMemo(
+    () => rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [rows, page]
+  );
+
+  // Clamp page si la liste rétrécit (après validation).
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const pageIds = pageRows.map((r) => r._id);
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+
+  const togglePage = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  // ── Validation groupée (tout ou sélection) ──
+  const validerLot = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setBulkBusy(true);
+    setError(null);
+    setSuccess(null);
+    let ok = 0;
+    let fail = 0;
+    for (const id of ids) {
+      try {
+        const r = await fetch(`/api/operations-validation/${id}/valider`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        const d = await r.json().catch(() => null);
+        if (r.ok && d?.success) ok += 1;
+        else fail += 1;
+      } catch {
+        fail += 1;
+      }
+    }
+    setSelected(new Set());
+    if (fail === 0) setSuccess(`${ok} opération(s) validée(s)`);
+    else setError(`${ok} validée(s), ${fail} en échec`);
+    setBulkBusy(false);
+    void reload();
+  };
+
+  const selectedIds = rows.filter((r) => selected.has(r._id)).map((r) => r._id);
+
   if (status === 'loading' || loading) {
     return (
       <DashboardLayout>
@@ -269,7 +341,7 @@ export default function OperationsAValiderPage() {
           )}
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Clock className="h-4 w-4 text-amber-600" />
                 {t('dashboard.opsValider.sectionEnAttente')}
@@ -277,6 +349,37 @@ export default function OperationsAValiderPage() {
                   {rows.length}
                 </Badge>
               </CardTitle>
+              {rows.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    disabled={bulkBusy || selectedIds.length === 0}
+                    onClick={() => void validerLot(selectedIds)}
+                  >
+                    {bulkBusy ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <ListChecks className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    Valider la sélection ({selectedIds.length})
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700"
+                    disabled={bulkBusy}
+                    onClick={() => void validerLot(rows.map((r) => r._id))}
+                  >
+                    {bulkBusy ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    Valider tout ({rows.length})
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="px-0 sm:px-6">
               {rows.length === 0 ? (
@@ -288,6 +391,13 @@ export default function OperationsAValiderPage() {
                   <table className="w-full text-sm">
                     <thead className="border-b bg-slate-50 text-left text-xs uppercase text-muted-foreground">
                       <tr>
+                        <th className="px-4 py-2.5 w-10">
+                          <Checkbox
+                            checked={allPageSelected}
+                            onCheckedChange={togglePage}
+                            aria-label="Tout sélectionner"
+                          />
+                        </th>
                         <th className="px-4 py-2.5 font-medium">{t('dashboard.opsValider.colType')}</th>
                         <th className="px-4 py-2.5 font-medium">{t('dashboard.opsValider.colLibelle')}</th>
                         <th className="px-4 py-2.5 font-medium">
@@ -303,11 +413,18 @@ export default function OperationsAValiderPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map((r) => (
+                      {pageRows.map((r) => (
                         <tr
                           key={r._id}
                           className="border-b last:border-0 hover:bg-slate-50"
                         >
+                          <td className="px-4 py-2.5">
+                            <Checkbox
+                              checked={selected.has(r._id)}
+                              onCheckedChange={() => toggleOne(r._id)}
+                              aria-label="Sélectionner l'opération"
+                            />
+                          </td>
                           <td className="px-4 py-2.5">
                             <Badge variant="outline" className="text-[10px]">
                               {getOpTypeLabel(r.opType, t)}
@@ -379,6 +496,17 @@ export default function OperationsAValiderPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+              {totalPages > 1 && (
+                <div className="mt-4 px-4 sm:px-0">
+                  <MobilePagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    totalItems={rows.length}
+                    itemsPerPage={PAGE_SIZE}
+                  />
                 </div>
               )}
             </CardContent>

@@ -34,8 +34,8 @@ export function initI18n() {
     .use(initReactI18next)
     .init({
       resources: RESOURCES,
-      lng: 'ar',
-      fallbackLng: 'ar',
+      lng: 'fr',
+      fallbackLng: 'fr',
       supportedLngs: SUPPORTED_LANGS as unknown as string[],
       ns: ['common'],
       defaultNS: 'common',
@@ -60,12 +60,12 @@ export function initI18n() {
  * Langue par défaut : **arabe** (peut être changée par cookie i18next).
  */
 export function getServerLang(cookieHeader?: string): SupportedLang {
-  if (!cookieHeader) return 'ar';
+  if (!cookieHeader) return 'fr';
   const match = cookieHeader.match(/(?:^|;\s*)i18next=([^;]+)/);
   const raw = match?.[1];
-  if (!raw) return 'ar';
+  if (!raw) return 'fr';
   const lang = decodeURIComponent(raw).split('-')[0] as SupportedLang;
-  return SUPPORTED_LANGS.includes(lang) ? lang : 'ar';
+  return SUPPORTED_LANGS.includes(lang) ? lang : 'fr';
 }
 
 export default i18n;
