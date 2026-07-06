@@ -498,6 +498,7 @@ export const DESIGNATIONS_ADMIN_ONLY = [
   'Frais Transit',
   'Gendarmerie',
   'Ouvrier chargement',
+  'Déchargement',
   'Fédération',
   'Amende',
   'Autre',

@@ -12,6 +12,7 @@ import {
   finalizeTransitIfAllValidated,
   markDesignationValideeAdmin,
 } from '@/lib/transit/finalizeTransit';
+import { finalizeJourneeIfAllValidated } from '@/lib/journee/finalizeJournee';
 
 async function handler(
   req: AuthenticatedRequest,
@@ -89,7 +90,7 @@ async function handler(
         const transit = await Transit.findOne({
           'designations._id': new mongoose.Types.ObjectId(op.opId),
         })
-          .select('_id')
+          .select('_id journeeId')
           .lean();
         if (transit) {
           const transitId = String(
@@ -101,6 +102,16 @@ async function handler(
             req.user!.userId
           );
           await finalizeTransitIfAllValidated(transitId, req.user!.userId);
+
+          // Si tous les transits de la journée liée sont validés, on valide
+          // automatiquement la journée (VALIDEE_ADMIN).
+          const journeeId = (transit as { journeeId?: unknown }).journeeId;
+          if (journeeId) {
+            await finalizeJourneeIfAllValidated(
+              String(journeeId),
+              req.user!.userId
+            );
+          }
         }
       } catch (e) {
         console.error('finalize transit after admin validation:', e);
