@@ -5,6 +5,7 @@ import { Caisse, Client, Transaction } from '@/models';
 import { TransactionType, UserRole } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 import { ensureClientCaisse } from '@/lib/caisse';
+import { reconcileClientCreances } from '@/lib/syncFactureClientCreance';
 import { generateClientOperationsPdfBuffer } from '@/lib/pdf/clientOperationsPdfBuffer';
 import type {
   ClientOperationsData,
@@ -59,6 +60,10 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const caisseIds = allCaisses.map(
       (c) => c._id as mongoose.Types.ObjectId
     );
+
+    // Auto-réparation : remet les créances au totalFinal courant des factures
+    // avant de calculer le relevé (sinon montants / solde périmés dans le PDF).
+    await reconcileClientCreances(caisseIds);
 
     // Filtre date optionnel.
     const { dateDebut, dateFin } = req.query as {

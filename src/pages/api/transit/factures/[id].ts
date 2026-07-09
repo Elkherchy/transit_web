@@ -10,6 +10,7 @@ import {
   PaiementStatus,
 } from '@/types';
 import { serializeFacture } from '@/lib/serializeFacture';
+import { syncFactureClientCreance } from '@/lib/syncFactureClientCreance';
 import { withAuth, AuthenticatedRequest, withAgentTransit, withComptable } from '@/middleware/auth';
 import mongoose from 'mongoose';
 
@@ -171,6 +172,15 @@ async function updateFacture(req: AuthenticatedRequest, res: NextApiResponse<Api
     }
 
     await facture.save();
+
+    // Resynchronise la créance caisse client + solde si le total a changé.
+    if (interet !== undefined) {
+      try {
+        await syncFactureClientCreance(String(facture._id), facture.totalFinal);
+      } catch (e) {
+        console.error('syncFactureClientCreance (update facture):', e);
+      }
+    }
 
     const transit = await Transit.findById(facture.transitId);
     if (transit && interet !== undefined) {

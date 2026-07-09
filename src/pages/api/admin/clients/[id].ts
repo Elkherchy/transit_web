@@ -10,6 +10,7 @@ import {
 } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 import { ensureClientCaisse } from '@/lib/caisse';
+import { reconcileClientCreances } from '@/lib/syncFactureClientCreance';
 
 interface ClientDetail {
   client: {
@@ -77,21 +78,30 @@ async function getClient(
       allClientCaisses[0] ||
       null;
 
-    const [facturesRaw, transactions] = await Promise.all([
-      Facture.find({ clientId: id })
-        .sort({ createdAt: -1 })
-        .limit(100)
-        .lean(),
-      Transaction.find({
-        caisseId:
-          caisseObjectIds.length === 1
-            ? caisseObjectIds[0]
-            : { $in: caisseObjectIds },
-      })
-        .sort({ date: -1 })
-        .limit(100)
-        .lean(),
-    ]);
+    const facturesRaw = await Facture.find({ clientId: id })
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    // Auto-réparation : resynchronise les créances (DÉBIT caisse client) dont le
+    // montant a divergé du totalFinal courant de la facture (désignations /
+    // intérêt modifiés après émission), et ajuste le solde des caisses. On lit
+    // ensuite les transactions APRÈS correction pour renvoyer les bons montants.
+    const creancesChanged = await reconcileClientCreances(caisseObjectIds);
+    if (creancesChanged && caisse) {
+      const fresh = await Caisse.findById(caisse._id).select('solde').lean();
+      if (fresh) caisse.solde = Number(fresh.solde) || 0;
+    }
+
+    const transactions = await Transaction.find({
+      caisseId:
+        caisseObjectIds.length === 1
+          ? caisseObjectIds[0]
+          : { $in: caisseObjectIds },
+    })
+      .sort({ date: -1 })
+      .limit(100)
+      .lean();
 
     // Populate transitObjet + bl (fallback) from Transit for each facture
     const transitIds = facturesRaw

@@ -2,6 +2,7 @@ import type { NextApiResponse } from 'next';
 import connectDB from '@/lib/db';
 import { Transit, Facture, Client } from '@/models';
 import { removeTransitStoredFiles } from '@/lib/transitDocumentStorage';
+import { syncFactureClientCreance } from '@/lib/syncFactureClientCreance';
 import {
   ApiResponse,
   ITransit,
@@ -143,6 +144,13 @@ async function updateTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
       }
       facture.totalFinal = facture.totalOperations + facture.interet;
       await facture.save();
+
+      // Resynchronise la créance caisse client + solde avec le nouveau total.
+      try {
+        await syncFactureClientCreance(String(facture._id), facture.totalFinal);
+      } catch (e) {
+        console.error('syncFactureClientCreance (update transit):', e);
+      }
     }
 
     const factureLean = await Facture.findOne({ transitId: id }).lean();
