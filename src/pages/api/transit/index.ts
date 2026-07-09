@@ -11,6 +11,7 @@ import {
   PaiementStatus,
 } from '@/types';
 import { AuthenticatedRequest, withAgentTransit, withTransitAccess } from '@/middleware/auth';
+import { autoValidateAdminOnlyDesignations } from '@/lib/transit/autoValidateAdminOnly';
 import mongoose from 'mongoose';
 
 type TransitListRow = ITransit & {
@@ -174,6 +175,13 @@ async function createTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
       });
     }
 
+    // Les désignations admin-only sont validées d'office par l'admin (invisibles
+    // aux payeurs, hors circuit paiement → validation transit).
+    const designationsAvecStatut = autoValidateAdminOnlyDesignations(
+      Array.isArray(designations) ? designations : [],
+      req.user!.userId
+    );
+
     // Create transit
     const transit = await Transit.create({
       client: clientNom,
@@ -181,7 +189,7 @@ async function createTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
       bl,
       objet,
       date: date || new Date(),
-      designations: designations || [],
+      designations: designationsAvecStatut,
       statut: TransitStatus.EN_COURS,
       createdBy: req.user!.userId,
     });

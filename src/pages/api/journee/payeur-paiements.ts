@@ -4,6 +4,7 @@ import { Transit, User } from '@/models';
 import {
   ApiResponse,
   DesignationStatus,
+  TransitStatus,
   UserRole,
 } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
@@ -47,8 +48,11 @@ async function handler(
 
     // Toutes les désignations PAYEE (en attente de traitement caissier),
     // sans filtre date — les paiements de 2-4 jours restent visibles
-    // jusqu'à leur validation ou rejet.
+    // jusqu'à leur validation ou rejet. On exclut les dossiers déjà finalisés
+    // (VALIDE / CLOTURE) : la facture client est émise, une désignation restée
+    // PAYEE dessus n'est plus actionnable et ne doit plus être affichée.
     const transits = await Transit.find({
+      statut: { $nin: [TransitStatus.VALIDE, TransitStatus.CLOTURE] },
       'designations.statutDesignation': DesignationStatus.PAYEE,
     })
       .select('_id bl client designations')

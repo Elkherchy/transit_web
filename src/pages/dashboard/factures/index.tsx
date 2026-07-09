@@ -93,7 +93,7 @@ export default function FacturesClientList() {
     setError(null);
     try {
       const [facturesRes, banquesRes, creditRes] = await Promise.all([
-        fetch('/api/transit/factures', { credentials: 'include' }).then((r) =>
+        fetch('/api/transit/factures?limit=1000', { credentials: 'include' }).then((r) =>
           r.json()
         ),
         fetch('/api/caisse/caisses', {

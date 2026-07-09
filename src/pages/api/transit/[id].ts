@@ -4,9 +4,14 @@ import { Transit, Facture, Client } from '@/models';
 import { removeTransitStoredFiles } from '@/lib/transitDocumentStorage';
 import { syncFactureClientCreance } from '@/lib/syncFactureClientCreance';
 import {
+  autoValidateAdminOnlyDesignations,
+  autoValidatePendingDesignations,
+} from '@/lib/transit/autoValidateAdminOnly';
+import {
   ApiResponse,
   ITransit,
   TransitStatus,
+  DesignationStatus,
   UserRole,
   isDesignationAdminOnly,
 } from '@/types';
@@ -93,6 +98,9 @@ async function updateTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
         error: 'Ce dossier est clôturé ou validé et ne peut être modifié que par un administrateur',
       });
     }
+    // BL déjà finalisé (VALIDE / CLOTURE) : les désignations ajoutées par l'admin
+    // sont validées d'office (cf. plus bas).
+    const dejaFinalise = isLocked;
 
     const { client, clientId, bl, objet, date, designations, statut, interet } = req.body;
 
@@ -116,7 +124,17 @@ async function updateTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
     if (bl !== undefined) transit.bl = bl;
     if (objet !== undefined) transit.objet = objet;
     if (date) transit.date = date;
-    if (designations) transit.designations = designations;
+    if (designations) {
+      // Les désignations admin-only sont validées d'office (invisibles aux
+      // payeurs, hors circuit paiement → validation transit).
+      let ds = autoValidateAdminOnlyDesignations(designations, req.user!.userId);
+      // Sur un BL déjà finalisé, toute désignation ajoutée par l'admin est
+      // validée d'office (le dossier a dépassé le stade paiement/validation).
+      if (dejaFinalise) {
+        ds = autoValidatePendingDesignations(ds, req.user!.userId);
+      }
+      transit.designations = ds;
+    }
     if (
       statut &&
       Object.values(TransitStatus).includes(statut as TransitStatus)
@@ -135,6 +153,13 @@ async function updateTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
       if (designations) {
         let totalOperations = 0;
         for (const d of transit.designations || []) {
+          // Les désignations rejetées ne sont jamais facturées.
+          if (
+            (d as { statutDesignation?: DesignationStatus }).statutDesignation ===
+            DesignationStatus.REJETEE
+          ) {
+            continue;
+          }
           totalOperations += (d as { montant?: number }).montant || 0;
         }
         facture.totalOperations = totalOperations;
