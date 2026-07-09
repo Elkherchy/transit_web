@@ -155,34 +155,38 @@ export default function CaissierOperationsAValiderPage() {
     setError(null);
     try {
       const ts = Date.now();
-      const [payeursRes, validations] = await Promise.all([
-        fetch(`/api/journee/payeur-paiements?_t=${ts}`, { credentials: 'include' }).then(
-          (x) => x.json()
-        ),
-        Promise.all([
-          fetch(`/api/operations-validation?statut=EN_ATTENTE_AGENT&opType=PAYEUR_PAIEMENT&limit=500&_t=${ts}`, {
-            credentials: 'include',
-          }).then((x) => x.json()),
-          fetch(`/api/operations-validation?statut=EN_ATTENTE_ADMIN&opType=PAYEUR_PAIEMENT&limit=500&_t=${ts}`, {
-            credentials: 'include',
-          }).then((x) => x.json()),
-          fetch(`/api/operations-validation?statut=REJETEE&opType=PAYEUR_PAIEMENT&limit=500&_t=${ts}`, {
-            credentials: 'include',
-          }).then((x) => x.json()),
-        ]),
-      ]);
+      const payeursRes = await fetch(
+        `/api/journee/payeur-paiements?_t=${ts}`,
+        { credentials: 'include' }
+      ).then((x) => x.json());
 
+      const payeurRows: PayeurPaiementRow[] = payeursRes?.success
+        ? ((payeursRes.data || []) as PayeurPaiementRow[])
+        : [];
       if (payeursRes?.success) {
-        setRows((payeursRes.data || []) as PayeurPaiementRow[]);
+        setRows(payeurRows);
       } else {
         setError(payeursRes?.error || t('dashboard.caissier.opsValider.errLoad'));
       }
 
+      // Statut OperationValidation UNIQUEMENT pour les désignations affichées
+      // (borné). Évite les requêtes par statut plafonnées à 500, qui pouvaient
+      // masquer une opération déjà soumise/validée et la faire réapparaître.
+      const opIds = Array.from(
+        new Set(payeurRows.map((r) => r.designationId).filter(Boolean))
+      );
       const map = new Map<string, string>();
-      for (const r of validations) {
-        if (!r?.success) continue;
-        for (const v of r.data || []) {
-          map.set(`${v.opType}:${v.opId}`, v.statut);
+      if (opIds.length > 0) {
+        const vRes = await fetch(
+          `/api/operations-validation?opType=PAYEUR_PAIEMENT&opIds=${opIds.join(',')}&_t=${ts}`,
+          { credentials: 'include' }
+        ).then((x) => x.json());
+        if (vRes?.success) {
+          // Tri submittedAt décroissant → 1er = plus récent par opId.
+          for (const v of vRes.data || []) {
+            const key = `${v.opType}:${v.opId}`;
+            if (!map.has(key)) map.set(key, v.statut);
+          }
         }
       }
       setSentMap(map);

@@ -38,9 +38,24 @@ async function list(
 ) {
   try {
     await connectDB();
-    const { statut, opType, limit = '200' } = req.query;
+    const { statut, opType, opIds, limit = '200' } = req.query;
     const filter: Record<string, unknown> = {};
-    if (
+
+    // Requête ciblée par opIds (liste séparée par virgule, bornée à ce que le
+    // client affiche) : renvoie le statut COURANT de ces opérations quel qu'il
+    // soit — sans plafond 500 par statut qui masquerait une opération déjà
+    // soumise/validée et la ferait « réapparaître » en « à valider ».
+    const opIdList =
+      typeof opIds === 'string' && opIds.trim()
+        ? opIds
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+
+    if (opIdList.length > 0) {
+      filter.opId = { $in: opIdList };
+    } else if (
       typeof statut === 'string' &&
       Object.values(OperationValidationStatus).includes(
         statut as OperationValidationStatus
@@ -56,7 +71,10 @@ async function list(
     ) {
       filter.opType = opType;
     }
-    const lim = Math.min(500, Math.max(1, parseInt(String(limit), 10) || 200));
+    const lim =
+      opIdList.length > 0
+        ? Math.max(opIdList.length * 2, 100)
+        : Math.min(500, Math.max(1, parseInt(String(limit), 10) || 200));
     const rows = await OperationValidation.find(filter)
       .sort({ submittedAt: -1 })
       .limit(lim)

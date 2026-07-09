@@ -10,15 +10,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { ClientSubNav } from '@/components/dashboard/admin/clients/ClientSubNav';
 import { useClientDetail } from '@/components/dashboard/admin/clients/useClientDetail';
 import { isAdminTransit } from '@/lib/roles';
@@ -57,20 +48,14 @@ export default function AdminClientDetails() {
       .catch(() => {/* ignore */});
   }, [id, isAdmin]);
 
-  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
-  const [pdfDateDebut, setPdfDateDebut] = useState<string>('');
-  const [pdfDateFin, setPdfDateFin] = useState<string>('');
   const [pdfLoading, setPdfLoading] = useState(false);
 
+  // Imprime directement TOUTES les opérations du client (sans filtre de date).
   const handlePrint = useCallback(async () => {
     if (!id || typeof window === 'undefined') return;
     setPdfLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (pdfDateDebut) params.set('dateDebut', pdfDateDebut);
-      if (pdfDateFin) params.set('dateFin', pdfDateFin);
-      const qs = params.toString();
-      const url = `/api/admin/clients/${encodeURIComponent(id)}/pdf${qs ? `?${qs}` : ''}`;
+      const url = `/api/admin/clients/${encodeURIComponent(id)}/pdf`;
       const res = await fetch(url, { method: 'GET', credentials: 'include' });
       if (!res.ok) return;
       const blob = await res.blob();
@@ -86,11 +71,10 @@ export default function AdminClientDetails() {
       a.click();
       a.remove();
       URL.revokeObjectURL(dlUrl);
-      setPdfDialogOpen(false);
     } finally {
       setPdfLoading(false);
     }
-  }, [id, pdfDateDebut, pdfDateFin]);
+  }, [id]);
 
   if (status === 'loading' || loading) {
     return (
@@ -161,15 +145,15 @@ export default function AdminClientDetails() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setPdfDateDebut('');
-                setPdfDateFin('');
-                setPdfDialogOpen(true);
-              }}
+              onClick={() => void handlePrint()}
               disabled={pdfLoading}
               className={isMobile ? 'h-10 px-3' : ''}
             >
-              <FileDown className="h-4 w-4 sm:mr-2" />
+              {pdfLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
+              ) : (
+                <FileDown className="h-4 w-4 sm:mr-2" />
+              )}
               <span className="hidden sm:inline">{t('dashboard.clients.btnImprimer')}</span>
             </Button>
             <Button asChild size="sm" className={isMobile ? 'h-10 px-3' : ''}>
@@ -307,59 +291,6 @@ export default function AdminClientDetails() {
           )}
         </div>
       </PageContent>
-
-      <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('dashboard.clients.printDialog.title')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {t('dashboard.clients.printDialog.hint')}
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="pdf-debut">{t('dashboard.clients.printDialog.labelDateDebut')}</Label>
-                <Input
-                  id="pdf-debut"
-                  type="date"
-                  value={pdfDateDebut}
-                  onChange={(e) => setPdfDateDebut(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="pdf-fin">{t('dashboard.clients.printDialog.labelDateFin')}</Label>
-                <Input
-                  id="pdf-fin"
-                  type="date"
-                  value={pdfDateFin}
-                  onChange={(e) => setPdfDateFin(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              disabled={pdfLoading}
-              onClick={() => setPdfDialogOpen(false)}
-            >
-              {t('actions.cancel')}
-            </Button>
-            <Button
-              disabled={pdfLoading}
-              onClick={() => void handlePrint()}
-            >
-              {pdfLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <FileDown className="mr-2 h-4 w-4" />
-              )}
-              {t('dashboard.clients.btnImprimer')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }
