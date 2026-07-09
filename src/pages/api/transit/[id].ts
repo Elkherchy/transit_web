@@ -3,6 +3,7 @@ import connectDB from '@/lib/db';
 import { Transit, Facture, Client } from '@/models';
 import { removeTransitStoredFiles } from '@/lib/transitDocumentStorage';
 import { syncFactureClientCreance } from '@/lib/syncFactureClientCreance';
+import { reconcileTransitPaidDesignations } from '@/lib/reconcileDesignationPaiement';
 import {
   autoValidateAdminOnlyDesignations,
   autoValidatePendingDesignations,
@@ -175,6 +176,16 @@ async function updateTransit(req: AuthenticatedRequest, res: NextApiResponse<Api
         await syncFactureClientCreance(String(facture._id), facture.totalFinal);
       } catch (e) {
         console.error('syncFactureClientCreance (update transit):', e);
+      }
+    }
+
+    // Si des désignations DÉJÀ PAYÉES ont vu leur montant modifié, on réajuste
+    // la caisse du payeur (écriture d'ajustement + solde) pour rester cohérent.
+    if (designations) {
+      try {
+        await reconcileTransitPaidDesignations(String(id), req.user!.userId);
+      } catch (e) {
+        console.error('reconcileTransitPaidDesignations (update transit):', e);
       }
     }
 
