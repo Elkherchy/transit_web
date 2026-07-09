@@ -1,6 +1,6 @@
 import type { NextApiResponse } from 'next';
 import connectDB from '@/lib/db';
-import { Transit, Facture, Paiement, User } from '@/models';
+import { Transit, Facture, Paiement, User, FactureManutention } from '@/models';
 import {
   ApiResponse,
   IFacture,
@@ -47,6 +47,13 @@ async function getFacture(req: AuthenticatedRequest, res: NextApiResponse<ApiRes
       .select('client bl objet')
       .lean();
 
+    // Facture manutention liée au même dossier transit (pour le bouton "Dossier Transit").
+    const manutention = await FactureManutention.findOne({
+      transitId: String(facture.transitId),
+    })
+      .select('_id')
+      .lean();
+
     const base = serializeFacture(facture as Record<string, unknown>);
     const payeurModifiable = !paiements.some(
       (p) => (p as { statut: PaiementStatus }).statut !== PaiementStatus.REJETE
@@ -59,6 +66,7 @@ async function getFacture(req: AuthenticatedRequest, res: NextApiResponse<ApiRes
         bl: base.bl || transit?.bl,
         transitClient: transit?.client,
         transitObjet: transit?.objet,
+        manutentionId: manutention?._id ? String(manutention._id) : undefined,
         paiements,
         payeurModifiable,
       } as IFacture & { paiements?: any[]; payeurModifiable: boolean },

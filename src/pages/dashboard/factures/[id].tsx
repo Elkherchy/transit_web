@@ -226,6 +226,9 @@ export default function FactureDetail() {
     }
   };
 
+  const manutentionId = (facture as (IFacture & { manutentionId?: string }) | null)
+    ?.manutentionId;
+
   const backList = (
     <div className="flex flex-wrap items-center gap-2">
       <Button variant="outline" size="sm" asChild className="shrink-0">
@@ -234,9 +237,9 @@ export default function FactureDetail() {
           {t('dashboard.factures.headerListe')}
         </Link>
       </Button>
-      {!loading && facture ? (
+      {!loading && manutentionId ? (
         <Button variant="outline" size="sm" asChild className="shrink-0">
-          <Link href={`/dashboard/transit/details?id=${encodeURIComponent(facture.transitId)}`}>
+          <Link href={`/dashboard/admin/manutention/${encodeURIComponent(manutentionId)}`}>
             <FolderOpen className="mr-2 h-4 w-4" />
             {t('dashboard.factures.headerDossierTransit')}
           </Link>
