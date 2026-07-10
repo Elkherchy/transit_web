@@ -12,6 +12,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,6 +28,8 @@ import { CompteType, UserRole } from '@/types';
 import {
   Banknote,
   Building2,
+  Download,
+  Loader2,
   RefreshCcw,
   TrendingDown,
   TrendingUp,
@@ -49,6 +60,24 @@ interface Props {
   allowedRoles: UserRole[];
   titleKey: string;
   subtitleKey: string;
+  /** Endpoint renvoyant { operations: [...] } pour l'export CSV. Optionnel. */
+  exportEndpoint?: string;
+}
+
+interface OperationRow {
+  date: string;
+  compteNom: string;
+  compteType: string;
+  type: string;
+  montant: number;
+  description: string;
+  reference: string;
+}
+
+interface ExportUser {
+  _id: string;
+  nom: string;
+  role: UserRole;
 }
 
 const fmt = (n: number) =>
@@ -67,11 +96,17 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function csvCell(v: string | number): string {
+  const s = String(v);
+  return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
 export default function MouvementGeneralView({
   endpoint,
   allowedRoles,
   titleKey,
   subtitleKey,
+  exportEndpoint,
 }: Props) {
   const { data: session, status } = useSession();
   const { t } = useTranslation();
@@ -85,6 +120,103 @@ export default function MouvementGeneralView({
   const [error, setError] = useState<string | null>(null);
   const [dateDebut, setDateDebut] = useState<string>(startOfMonthISO());
   const [dateFin, setDateFin] = useState<string>(todayISO());
+  const [exporting, setExporting] = useState(false);
+  // Périmètre d'export : 'societe' (défaut) ou l'_id d'un payeur/caissier.
+  const [exportScope, setExportScope] = useState<string>('societe');
+  const [exportUsers, setExportUsers] = useState<ExportUser[]>([]);
+
+  useEffect(() => {
+    if (!exportEndpoint || !isAllowed) return;
+    fetch('/api/users?limit=500', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((j) => {
+        if (!j.success) return;
+        const list = (j.data?.data || []) as ExportUser[];
+        setExportUsers(
+          list.filter(
+            (u) =>
+              u.role === UserRole.USER_PAYEUR || u.role === UserRole.CAISSIER
+          )
+        );
+      })
+      .catch(() => {
+        /* liste facultative — l'export société reste disponible */
+      });
+  }, [exportEndpoint, isAllowed]);
+
+  const exportOperations = useCallback(async () => {
+    if (!exportEndpoint || exporting) return;
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (dateDebut) params.set('dateDebut', new Date(dateDebut).toISOString());
+      if (dateFin) {
+        const end = new Date(dateFin);
+        end.setUTCHours(23, 59, 59, 999);
+        params.set('dateFin', end.toISOString());
+      }
+      if (exportScope && exportScope !== 'societe') {
+        params.set('userId', exportScope);
+      }
+      const url = `${exportEndpoint}${params.toString() ? `?${params}` : ''}`;
+      const r = await fetch(url, { credentials: 'include' });
+      const json = await r.json();
+      if (!json.success) {
+        setError(json.error || t('common.error'));
+        return;
+      }
+      const ops = (json.data?.operations || []) as OperationRow[];
+      const scopeLabel = String(json.data?.scopeLabel || 'transit');
+      const header = [
+        'Date',
+        'Compte',
+        'Type compte',
+        'Sens',
+        'Débit',
+        'Crédit',
+        'Description',
+        'Référence',
+      ];
+      const lines = [header];
+      for (const o of ops) {
+        const d = new Date(o.date);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const dateStr = `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+        const isCr = o.type === 'CREDIT';
+        lines.push([
+          dateStr,
+          o.compteNom,
+          o.compteType,
+          isCr ? 'Crédit' : 'Débit',
+          isCr ? '' : o.montant.toFixed(2),
+          isCr ? o.montant.toFixed(2) : '',
+          o.description.replace(/[\r\n]+/g, ' '),
+          o.reference,
+        ]);
+      }
+      const csv =
+        '﻿' + lines.map((row) => row.map(csvCell).join(';')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const dlUrl = URL.createObjectURL(blob);
+      const slug = scopeLabel
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = `operations-${slug || 'transit'}-${dateDebut || 'debut'}_${dateFin || 'fin'}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(dlUrl);
+    } catch {
+      setError(t('common.errorNetwork'));
+    } finally {
+      setExporting(false);
+    }
+  }, [exportEndpoint, exporting, dateDebut, dateFin, exportScope, t]);
 
   useEffect(() => {
     if (status !== 'loading' && user && !isAllowed) {
@@ -152,9 +284,7 @@ export default function MouvementGeneralView({
             className={isMobile ? 'h-10 px-3' : ''}
           >
             <RefreshCcw className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">
-              {t('actions.refresh')}
-            </span>
+            <span className="hidden sm:inline">{t('actions.refresh')}</span>
           </Button>
         }
         sticky={isMobile}
@@ -202,6 +332,74 @@ export default function MouvementGeneralView({
             </div>
           </CardContent>
         </Card>
+
+        {/* Export des opérations : périmètre société ou un payeur/caissier */}
+        {exportEndpoint && (
+          <Card className="mb-4">
+            <CardContent className="py-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+              <div className="grid gap-1 flex-1 min-w-0">
+                <Label className="text-xs">
+                  {t('dashboard.mouvement.exportScope')}
+                </Label>
+                <Select value={exportScope} onValueChange={setExportScope}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="societe">
+                      {t('dashboard.mouvement.exportScopeSociete')}
+                    </SelectItem>
+                    {exportUsers.some(
+                      (u) => u.role === UserRole.USER_PAYEUR
+                    ) && (
+                      <SelectGroup>
+                        <SelectLabel>
+                          {t('dashboard.mouvement.exportGroupPayeurs')}
+                        </SelectLabel>
+                        {exportUsers
+                          .filter((u) => u.role === UserRole.USER_PAYEUR)
+                          .map((u) => (
+                            <SelectItem key={u._id} value={u._id}>
+                              {u.nom}
+                            </SelectItem>
+                          ))}
+                      </SelectGroup>
+                    )}
+                    {exportUsers.some(
+                      (u) => u.role === UserRole.CAISSIER
+                    ) && (
+                      <SelectGroup>
+                        <SelectLabel>
+                          {t('dashboard.mouvement.exportGroupCaissiers')}
+                        </SelectLabel>
+                        {exportUsers
+                          .filter((u) => u.role === UserRole.CAISSIER)
+                          .map((u) => (
+                            <SelectItem key={u._id} value={u._id}>
+                              {u.nom}
+                            </SelectItem>
+                          ))}
+                      </SelectGroup>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => void exportOperations()}
+                disabled={exporting || loading}
+                className={isMobile ? 'h-10' : ''}
+              >
+                {exporting ? (
+                  <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
+                ) : (
+                  <Download className="h-4 w-4 sm:mr-2" />
+                )}
+                {t('dashboard.mouvement.exportOps')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 4 KPI cards : Solde · Charges · Bénéfices · Crédit Client */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">

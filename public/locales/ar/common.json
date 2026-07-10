@@ -228,7 +228,12 @@
       "creditClient": "الرصيد المستحق على العميل",
       "creditClientHint": "المبلغ المستحق من العملاء",
       "comptesDetailTitle": "تفاصيل الحسابات",
-      "noCompte": "لا يوجد حساب شركة في هذا المجال"
+      "noCompte": "لا يوجد حساب شركة في هذا المجال",
+      "exportOps": "تصدير العمليات",
+      "exportScope": "نطاق التصدير",
+      "exportScopeSociete": "حسابات الشركة (العبور)",
+      "exportGroupPayeurs": "الدافعون",
+      "exportGroupCaissiers": "أمناء الصندوق"
     },
     "debiteurs": {
       "titleTransit": "العملاء المدينون — العبور",

@@ -224,7 +224,12 @@
       "creditClient": "Crédit Client",
       "creditClientHint": "Montant dû par les clients",
       "comptesDetailTitle": "Détail des comptes",
-      "noCompte": "Aucun compte société dans ce domaine"
+      "noCompte": "Aucun compte société dans ce domaine",
+      "exportOps": "Exporter les opérations",
+      "exportScope": "Périmètre d'export",
+      "exportScopeSociete": "Comptes société (transit)",
+      "exportGroupPayeurs": "Payeurs",
+      "exportGroupCaissiers": "Caissiers"
     },
     "debiteurs": {
       "titleTransit": "Clients débiteurs — Transit",

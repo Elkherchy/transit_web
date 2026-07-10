@@ -6,6 +6,7 @@ export default function AdminTransitMouvementGeneral() {
   return (
     <MouvementGeneralView
       endpoint="/api/admin/transit/mouvement-general"
+      exportEndpoint="/api/admin/transit/mouvement-operations"
       allowedRoles={[
         UserRole.ADMIN,
         UserRole.ADMIN_TRANSIT,
