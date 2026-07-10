@@ -1,0 +1,109 @@
+﻿#;Date;Categorie;BL;Description;Debit;Credit;Solde
+1;15/06/2026 15:05;Alimentation;;Alimentation caisse — Rabah Brahim;;10700.00;10700.04
+2;18/06/2026 13:11;Alimentation;;Alimentation caisse — Rabah Brahim;;300000.00;310700.04
+3;22/06/2026 13:35;Paiement désignation;ZZH0102706;"Paiement désignation ""Camion"" — Transit 6a3433745cfbaec545c39638";25600.00;;285100.04
+4;22/06/2026 13:35;Paiement désignation;ZZH0102706;"Paiement désignation ""Bon de livret"" — Transit 6a3433745cfbaec545c39638";68790.00;;216310.04
+5;22/06/2026 13:35;Paiement désignation;ZZH0102646;"Paiement désignation ""Camion"" — Transit 6a3433945cfbaec545c3965d";19200.00;;197110.04
+6;22/06/2026 13:35;Paiement désignation;ZZH0102646;"Paiement désignation ""Bon de livret"" — Transit 6a3433945cfbaec545c3965d";51741.00;;145369.04
+7;22/06/2026 17:26;Alimentation;;Alimentation caisse — Rabah Brahim;;460000.00;605369.04
+8;24/06/2026 16:16;Paiement désignation;NGP3492537;"Paiement désignation ""Bon de livret"" — Transit 6a34102808dfbcc549e8701d";16547.00;;588822.04
+9;24/06/2026 16:16;Paiement désignation;NGP3492537;"Paiement désignation ""Camion"" — Transit 6a34102808dfbcc549e8701d";6400.00;;582422.04
+10;24/06/2026 16:16;Paiement désignation;NGP3508618;"Paiement désignation ""Bon de livret"" — Transit 6a34101f08dfbcc549e87003";17047.00;;565375.04
+11;24/06/2026 16:16;Paiement désignation;NGP3508618;"Paiement désignation ""Camion"" — Transit 6a34101f08dfbcc549e87003";6400.00;;558975.04
+12;24/06/2026 16:16;Paiement désignation;ZZH0102748;"Paiement désignation ""Bon de livret"" — Transit 6a3a5762f189fa61f00164db";142876.00;;416099.04
+13;24/06/2026 16:16;Paiement désignation;ZZH0102748;"Paiement désignation ""Camion"" — Transit 6a3a5762f189fa61f00164db";19200.00;;396899.04
+14;24/06/2026 16:16;Paiement désignation;ZZH0102747;"Paiement désignation ""Bon de livret"" — Transit 6a3a5742f189fa61f00164cf";192490.00;;204409.04
+15;24/06/2026 16:16;Paiement désignation;ZZH0102747;"Paiement désignation ""Camion"" — Transit 6a3a5742f189fa61f00164cf";25600.00;;178809.04
+16;24/06/2026 16:16;Paiement désignation;NGP3492525;"Paiement désignation ""Camion"" — Transit 6a34100d08dfbcc549e86fd2";6400.00;;172409.04
+17;24/06/2026 16:16;Paiement désignation;NGP3492525;"Paiement désignation ""Bon de livret"" — Transit 6a34100d08dfbcc549e86fd2";16547.00;;155862.04
+18;24/06/2026 16:16;Paiement désignation;NGP3492600;"Paiement désignation ""Camion"" — Transit 6a3a6eb3aed8ff16536072a3";6400.00;;149462.04
+19;24/06/2026 16:16;Paiement désignation;NGP3467097;"Paiement désignation ""Camion"" — Transit 6a34101508dfbcc549e86fea";6400.00;;143062.04
+20;24/06/2026 16:16;Paiement désignation;NGP3467097;"Paiement désignation ""Bon de livret"" — Transit 6a34101508dfbcc549e86fea";16547.00;;126515.04
+21;24/06/2026 16:16;Paiement désignation;NGP3492526;"Paiement désignation ""Bon de livret"" — Transit 6a34100808dfbcc549e86fbb";17047.00;;109468.04
+22;24/06/2026 16:16;Paiement désignation;NGP3492526;"Paiement désignation ""Camion"" — Transit 6a34100808dfbcc549e86fbb";6400.00;;103068.04
+23;24/06/2026 16:16;Paiement désignation;269102730;"Paiement désignation ""Camion"" — Transit 6a3a5b2d48e896a0f0d3e98b";6500.00;;96568.04
+24;24/06/2026 16:16;Paiement désignation;269102730;"Paiement désignation ""Facture Port"" — Transit 6a3a5b2d48e896a0f0d3e98b";5452.00;;91116.04
+25;24/06/2026 16:16;Paiement désignation;269102730;"Paiement désignation ""Bon de livret"" — Transit 6a3a5b2d48e896a0f0d3e98b";17698.00;;73418.04
+26;24/06/2026 18:26;Paiement désignation;268704096;"Paiement désignation ""Bon de livret"" — Transit 6a3a57d0f189fa61f00164f3";22741.00;;50677.04
+27;24/06/2026 18:26;Paiement désignation;268704096;"Paiement désignation ""Facture Port"" — Transit 6a3a57d0f189fa61f00164f3";5452.00;;45225.04
+28;24/06/2026 18:26;Paiement désignation;268704097;"Paiement désignation ""Bon de livret"" — Transit 6a3a57bd48e896a0f0d3e928";22741.00;;22484.04
+29;24/06/2026 18:26;Paiement désignation;268704097;"Paiement désignation ""Facture Port"" — Transit 6a3a57bd48e896a0f0d3e928";5452.00;;17032.04
+30;24/06/2026 18:26;Paiement désignation;268704097;"Paiement désignation ""Camion"" — Transit 6a3a57bd48e896a0f0d3e928";6500.00;;10532.04
+31;24/06/2026 18:26;Paiement désignation;268704096;"Paiement désignation ""Camion"" — Transit 6a3a57d0f189fa61f00164f3";6500.00;;4032.04
+32;26/06/2026 14:45;Alimentation;;Alimentation caisse — Rabah Brahim;;120300.00;124332.04
+33;26/06/2026 14:45;Alimentation;;Alimentation caisse — Rabah Brahim;;6550.00;130882.04
+34;26/06/2026 14:46;Alimentation;;Alimentation caisse — Rabah Brahim;;400000.00;530882.04
+35;26/06/2026 14:49;Alimentation;;ذهب بها شداد إلى رباه (نقدا);;60000.00;590882.04
+36;26/06/2026 14:53;Alimentation;;Alimentation caisse — Rabah Brahim;;151400.00;742282.04
+37;30/06/2026 08:35;Paiement désignation;ZZH0102845;"Paiement désignation ""Camion"" — Transit 6a34102d08dfbcc549e87038";25600.00;;716682.04
+38;30/06/2026 08:35;Paiement désignation;ZZH0102845;"Paiement désignation ""Bon de livret"" — Transit 6a34102d08dfbcc549e87038";73046.00;;643636.04
+39;30/06/2026 08:37;Paiement désignation;WNZ0105946;"Paiement désignation ""Bon de livret"" — Transit 6a3d693f4b57cd3208b1a844";18855.00;;624781.04
+40;30/06/2026 08:37;Paiement désignation;267421617;"Paiement désignation ""Facture Port"" — Transit 6a3fbe66a1869373ddf2b51b";13340.00;;611441.04
+41;30/06/2026 08:37;Paiement désignation;268838053;"Paiement désignation ""Bon de livret"" — Transit 6a3d69334b57cd3208b1a838";17977.00;;593464.04
+42;30/06/2026 08:37;Paiement désignation;268838053;"Paiement désignation ""Facture Port"" — Transit 6a3d69334b57cd3208b1a838";5452.00;;588012.04
+43;30/06/2026 08:37;Paiement désignation;269082871;"Paiement désignation ""Bon de livret"" — Transit 6a3d69184b57cd3208b1a820";33034.00;;554978.04
+44;30/06/2026 08:37;Paiement désignation;269082871;"Paiement désignation ""Facture Port"" — Transit 6a3d69184b57cd3208b1a820";5452.00;;549526.04
+45;30/06/2026 08:37;Paiement désignation;270706411;"Paiement désignation ""Bon de livret"" — Transit 6a3d69274b57cd3208b1a82c";17142.00;;532384.04
+46;30/06/2026 08:37;Paiement désignation;270706411;"Paiement désignation ""Facture Port"" — Transit 6a3d69274b57cd3208b1a82c";5452.00;;526932.04
+47;30/06/2026 08:37;Paiement désignation;269370711;"Paiement désignation ""Bon de livret"" — Transit 6a3a579ef189fa61f00164e7";20228.00;;506704.04
+48;30/06/2026 08:37;Paiement désignation;269370711;"Paiement désignation ""Facture Port"" — Transit 6a3a579ef189fa61f00164e7";5452.00;;501252.04
+49;30/06/2026 08:37;Paiement désignation;269370711;"Paiement désignation ""Camion"" — Transit 6a3a579ef189fa61f00164e7";6500.00;;494752.04
+50;30/06/2026 08:37;Paiement désignation;271216074;"Paiement désignation ""Bon de livret"" — Transit 6a3fbe74a1869373ddf2b579";19235.00;;475517.04
+51;30/06/2026 08:37;Paiement désignation;271216074;"Paiement désignation ""Facture Port"" — Transit 6a3fbe74a1869373ddf2b579";5452.00;;470065.04
+52;30/06/2026 08:38;Paiement désignation;271216074;"Paiement désignation ""Camion"" — Transit 6a3fbe74a1869373ddf2b579";6500.00;;463565.04
+53;30/06/2026 08:38;Paiement désignation;267421766;"Paiement désignation ""Bon de livret"" — Transit 6a3fbe6ea1869373ddf2b54a";159013.00;;304552.04
+54;30/06/2026 08:38;Paiement désignation;267421766;"Paiement désignation ""Facture Port"" — Transit 6a3fbe6ea1869373ddf2b54a";13340.00;;291212.04
+55;30/06/2026 08:38;Paiement désignation;267421617;"Paiement désignation ""Bon de livret"" — Transit 6a3fbe66a1869373ddf2b51b";155833.00;;135379.04
+56;06/07/2026 10:26;Alimentation;;Alimentation caisse — Rabah Brahim;;1204300.00;1339679.04
+57;06/07/2026 10:34;Paiement désignation;NGP3550912;"Paiement désignation ""Camion"" — Transit 6a3a577c48e896a0f0d3e91c";6400.00;;1333279.04
+58;06/07/2026 11:51;Paiement désignation;267421766;"Paiement désignation ""Camion"" — Transit 6a3fbe6ea1869373ddf2b54a";32500.00;;1300779.04
+59;06/07/2026 11:51;Paiement désignation;267421617;"Paiement désignation ""Camion"" — Transit 6a3fbe66a1869373ddf2b51b";32500.00;;1268279.04
+60;06/07/2026 11:51;Paiement désignation;267421949;"Paiement désignation ""Bon de livret"" — Transit 6a3a6eceaed8ff16536072bb";89758.00;;1178521.04
+61;06/07/2026 11:51;Paiement désignation;267421949;"Paiement désignation ""Camion"" — Transit 6a3a6eceaed8ff16536072bb";37500.00;;1141021.04
+62;06/07/2026 11:51;Paiement désignation;269120149;"Paiement désignation ""Bon de livret"" — Transit 6a3a6ec3aed8ff16536072af";92278.00;;1048743.04
+63;06/07/2026 11:51;Paiement désignation;269120149;"Paiement désignation ""Facture Port"" — Transit 6a3a6ec3aed8ff16536072af";10672.00;;1038071.04
+64;06/07/2026 11:51;Paiement désignation;269120149;"Paiement désignation ""Camion"" — Transit 6a3a6ec3aed8ff16536072af";30000.00;;1008071.04
+65;06/07/2026 11:51;Paiement désignation;MCB0338892;"Paiement désignation ""Bon de livret"" — Transit 6a462343ddc669c262dfc7ef";19957.00;;988114.04
+66;06/07/2026 11:52;Paiement désignation;NGP3537194;"Paiement désignation ""Bon de livret"" — Transit 6a4623b5ddc669c262dfc808";17547.00;;970567.04
+67;06/07/2026 11:52;Paiement désignation;NGP3537194;"Paiement désignation ""Camion"" — Transit 6a4623b5ddc669c262dfc808";6400.00;;964167.04
+68;06/07/2026 12:59;Paiement désignation;NGP3501877;"Paiement désignation ""Camion"" — Transit 6a4ba4901d826c80589b7fb4";6400.00;;957767.04
+69;06/07/2026 12:59;Paiement désignation;NGP3501877;"Paiement désignation ""Bon de livret"" — Transit 6a4ba4901d826c80589b7fb4";16547.00;;941220.04
+70;06/07/2026 12:59;Paiement désignation;269274971;"Paiement désignation ""Facture Port"" — Transit 6a4ba4bd5cad2ab699676ffb";5452.00;;935768.04
+71;06/07/2026 12:59;Paiement désignation;269274971;"Paiement désignation ""Camion"" — Transit 6a4ba4bd5cad2ab699676ffb";6500.00;;929268.04
+72;06/07/2026 12:59;Paiement désignation;269274971;"Paiement désignation ""Bon de livret"" — Transit 6a4ba4bd5cad2ab699676ffb";18684.00;;910584.04
+73;06/07/2026 12:59;Paiement désignation;LHV4031435;"Paiement désignation ""Camion"" — Transit 6a4b9473edb4ed9d450ed532";6400.00;;904184.04
+74;06/07/2026 12:59;Paiement désignation;LHV4031435;"Paiement désignation ""Bon de livret"" — Transit 6a4b9473edb4ed9d450ed532";23720.00;;880464.04
+75;06/07/2026 12:59;Paiement désignation;TYO0737580;"Paiement désignation ""Camion"" — Transit 6a4b9484e718a2e0b1871dd6";6400.00;;874064.04
+76;06/07/2026 12:59;Paiement désignation;TYO0737580;"Paiement désignation ""Bon de livret"" — Transit 6a4b9484e718a2e0b1871dd6";27319.00;;846745.04
+77;06/07/2026 13:00;Paiement désignation;TJN0917734;"Paiement désignation ""Bon de livret"" — Transit 6a462376ddc669c262dfc7fc";231842.00;;614903.04
+78;06/07/2026 13:00;Paiement désignation;NGP3550912;"Paiement désignation ""Bon de livret"" — Transit 6a3a577c48e896a0f0d3e91c";16547.00;;598356.04
+79;06/07/2026 13:00;Paiement désignation;269116100;"Paiement désignation ""Facture Port"" — Transit 6a3a57f9f189fa61f00164ff";16356.00;;582000.04
+80;06/07/2026 13:00;Paiement désignation;269116100;"Paiement désignation ""Bon de livret"" — Transit 6a3a57f9f189fa61f00164ff";84743.00;;497257.04
+81;06/07/2026 13:00;Paiement désignation;269116100;"Paiement désignation ""Camion"" — Transit 6a3a57f9f189fa61f00164ff";22500.00;;474757.04
+82;06/07/2026 13:00;Paiement désignation;TJN0917734;"Paiement désignation ""Camion"" — Transit 6a462376ddc669c262dfc7fc";6400.00;;468357.04
+83;06/07/2026 13:00;Paiement désignation;MCB0338892;"Paiement désignation ""Camion"" — Transit 6a462343ddc669c262dfc7ef";6400.00;;461957.04
+84;06/07/2026 13:00;Paiement désignation;267421949;"Paiement désignation ""Facture Port"" — Transit 6a3a6eceaed8ff16536072bb";13340.00;;448617.04
+85;06/07/2026 13:01;Paiement désignation;269085133;"Paiement désignation ""Bon de livret"" — Transit 6a4ba4a15cad2ab699676fef";22850.00;;425767.04
+86;06/07/2026 15:17;Paiement désignation;MEDUY9173145;"Paiement désignation ""Camion"" — Transit 6a46232c7da8135b37517d04";6670.00;;419097.04
+87;06/07/2026 15:17;Paiement désignation;MEDUY9173145;"Paiement désignation ""Bon de livret"" — Transit 6a46232c7da8135b37517d04";21518.00;;397579.04
+88;06/07/2026 15:17;Paiement désignation;269085133;"Paiement désignation ""Camion"" — Transit 6a4ba4a15cad2ab699676fef";6500.00;;391079.04
+89;06/07/2026 15:17;Paiement désignation;269085133;"Paiement désignation ""Facture Port"" — Transit 6a4ba4a15cad2ab699676fef";5452.00;;385627.04
+90;06/07/2026 16:21;Paiement désignation;WNZ0105946;"Paiement désignation ""Camion"" — Transit 6a3d693f4b57cd3208b1a844";6400.00;;379227.04
+91;08/07/2026 11:38;Alimentation;;Alimentation caisse — Rabah Brahim;;40600.00;419827.04
+92;09/07/2026 13:49;Paiement désignation;NGP3492600;"Paiement désignation ""Bon de livret"" — Transit 6a3a6eb3aed8ff16536072a3";16547.00;;403280.04
+93;09/07/2026 16:41;Paiement désignation;269806336;"Paiement désignation ""Camion"" — Transit 6a4e6a7ec0463752161c1143";6500.00;;396780.04
+94;09/07/2026 16:41;Paiement désignation;269806336;"Paiement désignation ""Facture Port"" — Transit 6a4e6a7ec0463752161c1143";5452.00;;391328.04
+95;09/07/2026 16:41;Paiement désignation;269806336;"Paiement désignation ""Bon de livret"" — Transit 6a4e6a7ec0463752161c1143";28652.00;;362676.04
+96;09/07/2026 18:40;Ajustement (correction);267675383;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a26911b80b81437669b06c7";;13340.00;376016.04
+97;09/07/2026 18:40;Ajustement (correction);WNZ0105853;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a2691e280b81437669b06dd";;297.00;376313.04
+98;09/07/2026 18:40;Ajustement (correction);ZZH0102706;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a3433745cfbaec545c39638";85078.00;;291235.04
+99;09/07/2026 18:40;Ajustement (correction);268704096;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a3a57d0f189fa61f00164f3";8555.00;;282680.04
+100;09/07/2026 18:40;Ajustement (correction);268704097;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a3a57bd48e896a0f0d3e928";8555.00;;274125.04
+101;09/07/2026 18:40;Ajustement (correction);269370711;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a3a579ef189fa61f00164e7";10796.00;;263329.04
+102;09/07/2026 18:40;Ajustement (correction);271216074;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a3fbe74a1869373ddf2b579";6456.00;;256873.04
+103;09/07/2026 18:40;Ajustement (correction);267421766;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a3fbe6ea1869373ddf2b54a";63541.00;;193332.04
+104;09/07/2026 18:40;Ajustement (correction);267421617;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a3fbe66a1869373ddf2b51b";18346.00;;174986.04
+105;09/07/2026 18:51;Paiement désignation;266438122;"Paiement désignation ""Facture Port"" — Transit 6a26927c200315f63fc03538";5452.00;;169534.04
+106;09/07/2026 18:51;Paiement désignation;MEDUPU519203;"Paiement désignation ""Camion"" — Transit 6a26952180b81437669b0705";30000.00;;139534.04
+107;09/07/2026 18:51;Paiement désignation;NGP3492600;"Paiement désignation ""Facture Port"" — Transit 6a3a6eb3aed8ff16536072a3";64000.00;;75534.04
+108;09/07/2026 19:09;Ajustement (correction);ZZH0102646;"Ajustement désignation ""Bon de livret"" (montant corrigé) — Transit 6a3433945cfbaec545c3965d";43483.00;;32051.04

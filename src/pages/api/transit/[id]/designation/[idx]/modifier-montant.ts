@@ -2,7 +2,7 @@ import type { NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import { OperationValidation, Transit } from '@/models';
-import { OperationType } from '@/models/OperationValidation';
+import { OperationType, OperationValidationStatus } from '@/models/OperationValidation';
 import { ApiResponse, DesignationStatus, UserRole } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 
@@ -62,10 +62,15 @@ async function handler(
       });
     }
 
-    // Bloque si le caissier a déjà soumis ce paiement à la chaîne de validation.
+    // Bloque uniquement si un paiement est ACTUELLEMENT dans la chaîne de
+    // validation (soumis par le caissier ou déjà validé). Les traces REJETEE
+    // d'un paiement précédent (rejeté puis re-payé) ne doivent PAS bloquer :
+    // tant que le caissier n'a pas validé le paiement courant, le payeur peut
+    // toujours corriger son montant.
     const existingValidation = await OperationValidation.findOne({
       opType: OperationType.PAYEUR_PAIEMENT,
       opId: String(designation._id),
+      statut: { $ne: OperationValidationStatus.REJETEE },
     });
     if (existingValidation) {
       return res.status(409).json({

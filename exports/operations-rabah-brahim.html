@@ -1,0 +1,1160 @@
+<title>Caisse Rabah — Opérations depuis 0,04</title>
+<style>
+  :root{
+    --bg:#FBFCFD; --surface:#FFFFFF; --surface-2:#F3F6F8; --line:#E4EAEE;
+    --ink:#1A2230; --muted:#5A6572; --faint:#8A97A6;
+    --accent:#2F6F6A; --accent-soft:#DCEBE9;
+    --credit:#157F5A; --credit-soft:#E1F1EA;
+    --debit:#B4453C; --debit-soft:#F6E4E2;
+    --adj:#8A5A00; --adj-soft:#F4E9D4;
+    --shadow:0 1px 2px rgba(20,30,45,.04),0 8px 24px rgba(20,30,45,.05);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0F1720; --surface:#16202B; --surface-2:#1B2734; --line:#26333F;
+      --ink:#E6EDF3; --muted:#93A1B0; --faint:#6C7A88;
+      --accent:#4FB3A6; --accent-soft:#173430;
+      --credit:#3FBE8A; --credit-soft:#12312A;
+      --debit:#E0736A; --debit-soft:#38211F;
+      --adj:#D9A94E; --adj-soft:#332913;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#FBFCFD; --surface:#FFFFFF; --surface-2:#F3F6F8; --line:#E4EAEE;
+    --ink:#1A2230; --muted:#5A6572; --faint:#8A97A6;
+    --accent:#2F6F6A; --accent-soft:#DCEBE9;
+    --credit:#157F5A; --credit-soft:#E1F1EA; --debit:#B4453C; --debit-soft:#F6E4E2;
+    --adj:#8A5A00; --adj-soft:#F4E9D4; --shadow:0 1px 2px rgba(20,30,45,.04),0 8px 24px rgba(20,30,45,.05);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F1720; --surface:#16202B; --surface-2:#1B2734; --line:#26333F;
+    --ink:#E6EDF3; --muted:#93A1B0; --faint:#6C7A88;
+    --accent:#4FB3A6; --accent-soft:#173430;
+    --credit:#3FBE8A; --credit-soft:#12312A; --debit:#E0736A; --debit-soft:#38211F;
+    --adj:#D9A94E; --adj-soft:#332913; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums;}
+  .wrap{max-width:1140px;margin:0 auto;padding:40px 24px 80px;}
+  header .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;}
+  h1{font-size:clamp(24px,3.2vw,34px);line-height:1.15;margin:.35rem 0 .5rem;letter-spacing:-.02em;text-wrap:balance;}
+  .sub{color:var(--muted);font-size:15px;max-width:70ch;}
+  .sub b{color:var(--ink);font-weight:600;}
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:28px 0 8px;}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);}
+  .tile .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;}
+  .tile .v{font-size:22px;margin-top:6px;letter-spacing:-.01em;}
+  .tile .n{font-size:12px;color:var(--muted);margin-top:2px;}
+  .tile.credit .v{color:var(--credit)} .tile.debit .v{color:var(--debit)} .tile.adj .v{color:var(--adj)}
+  .tile.total{background:var(--accent-soft);border-color:transparent;}
+  .tile.total .v{color:var(--accent);font-weight:700;}
+
+  .equation{margin:18px 0 6px;padding:14px 18px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+    font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;}
+  .equation b{color:var(--ink)}
+  .equation .op{color:var(--faint)}
+
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:22px 0 12px;}
+  .filters{display:flex;flex-wrap:wrap;gap:6px;}
+  .fbtn{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;
+    padding:6px 13px;font-size:13px;cursor:pointer;font-weight:500;transition:.15s;}
+  .fbtn:hover{border-color:var(--accent);color:var(--ink);}
+  .fbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;}
+  :root[data-theme="dark"] .fbtn[aria-pressed="true"], @media(prefers-color-scheme:dark){}
+  .spacer{flex:1 1 auto}
+  input[type="search"]{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;
+    padding:8px 12px;font-size:14px;min-width:200px;font-family:inherit;}
+  input[type="search"]:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .dl{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;text-decoration:none;
+    border-radius:8px;padding:9px 15px;font-size:14px;font-weight:600;border:none;cursor:pointer;}
+  .dl:hover{filter:brightness(1.06)}
+  .dl:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+
+  .tablecard{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+  .scroll{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:860px;}
+  thead th{position:sticky;top:0;background:var(--surface-2);z-index:2;text-align:left;
+    font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;
+    padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  thead th.num,tbody td.num{text-align:right;}
+  tbody td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  td.num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  td.idx{color:var(--faint);}
+  td.date{color:var(--muted);white-space:nowrap;font-size:12.5px;}
+  td.bl{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted);white-space:nowrap;}
+  td.desc{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);}
+  td.debit{color:var(--debit);} td.credit{color:var(--credit);}
+  td.solde{color:var(--ink);font-weight:600;}
+  tfoot td{padding:12px 14px;border-top:2px solid var(--line);font-weight:600;background:var(--surface-2);}
+  tfoot td.num{font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;}
+
+  .chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;}
+  .chip-alim{background:var(--credit-soft);color:var(--credit);}
+  .chip-desig{background:var(--debit-soft);color:var(--debit);}
+  .chip-adj{background:var(--adj-soft);color:var(--adj);}
+  .chip-retour{background:var(--surface-2);color:var(--muted);}
+  .chip-manuel{background:var(--surface-2);color:var(--faint);}
+  .chip-autre{background:var(--surface-2);color:var(--faint);}
+  .empty{padding:40px;text-align:center;color:var(--muted);display:none;}
+  footer{margin-top:22px;color:var(--faint);font-size:12px;}
+  @media(max-width:640px){.wrap{padding:26px 14px 60px}.desc{max-width:180px}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Rapprochement de caisse · Payeur</div>
+    <h1>Caisse Rabah Brahim — opérations depuis le solde 0,04</h1>
+    <p class="sub">Toutes les opérations <b>après le 15/06/2026 14:23</b> (dernier passage à <b>0,04&nbsp;MRU</b>) jusqu'à aujourd'hui : alimentations reçues, paiements de désignations, et ajustements de correction. Solde courant recalculé à chaque ligne.</p>
+  </header>
+
+  <section class="tiles">
+    <div class="tile"><div class="k">Solde de départ</div><div class="v mono">0,04</div><div class="n">15/06 14:23</div></div>
+    <div class="tile credit"><div class="k">Alimentations</div><div class="v mono">+2 753 850,00</div><div class="n">10 opérations</div></div>
+    <div class="tile debit"><div class="k">Paiements désignation</div><div class="v mono">−2 490 626,00</div><div class="n">88 opérations</div></div>
+    <div class="tile adj"><div class="k">Ajustements (corr.)</div><div class="v mono">−231 173,00</div><div class="n">10 opérations</div></div>
+    <div class="tile total"><div class="k">Solde actuel</div><div class="v mono">32 051,04</div><div class="n">108 opérations</div></div>
+  </section>
+
+  <div class="equation mono">
+    <span>0,04</span><span class="op">+</span><span class="credit">2 753 850,00</span>
+    <span class="op">−</span><span class="debit">2 490 626,00</span>
+    <span class="op">−</span><span class="adj">231 173,00</span>
+    <span class="op">=</span><b>32 051,04 MRU</b>
+  </div>
+
+  <div class="controls">
+    <div class="filters" role="group" aria-label="Filtrer par catégorie">
+      <button class="fbtn" data-f="all" aria-pressed="true">Tout</button>
+      <button class="fbtn" data-f="alim" aria-pressed="false">Alimentations</button>
+      <button class="fbtn" data-f="desig" aria-pressed="false">Désignations</button>
+      <button class="fbtn" data-f="adj" aria-pressed="false">Ajustements</button>
+    </div>
+    <span class="spacer"></span>
+    <input type="search" id="q" placeholder="Rechercher (BL, désignation…)" aria-label="Rechercher">
+    <a class="dl" href="data:text/csv;charset=utf-8,%EF%BB%BF%23%3BDate%3BCategorie%3BBL%3BDescription%3BDebit%3BCredit%3BSolde%0D%0A1%3B15%2F06%2F2026%2015%3A05%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B10700.00%3B10700.04%0D%0A2%3B18%2F06%2F2026%2013%3A11%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B300000.00%3B310700.04%0D%0A3%3B22%2F06%2F2026%2013%3A35%3BPaiement%20d%C3%A9signation%3BZZH0102706%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3433745cfbaec545c39638%22%3B25600.00%3B%3B285100.04%0D%0A4%3B22%2F06%2F2026%2013%3A35%3BPaiement%20d%C3%A9signation%3BZZH0102706%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3433745cfbaec545c39638%22%3B68790.00%3B%3B216310.04%0D%0A5%3B22%2F06%2F2026%2013%3A35%3BPaiement%20d%C3%A9signation%3BZZH0102646%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3433945cfbaec545c3965d%22%3B19200.00%3B%3B197110.04%0D%0A6%3B22%2F06%2F2026%2013%3A35%3BPaiement%20d%C3%A9signation%3BZZH0102646%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3433945cfbaec545c3965d%22%3B51741.00%3B%3B145369.04%0D%0A7%3B22%2F06%2F2026%2017%3A26%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B460000.00%3B605369.04%0D%0A8%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3492537%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a34102808dfbcc549e8701d%22%3B16547.00%3B%3B588822.04%0D%0A9%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3492537%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a34102808dfbcc549e8701d%22%3B6400.00%3B%3B582422.04%0D%0A10%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3508618%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a34101f08dfbcc549e87003%22%3B17047.00%3B%3B565375.04%0D%0A11%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3508618%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a34101f08dfbcc549e87003%22%3B6400.00%3B%3B558975.04%0D%0A12%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BZZH0102748%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a5762f189fa61f00164db%22%3B142876.00%3B%3B416099.04%0D%0A13%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BZZH0102748%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a5762f189fa61f00164db%22%3B19200.00%3B%3B396899.04%0D%0A14%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BZZH0102747%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a5742f189fa61f00164cf%22%3B192490.00%3B%3B204409.04%0D%0A15%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BZZH0102747%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a5742f189fa61f00164cf%22%3B25600.00%3B%3B178809.04%0D%0A16%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3492525%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a34100d08dfbcc549e86fd2%22%3B6400.00%3B%3B172409.04%0D%0A17%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3492525%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a34100d08dfbcc549e86fd2%22%3B16547.00%3B%3B155862.04%0D%0A18%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3492600%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a6eb3aed8ff16536072a3%22%3B6400.00%3B%3B149462.04%0D%0A19%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3467097%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a34101508dfbcc549e86fea%22%3B6400.00%3B%3B143062.04%0D%0A20%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3467097%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a34101508dfbcc549e86fea%22%3B16547.00%3B%3B126515.04%0D%0A21%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3492526%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a34100808dfbcc549e86fbb%22%3B17047.00%3B%3B109468.04%0D%0A22%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3BNGP3492526%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a34100808dfbcc549e86fbb%22%3B6400.00%3B%3B103068.04%0D%0A23%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3B269102730%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a5b2d48e896a0f0d3e98b%22%3B6500.00%3B%3B96568.04%0D%0A24%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3B269102730%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3a5b2d48e896a0f0d3e98b%22%3B5452.00%3B%3B91116.04%0D%0A25%3B24%2F06%2F2026%2016%3A16%3BPaiement%20d%C3%A9signation%3B269102730%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a5b2d48e896a0f0d3e98b%22%3B17698.00%3B%3B73418.04%0D%0A26%3B24%2F06%2F2026%2018%3A26%3BPaiement%20d%C3%A9signation%3B268704096%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a57d0f189fa61f00164f3%22%3B22741.00%3B%3B50677.04%0D%0A27%3B24%2F06%2F2026%2018%3A26%3BPaiement%20d%C3%A9signation%3B268704096%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3a57d0f189fa61f00164f3%22%3B5452.00%3B%3B45225.04%0D%0A28%3B24%2F06%2F2026%2018%3A26%3BPaiement%20d%C3%A9signation%3B268704097%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a57bd48e896a0f0d3e928%22%3B22741.00%3B%3B22484.04%0D%0A29%3B24%2F06%2F2026%2018%3A26%3BPaiement%20d%C3%A9signation%3B268704097%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3a57bd48e896a0f0d3e928%22%3B5452.00%3B%3B17032.04%0D%0A30%3B24%2F06%2F2026%2018%3A26%3BPaiement%20d%C3%A9signation%3B268704097%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a57bd48e896a0f0d3e928%22%3B6500.00%3B%3B10532.04%0D%0A31%3B24%2F06%2F2026%2018%3A26%3BPaiement%20d%C3%A9signation%3B268704096%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a57d0f189fa61f00164f3%22%3B6500.00%3B%3B4032.04%0D%0A32%3B26%2F06%2F2026%2014%3A45%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B120300.00%3B124332.04%0D%0A33%3B26%2F06%2F2026%2014%3A45%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B6550.00%3B130882.04%0D%0A34%3B26%2F06%2F2026%2014%3A46%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B400000.00%3B530882.04%0D%0A35%3B26%2F06%2F2026%2014%3A49%3BAlimentation%3B%3B%D8%B0%D9%87%D8%A8%20%D8%A8%D9%87%D8%A7%20%D8%B4%D8%AF%D8%A7%D8%AF%20%D8%A5%D9%84%D9%89%20%D8%B1%D8%A8%D8%A7%D9%87%20(%D9%86%D9%82%D8%AF%D8%A7)%3B%3B60000.00%3B590882.04%0D%0A36%3B26%2F06%2F2026%2014%3A53%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B151400.00%3B742282.04%0D%0A37%3B30%2F06%2F2026%2008%3A35%3BPaiement%20d%C3%A9signation%3BZZH0102845%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a34102d08dfbcc549e87038%22%3B25600.00%3B%3B716682.04%0D%0A38%3B30%2F06%2F2026%2008%3A35%3BPaiement%20d%C3%A9signation%3BZZH0102845%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a34102d08dfbcc549e87038%22%3B73046.00%3B%3B643636.04%0D%0A39%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3BWNZ0105946%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3d693f4b57cd3208b1a844%22%3B18855.00%3B%3B624781.04%0D%0A40%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B267421617%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3fbe66a1869373ddf2b51b%22%3B13340.00%3B%3B611441.04%0D%0A41%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B268838053%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3d69334b57cd3208b1a838%22%3B17977.00%3B%3B593464.04%0D%0A42%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B268838053%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3d69334b57cd3208b1a838%22%3B5452.00%3B%3B588012.04%0D%0A43%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B269082871%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3d69184b57cd3208b1a820%22%3B33034.00%3B%3B554978.04%0D%0A44%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B269082871%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3d69184b57cd3208b1a820%22%3B5452.00%3B%3B549526.04%0D%0A45%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B270706411%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3d69274b57cd3208b1a82c%22%3B17142.00%3B%3B532384.04%0D%0A46%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B270706411%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3d69274b57cd3208b1a82c%22%3B5452.00%3B%3B526932.04%0D%0A47%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B269370711%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a579ef189fa61f00164e7%22%3B20228.00%3B%3B506704.04%0D%0A48%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B269370711%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3a579ef189fa61f00164e7%22%3B5452.00%3B%3B501252.04%0D%0A49%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B269370711%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a579ef189fa61f00164e7%22%3B6500.00%3B%3B494752.04%0D%0A50%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B271216074%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3fbe74a1869373ddf2b579%22%3B19235.00%3B%3B475517.04%0D%0A51%3B30%2F06%2F2026%2008%3A37%3BPaiement%20d%C3%A9signation%3B271216074%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3fbe74a1869373ddf2b579%22%3B5452.00%3B%3B470065.04%0D%0A52%3B30%2F06%2F2026%2008%3A38%3BPaiement%20d%C3%A9signation%3B271216074%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3fbe74a1869373ddf2b579%22%3B6500.00%3B%3B463565.04%0D%0A53%3B30%2F06%2F2026%2008%3A38%3BPaiement%20d%C3%A9signation%3B267421766%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3fbe6ea1869373ddf2b54a%22%3B159013.00%3B%3B304552.04%0D%0A54%3B30%2F06%2F2026%2008%3A38%3BPaiement%20d%C3%A9signation%3B267421766%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3fbe6ea1869373ddf2b54a%22%3B13340.00%3B%3B291212.04%0D%0A55%3B30%2F06%2F2026%2008%3A38%3BPaiement%20d%C3%A9signation%3B267421617%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3fbe66a1869373ddf2b51b%22%3B155833.00%3B%3B135379.04%0D%0A56%3B06%2F07%2F2026%2010%3A26%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B1204300.00%3B1339679.04%0D%0A57%3B06%2F07%2F2026%2010%3A34%3BPaiement%20d%C3%A9signation%3BNGP3550912%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a577c48e896a0f0d3e91c%22%3B6400.00%3B%3B1333279.04%0D%0A58%3B06%2F07%2F2026%2011%3A51%3BPaiement%20d%C3%A9signation%3B267421766%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3fbe6ea1869373ddf2b54a%22%3B32500.00%3B%3B1300779.04%0D%0A59%3B06%2F07%2F2026%2011%3A51%3BPaiement%20d%C3%A9signation%3B267421617%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3fbe66a1869373ddf2b51b%22%3B32500.00%3B%3B1268279.04%0D%0A60%3B06%2F07%2F2026%2011%3A51%3BPaiement%20d%C3%A9signation%3B267421949%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a6eceaed8ff16536072bb%22%3B89758.00%3B%3B1178521.04%0D%0A61%3B06%2F07%2F2026%2011%3A51%3BPaiement%20d%C3%A9signation%3B267421949%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a6eceaed8ff16536072bb%22%3B37500.00%3B%3B1141021.04%0D%0A62%3B06%2F07%2F2026%2011%3A51%3BPaiement%20d%C3%A9signation%3B269120149%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a6ec3aed8ff16536072af%22%3B92278.00%3B%3B1048743.04%0D%0A63%3B06%2F07%2F2026%2011%3A51%3BPaiement%20d%C3%A9signation%3B269120149%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3a6ec3aed8ff16536072af%22%3B10672.00%3B%3B1038071.04%0D%0A64%3B06%2F07%2F2026%2011%3A51%3BPaiement%20d%C3%A9signation%3B269120149%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a6ec3aed8ff16536072af%22%3B30000.00%3B%3B1008071.04%0D%0A65%3B06%2F07%2F2026%2011%3A51%3BPaiement%20d%C3%A9signation%3BMCB0338892%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a462343ddc669c262dfc7ef%22%3B19957.00%3B%3B988114.04%0D%0A66%3B06%2F07%2F2026%2011%3A52%3BPaiement%20d%C3%A9signation%3BNGP3537194%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a4623b5ddc669c262dfc808%22%3B17547.00%3B%3B970567.04%0D%0A67%3B06%2F07%2F2026%2011%3A52%3BPaiement%20d%C3%A9signation%3BNGP3537194%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a4623b5ddc669c262dfc808%22%3B6400.00%3B%3B964167.04%0D%0A68%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3BNGP3501877%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a4ba4901d826c80589b7fb4%22%3B6400.00%3B%3B957767.04%0D%0A69%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3BNGP3501877%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a4ba4901d826c80589b7fb4%22%3B16547.00%3B%3B941220.04%0D%0A70%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3B269274971%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a4ba4bd5cad2ab699676ffb%22%3B5452.00%3B%3B935768.04%0D%0A71%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3B269274971%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a4ba4bd5cad2ab699676ffb%22%3B6500.00%3B%3B929268.04%0D%0A72%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3B269274971%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a4ba4bd5cad2ab699676ffb%22%3B18684.00%3B%3B910584.04%0D%0A73%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3BLHV4031435%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a4b9473edb4ed9d450ed532%22%3B6400.00%3B%3B904184.04%0D%0A74%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3BLHV4031435%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a4b9473edb4ed9d450ed532%22%3B23720.00%3B%3B880464.04%0D%0A75%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3BTYO0737580%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a4b9484e718a2e0b1871dd6%22%3B6400.00%3B%3B874064.04%0D%0A76%3B06%2F07%2F2026%2012%3A59%3BPaiement%20d%C3%A9signation%3BTYO0737580%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a4b9484e718a2e0b1871dd6%22%3B27319.00%3B%3B846745.04%0D%0A77%3B06%2F07%2F2026%2013%3A00%3BPaiement%20d%C3%A9signation%3BTJN0917734%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a462376ddc669c262dfc7fc%22%3B231842.00%3B%3B614903.04%0D%0A78%3B06%2F07%2F2026%2013%3A00%3BPaiement%20d%C3%A9signation%3BNGP3550912%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a577c48e896a0f0d3e91c%22%3B16547.00%3B%3B598356.04%0D%0A79%3B06%2F07%2F2026%2013%3A00%3BPaiement%20d%C3%A9signation%3B269116100%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3a57f9f189fa61f00164ff%22%3B16356.00%3B%3B582000.04%0D%0A80%3B06%2F07%2F2026%2013%3A00%3BPaiement%20d%C3%A9signation%3B269116100%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a57f9f189fa61f00164ff%22%3B84743.00%3B%3B497257.04%0D%0A81%3B06%2F07%2F2026%2013%3A00%3BPaiement%20d%C3%A9signation%3B269116100%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3a57f9f189fa61f00164ff%22%3B22500.00%3B%3B474757.04%0D%0A82%3B06%2F07%2F2026%2013%3A00%3BPaiement%20d%C3%A9signation%3BTJN0917734%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a462376ddc669c262dfc7fc%22%3B6400.00%3B%3B468357.04%0D%0A83%3B06%2F07%2F2026%2013%3A00%3BPaiement%20d%C3%A9signation%3BMCB0338892%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a462343ddc669c262dfc7ef%22%3B6400.00%3B%3B461957.04%0D%0A84%3B06%2F07%2F2026%2013%3A00%3BPaiement%20d%C3%A9signation%3B267421949%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3a6eceaed8ff16536072bb%22%3B13340.00%3B%3B448617.04%0D%0A85%3B06%2F07%2F2026%2013%3A01%3BPaiement%20d%C3%A9signation%3B269085133%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a4ba4a15cad2ab699676fef%22%3B22850.00%3B%3B425767.04%0D%0A86%3B06%2F07%2F2026%2015%3A17%3BPaiement%20d%C3%A9signation%3BMEDUY9173145%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a46232c7da8135b37517d04%22%3B6670.00%3B%3B419097.04%0D%0A87%3B06%2F07%2F2026%2015%3A17%3BPaiement%20d%C3%A9signation%3BMEDUY9173145%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a46232c7da8135b37517d04%22%3B21518.00%3B%3B397579.04%0D%0A88%3B06%2F07%2F2026%2015%3A17%3BPaiement%20d%C3%A9signation%3B269085133%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a4ba4a15cad2ab699676fef%22%3B6500.00%3B%3B391079.04%0D%0A89%3B06%2F07%2F2026%2015%3A17%3BPaiement%20d%C3%A9signation%3B269085133%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a4ba4a15cad2ab699676fef%22%3B5452.00%3B%3B385627.04%0D%0A90%3B06%2F07%2F2026%2016%3A21%3BPaiement%20d%C3%A9signation%3BWNZ0105946%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a3d693f4b57cd3208b1a844%22%3B6400.00%3B%3B379227.04%0D%0A91%3B08%2F07%2F2026%2011%3A38%3BAlimentation%3B%3BAlimentation%20caisse%20%E2%80%94%20Rabah%20Brahim%3B%3B40600.00%3B419827.04%0D%0A92%3B09%2F07%2F2026%2013%3A49%3BPaiement%20d%C3%A9signation%3BNGP3492600%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a3a6eb3aed8ff16536072a3%22%3B16547.00%3B%3B403280.04%0D%0A93%3B09%2F07%2F2026%2016%3A41%3BPaiement%20d%C3%A9signation%3B269806336%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a4e6a7ec0463752161c1143%22%3B6500.00%3B%3B396780.04%0D%0A94%3B09%2F07%2F2026%2016%3A41%3BPaiement%20d%C3%A9signation%3B269806336%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a4e6a7ec0463752161c1143%22%3B5452.00%3B%3B391328.04%0D%0A95%3B09%2F07%2F2026%2016%3A41%3BPaiement%20d%C3%A9signation%3B269806336%3B%22Paiement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20%E2%80%94%20Transit%206a4e6a7ec0463752161c1143%22%3B28652.00%3B%3B362676.04%0D%0A96%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3B267675383%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a26911b80b81437669b06c7%22%3B%3B13340.00%3B376016.04%0D%0A97%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3BWNZ0105853%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a2691e280b81437669b06dd%22%3B%3B297.00%3B376313.04%0D%0A98%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3BZZH0102706%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a3433745cfbaec545c39638%22%3B85078.00%3B%3B291235.04%0D%0A99%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3B268704096%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a3a57d0f189fa61f00164f3%22%3B8555.00%3B%3B282680.04%0D%0A100%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3B268704097%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a3a57bd48e896a0f0d3e928%22%3B8555.00%3B%3B274125.04%0D%0A101%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3B269370711%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a3a579ef189fa61f00164e7%22%3B10796.00%3B%3B263329.04%0D%0A102%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3B271216074%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a3fbe74a1869373ddf2b579%22%3B6456.00%3B%3B256873.04%0D%0A103%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3B267421766%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a3fbe6ea1869373ddf2b54a%22%3B63541.00%3B%3B193332.04%0D%0A104%3B09%2F07%2F2026%2018%3A40%3BAjustement%20(correction)%3B267421617%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a3fbe66a1869373ddf2b51b%22%3B18346.00%3B%3B174986.04%0D%0A105%3B09%2F07%2F2026%2018%3A51%3BPaiement%20d%C3%A9signation%3B266438122%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a26927c200315f63fc03538%22%3B5452.00%3B%3B169534.04%0D%0A106%3B09%2F07%2F2026%2018%3A51%3BPaiement%20d%C3%A9signation%3BMEDUPU519203%3B%22Paiement%20d%C3%A9signation%20%22%22Camion%22%22%20%E2%80%94%20Transit%206a26952180b81437669b0705%22%3B30000.00%3B%3B139534.04%0D%0A107%3B09%2F07%2F2026%2018%3A51%3BPaiement%20d%C3%A9signation%3BNGP3492600%3B%22Paiement%20d%C3%A9signation%20%22%22Facture%20Port%22%22%20%E2%80%94%20Transit%206a3a6eb3aed8ff16536072a3%22%3B64000.00%3B%3B75534.04%0D%0A108%3B09%2F07%2F2026%2019%3A09%3BAjustement%20(correction)%3BZZH0102646%3B%22Ajustement%20d%C3%A9signation%20%22%22Bon%20de%20livret%22%22%20(montant%20corrig%C3%A9)%20%E2%80%94%20Transit%206a3433945cfbaec545c3965d%22%3B43483.00%3B%3B32051.04" download="operations-rabah-brahim.csv">⤓ Télécharger CSV</a>
+  </div>
+
+  <div class="tablecard">
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="num">#</th><th>Date</th><th>Catégorie</th><th>BL</th><th>Désignation / libellé</th>
+            <th class="num">Débit</th><th class="num">Crédit</th><th class="num">Solde</th>
+          </tr>
+        </thead>
+        <tbody id="tb"><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">1</td>
+    <td class="date">15/06/2026 15:05</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">10 700,00</td>
+    <td class="num solde">10 700,04</td>
+  </tr><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">2</td>
+    <td class="date">18/06/2026 13:11</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">300 000,00</td>
+    <td class="num solde">310 700,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3433745cfbaec545c39638 zzh0102706">
+    <td class="num idx">3</td>
+    <td class="date">22/06/2026 13:35</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102706</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3433745cfbaec545c39638">Paiement désignation &quot;Camion&quot; — Transit 6a3433745cfbaec545c39638</td>
+    <td class="num debit">25 600,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">285 100,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3433745cfbaec545c39638 zzh0102706">
+    <td class="num idx">4</td>
+    <td class="date">22/06/2026 13:35</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102706</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3433745cfbaec545c39638">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3433745cfbaec545c39638</td>
+    <td class="num debit">68 790,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">216 310,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3433945cfbaec545c3965d zzh0102646">
+    <td class="num idx">5</td>
+    <td class="date">22/06/2026 13:35</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102646</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3433945cfbaec545c3965d">Paiement désignation &quot;Camion&quot; — Transit 6a3433945cfbaec545c3965d</td>
+    <td class="num debit">19 200,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">197 110,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3433945cfbaec545c3965d zzh0102646">
+    <td class="num idx">6</td>
+    <td class="date">22/06/2026 13:35</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102646</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3433945cfbaec545c3965d">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3433945cfbaec545c3965d</td>
+    <td class="num debit">51 741,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">145 369,04</td>
+  </tr><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">7</td>
+    <td class="date">22/06/2026 17:26</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">460 000,00</td>
+    <td class="num solde">605 369,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a34102808dfbcc549e8701d ngp3492537">
+    <td class="num idx">8</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492537</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a34102808dfbcc549e8701d">Paiement désignation &quot;Bon de livret&quot; — Transit 6a34102808dfbcc549e8701d</td>
+    <td class="num debit">16 547,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">588 822,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a34102808dfbcc549e8701d ngp3492537">
+    <td class="num idx">9</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492537</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a34102808dfbcc549e8701d">Paiement désignation &quot;Camion&quot; — Transit 6a34102808dfbcc549e8701d</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">582 422,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a34101f08dfbcc549e87003 ngp3508618">
+    <td class="num idx">10</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3508618</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a34101f08dfbcc549e87003">Paiement désignation &quot;Bon de livret&quot; — Transit 6a34101f08dfbcc549e87003</td>
+    <td class="num debit">17 047,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">565 375,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a34101f08dfbcc549e87003 ngp3508618">
+    <td class="num idx">11</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3508618</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a34101f08dfbcc549e87003">Paiement désignation &quot;Camion&quot; — Transit 6a34101f08dfbcc549e87003</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">558 975,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a5762f189fa61f00164db zzh0102748">
+    <td class="num idx">12</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102748</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a5762f189fa61f00164db">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a5762f189fa61f00164db</td>
+    <td class="num debit">142 876,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">416 099,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a5762f189fa61f00164db zzh0102748">
+    <td class="num idx">13</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102748</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a5762f189fa61f00164db">Paiement désignation &quot;Camion&quot; — Transit 6a3a5762f189fa61f00164db</td>
+    <td class="num debit">19 200,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">396 899,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a5742f189fa61f00164cf zzh0102747">
+    <td class="num idx">14</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102747</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a5742f189fa61f00164cf">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a5742f189fa61f00164cf</td>
+    <td class="num debit">192 490,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">204 409,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a5742f189fa61f00164cf zzh0102747">
+    <td class="num idx">15</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102747</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a5742f189fa61f00164cf">Paiement désignation &quot;Camion&quot; — Transit 6a3a5742f189fa61f00164cf</td>
+    <td class="num debit">25 600,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">178 809,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a34100d08dfbcc549e86fd2 ngp3492525">
+    <td class="num idx">16</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492525</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a34100d08dfbcc549e86fd2">Paiement désignation &quot;Camion&quot; — Transit 6a34100d08dfbcc549e86fd2</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">172 409,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a34100d08dfbcc549e86fd2 ngp3492525">
+    <td class="num idx">17</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492525</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a34100d08dfbcc549e86fd2">Paiement désignation &quot;Bon de livret&quot; — Transit 6a34100d08dfbcc549e86fd2</td>
+    <td class="num debit">16 547,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">155 862,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a6eb3aed8ff16536072a3 ngp3492600">
+    <td class="num idx">18</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492600</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a6eb3aed8ff16536072a3">Paiement désignation &quot;Camion&quot; — Transit 6a3a6eb3aed8ff16536072a3</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">149 462,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a34101508dfbcc549e86fea ngp3467097">
+    <td class="num idx">19</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3467097</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a34101508dfbcc549e86fea">Paiement désignation &quot;Camion&quot; — Transit 6a34101508dfbcc549e86fea</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">143 062,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a34101508dfbcc549e86fea ngp3467097">
+    <td class="num idx">20</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3467097</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a34101508dfbcc549e86fea">Paiement désignation &quot;Bon de livret&quot; — Transit 6a34101508dfbcc549e86fea</td>
+    <td class="num debit">16 547,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">126 515,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a34100808dfbcc549e86fbb ngp3492526">
+    <td class="num idx">21</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492526</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a34100808dfbcc549e86fbb">Paiement désignation &quot;Bon de livret&quot; — Transit 6a34100808dfbcc549e86fbb</td>
+    <td class="num debit">17 047,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">109 468,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a34100808dfbcc549e86fbb ngp3492526">
+    <td class="num idx">22</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492526</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a34100808dfbcc549e86fbb">Paiement désignation &quot;Camion&quot; — Transit 6a34100808dfbcc549e86fbb</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">103 068,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a5b2d48e896a0f0d3e98b 269102730">
+    <td class="num idx">23</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269102730</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a5b2d48e896a0f0d3e98b">Paiement désignation &quot;Camion&quot; — Transit 6a3a5b2d48e896a0f0d3e98b</td>
+    <td class="num debit">6 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">96 568,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3a5b2d48e896a0f0d3e98b 269102730">
+    <td class="num idx">24</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269102730</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3a5b2d48e896a0f0d3e98b">Paiement désignation &quot;Facture Port&quot; — Transit 6a3a5b2d48e896a0f0d3e98b</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">91 116,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a5b2d48e896a0f0d3e98b 269102730">
+    <td class="num idx">25</td>
+    <td class="date">24/06/2026 16:16</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269102730</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a5b2d48e896a0f0d3e98b">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a5b2d48e896a0f0d3e98b</td>
+    <td class="num debit">17 698,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">73 418,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a57d0f189fa61f00164f3 268704096">
+    <td class="num idx">26</td>
+    <td class="date">24/06/2026 18:26</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">268704096</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a57d0f189fa61f00164f3">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a57d0f189fa61f00164f3</td>
+    <td class="num debit">22 741,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">50 677,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3a57d0f189fa61f00164f3 268704096">
+    <td class="num idx">27</td>
+    <td class="date">24/06/2026 18:26</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">268704096</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3a57d0f189fa61f00164f3">Paiement désignation &quot;Facture Port&quot; — Transit 6a3a57d0f189fa61f00164f3</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">45 225,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a57bd48e896a0f0d3e928 268704097">
+    <td class="num idx">28</td>
+    <td class="date">24/06/2026 18:26</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">268704097</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a57bd48e896a0f0d3e928">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a57bd48e896a0f0d3e928</td>
+    <td class="num debit">22 741,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">22 484,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3a57bd48e896a0f0d3e928 268704097">
+    <td class="num idx">29</td>
+    <td class="date">24/06/2026 18:26</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">268704097</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3a57bd48e896a0f0d3e928">Paiement désignation &quot;Facture Port&quot; — Transit 6a3a57bd48e896a0f0d3e928</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">17 032,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a57bd48e896a0f0d3e928 268704097">
+    <td class="num idx">30</td>
+    <td class="date">24/06/2026 18:26</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">268704097</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a57bd48e896a0f0d3e928">Paiement désignation &quot;Camion&quot; — Transit 6a3a57bd48e896a0f0d3e928</td>
+    <td class="num debit">6 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">10 532,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a57d0f189fa61f00164f3 268704096">
+    <td class="num idx">31</td>
+    <td class="date">24/06/2026 18:26</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">268704096</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a57d0f189fa61f00164f3">Paiement désignation &quot;Camion&quot; — Transit 6a3a57d0f189fa61f00164f3</td>
+    <td class="num debit">6 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">4 032,04</td>
+  </tr><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">32</td>
+    <td class="date">26/06/2026 14:45</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">120 300,00</td>
+    <td class="num solde">124 332,04</td>
+  </tr><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">33</td>
+    <td class="date">26/06/2026 14:45</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">6 550,00</td>
+    <td class="num solde">130 882,04</td>
+  </tr><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">34</td>
+    <td class="date">26/06/2026 14:46</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">400 000,00</td>
+    <td class="num solde">530 882,04</td>
+  </tr><tr data-cat="alim" data-search="ذهب بها شداد إلى رباه (نقدا) ">
+    <td class="num idx">35</td>
+    <td class="date">26/06/2026 14:49</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="ذهب بها شداد إلى رباه (نقدا)">ذهب بها شداد إلى رباه (نقدا)</td>
+    <td class="num debit"></td>
+    <td class="num credit">60 000,00</td>
+    <td class="num solde">590 882,04</td>
+  </tr><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">36</td>
+    <td class="date">26/06/2026 14:53</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">151 400,00</td>
+    <td class="num solde">742 282,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a34102d08dfbcc549e87038 zzh0102845">
+    <td class="num idx">37</td>
+    <td class="date">30/06/2026 08:35</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102845</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a34102d08dfbcc549e87038">Paiement désignation &quot;Camion&quot; — Transit 6a34102d08dfbcc549e87038</td>
+    <td class="num debit">25 600,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">716 682,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a34102d08dfbcc549e87038 zzh0102845">
+    <td class="num idx">38</td>
+    <td class="date">30/06/2026 08:35</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">ZZH0102845</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a34102d08dfbcc549e87038">Paiement désignation &quot;Bon de livret&quot; — Transit 6a34102d08dfbcc549e87038</td>
+    <td class="num debit">73 046,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">643 636,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3d693f4b57cd3208b1a844 wnz0105946">
+    <td class="num idx">39</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">WNZ0105946</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3d693f4b57cd3208b1a844">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3d693f4b57cd3208b1a844</td>
+    <td class="num debit">18 855,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">624 781,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3fbe66a1869373ddf2b51b 267421617">
+    <td class="num idx">40</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421617</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3fbe66a1869373ddf2b51b">Paiement désignation &quot;Facture Port&quot; — Transit 6a3fbe66a1869373ddf2b51b</td>
+    <td class="num debit">13 340,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">611 441,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3d69334b57cd3208b1a838 268838053">
+    <td class="num idx">41</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">268838053</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3d69334b57cd3208b1a838">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3d69334b57cd3208b1a838</td>
+    <td class="num debit">17 977,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">593 464,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3d69334b57cd3208b1a838 268838053">
+    <td class="num idx">42</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">268838053</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3d69334b57cd3208b1a838">Paiement désignation &quot;Facture Port&quot; — Transit 6a3d69334b57cd3208b1a838</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">588 012,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3d69184b57cd3208b1a820 269082871">
+    <td class="num idx">43</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269082871</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3d69184b57cd3208b1a820">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3d69184b57cd3208b1a820</td>
+    <td class="num debit">33 034,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">554 978,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3d69184b57cd3208b1a820 269082871">
+    <td class="num idx">44</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269082871</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3d69184b57cd3208b1a820">Paiement désignation &quot;Facture Port&quot; — Transit 6a3d69184b57cd3208b1a820</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">549 526,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3d69274b57cd3208b1a82c 270706411">
+    <td class="num idx">45</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">270706411</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3d69274b57cd3208b1a82c">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3d69274b57cd3208b1a82c</td>
+    <td class="num debit">17 142,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">532 384,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3d69274b57cd3208b1a82c 270706411">
+    <td class="num idx">46</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">270706411</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3d69274b57cd3208b1a82c">Paiement désignation &quot;Facture Port&quot; — Transit 6a3d69274b57cd3208b1a82c</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">526 932,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a579ef189fa61f00164e7 269370711">
+    <td class="num idx">47</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269370711</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a579ef189fa61f00164e7">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a579ef189fa61f00164e7</td>
+    <td class="num debit">20 228,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">506 704,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3a579ef189fa61f00164e7 269370711">
+    <td class="num idx">48</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269370711</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3a579ef189fa61f00164e7">Paiement désignation &quot;Facture Port&quot; — Transit 6a3a579ef189fa61f00164e7</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">501 252,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a579ef189fa61f00164e7 269370711">
+    <td class="num idx">49</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269370711</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a579ef189fa61f00164e7">Paiement désignation &quot;Camion&quot; — Transit 6a3a579ef189fa61f00164e7</td>
+    <td class="num debit">6 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">494 752,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3fbe74a1869373ddf2b579 271216074">
+    <td class="num idx">50</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">271216074</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3fbe74a1869373ddf2b579">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3fbe74a1869373ddf2b579</td>
+    <td class="num debit">19 235,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">475 517,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3fbe74a1869373ddf2b579 271216074">
+    <td class="num idx">51</td>
+    <td class="date">30/06/2026 08:37</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">271216074</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3fbe74a1869373ddf2b579">Paiement désignation &quot;Facture Port&quot; — Transit 6a3fbe74a1869373ddf2b579</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">470 065,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3fbe74a1869373ddf2b579 271216074">
+    <td class="num idx">52</td>
+    <td class="date">30/06/2026 08:38</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">271216074</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3fbe74a1869373ddf2b579">Paiement désignation &quot;Camion&quot; — Transit 6a3fbe74a1869373ddf2b579</td>
+    <td class="num debit">6 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">463 565,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3fbe6ea1869373ddf2b54a 267421766">
+    <td class="num idx">53</td>
+    <td class="date">30/06/2026 08:38</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421766</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3fbe6ea1869373ddf2b54a">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3fbe6ea1869373ddf2b54a</td>
+    <td class="num debit">159 013,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">304 552,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3fbe6ea1869373ddf2b54a 267421766">
+    <td class="num idx">54</td>
+    <td class="date">30/06/2026 08:38</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421766</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3fbe6ea1869373ddf2b54a">Paiement désignation &quot;Facture Port&quot; — Transit 6a3fbe6ea1869373ddf2b54a</td>
+    <td class="num debit">13 340,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">291 212,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3fbe66a1869373ddf2b51b 267421617">
+    <td class="num idx">55</td>
+    <td class="date">30/06/2026 08:38</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421617</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3fbe66a1869373ddf2b51b">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3fbe66a1869373ddf2b51b</td>
+    <td class="num debit">155 833,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">135 379,04</td>
+  </tr><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">56</td>
+    <td class="date">06/07/2026 10:26</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">1 204 300,00</td>
+    <td class="num solde">1 339 679,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a577c48e896a0f0d3e91c ngp3550912">
+    <td class="num idx">57</td>
+    <td class="date">06/07/2026 10:34</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3550912</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a577c48e896a0f0d3e91c">Paiement désignation &quot;Camion&quot; — Transit 6a3a577c48e896a0f0d3e91c</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">1 333 279,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3fbe6ea1869373ddf2b54a 267421766">
+    <td class="num idx">58</td>
+    <td class="date">06/07/2026 11:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421766</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3fbe6ea1869373ddf2b54a">Paiement désignation &quot;Camion&quot; — Transit 6a3fbe6ea1869373ddf2b54a</td>
+    <td class="num debit">32 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">1 300 779,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3fbe66a1869373ddf2b51b 267421617">
+    <td class="num idx">59</td>
+    <td class="date">06/07/2026 11:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421617</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3fbe66a1869373ddf2b51b">Paiement désignation &quot;Camion&quot; — Transit 6a3fbe66a1869373ddf2b51b</td>
+    <td class="num debit">32 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">1 268 279,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a6eceaed8ff16536072bb 267421949">
+    <td class="num idx">60</td>
+    <td class="date">06/07/2026 11:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421949</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a6eceaed8ff16536072bb">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a6eceaed8ff16536072bb</td>
+    <td class="num debit">89 758,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">1 178 521,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a6eceaed8ff16536072bb 267421949">
+    <td class="num idx">61</td>
+    <td class="date">06/07/2026 11:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421949</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a6eceaed8ff16536072bb">Paiement désignation &quot;Camion&quot; — Transit 6a3a6eceaed8ff16536072bb</td>
+    <td class="num debit">37 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">1 141 021,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a6ec3aed8ff16536072af 269120149">
+    <td class="num idx">62</td>
+    <td class="date">06/07/2026 11:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269120149</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a6ec3aed8ff16536072af">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a6ec3aed8ff16536072af</td>
+    <td class="num debit">92 278,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">1 048 743,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3a6ec3aed8ff16536072af 269120149">
+    <td class="num idx">63</td>
+    <td class="date">06/07/2026 11:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269120149</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3a6ec3aed8ff16536072af">Paiement désignation &quot;Facture Port&quot; — Transit 6a3a6ec3aed8ff16536072af</td>
+    <td class="num debit">10 672,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">1 038 071,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a6ec3aed8ff16536072af 269120149">
+    <td class="num idx">64</td>
+    <td class="date">06/07/2026 11:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269120149</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a6ec3aed8ff16536072af">Paiement désignation &quot;Camion&quot; — Transit 6a3a6ec3aed8ff16536072af</td>
+    <td class="num debit">30 000,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">1 008 071,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a462343ddc669c262dfc7ef mcb0338892">
+    <td class="num idx">65</td>
+    <td class="date">06/07/2026 11:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">MCB0338892</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a462343ddc669c262dfc7ef">Paiement désignation &quot;Bon de livret&quot; — Transit 6a462343ddc669c262dfc7ef</td>
+    <td class="num debit">19 957,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">988 114,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a4623b5ddc669c262dfc808 ngp3537194">
+    <td class="num idx">66</td>
+    <td class="date">06/07/2026 11:52</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3537194</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a4623b5ddc669c262dfc808">Paiement désignation &quot;Bon de livret&quot; — Transit 6a4623b5ddc669c262dfc808</td>
+    <td class="num debit">17 547,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">970 567,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a4623b5ddc669c262dfc808 ngp3537194">
+    <td class="num idx">67</td>
+    <td class="date">06/07/2026 11:52</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3537194</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a4623b5ddc669c262dfc808">Paiement désignation &quot;Camion&quot; — Transit 6a4623b5ddc669c262dfc808</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">964 167,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a4ba4901d826c80589b7fb4 ngp3501877">
+    <td class="num idx">68</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3501877</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a4ba4901d826c80589b7fb4">Paiement désignation &quot;Camion&quot; — Transit 6a4ba4901d826c80589b7fb4</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">957 767,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a4ba4901d826c80589b7fb4 ngp3501877">
+    <td class="num idx">69</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3501877</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a4ba4901d826c80589b7fb4">Paiement désignation &quot;Bon de livret&quot; — Transit 6a4ba4901d826c80589b7fb4</td>
+    <td class="num debit">16 547,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">941 220,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a4ba4bd5cad2ab699676ffb 269274971">
+    <td class="num idx">70</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269274971</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a4ba4bd5cad2ab699676ffb">Paiement désignation &quot;Facture Port&quot; — Transit 6a4ba4bd5cad2ab699676ffb</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">935 768,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a4ba4bd5cad2ab699676ffb 269274971">
+    <td class="num idx">71</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269274971</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a4ba4bd5cad2ab699676ffb">Paiement désignation &quot;Camion&quot; — Transit 6a4ba4bd5cad2ab699676ffb</td>
+    <td class="num debit">6 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">929 268,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a4ba4bd5cad2ab699676ffb 269274971">
+    <td class="num idx">72</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269274971</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a4ba4bd5cad2ab699676ffb">Paiement désignation &quot;Bon de livret&quot; — Transit 6a4ba4bd5cad2ab699676ffb</td>
+    <td class="num debit">18 684,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">910 584,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a4b9473edb4ed9d450ed532 lhv4031435">
+    <td class="num idx">73</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">LHV4031435</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a4b9473edb4ed9d450ed532">Paiement désignation &quot;Camion&quot; — Transit 6a4b9473edb4ed9d450ed532</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">904 184,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a4b9473edb4ed9d450ed532 lhv4031435">
+    <td class="num idx">74</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">LHV4031435</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a4b9473edb4ed9d450ed532">Paiement désignation &quot;Bon de livret&quot; — Transit 6a4b9473edb4ed9d450ed532</td>
+    <td class="num debit">23 720,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">880 464,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a4b9484e718a2e0b1871dd6 tyo0737580">
+    <td class="num idx">75</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">TYO0737580</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a4b9484e718a2e0b1871dd6">Paiement désignation &quot;Camion&quot; — Transit 6a4b9484e718a2e0b1871dd6</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">874 064,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a4b9484e718a2e0b1871dd6 tyo0737580">
+    <td class="num idx">76</td>
+    <td class="date">06/07/2026 12:59</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">TYO0737580</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a4b9484e718a2e0b1871dd6">Paiement désignation &quot;Bon de livret&quot; — Transit 6a4b9484e718a2e0b1871dd6</td>
+    <td class="num debit">27 319,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">846 745,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a462376ddc669c262dfc7fc tjn0917734">
+    <td class="num idx">77</td>
+    <td class="date">06/07/2026 13:00</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">TJN0917734</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a462376ddc669c262dfc7fc">Paiement désignation &quot;Bon de livret&quot; — Transit 6a462376ddc669c262dfc7fc</td>
+    <td class="num debit">231 842,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">614 903,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a577c48e896a0f0d3e91c ngp3550912">
+    <td class="num idx">78</td>
+    <td class="date">06/07/2026 13:00</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3550912</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a577c48e896a0f0d3e91c">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a577c48e896a0f0d3e91c</td>
+    <td class="num debit">16 547,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">598 356,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3a57f9f189fa61f00164ff 269116100">
+    <td class="num idx">79</td>
+    <td class="date">06/07/2026 13:00</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269116100</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3a57f9f189fa61f00164ff">Paiement désignation &quot;Facture Port&quot; — Transit 6a3a57f9f189fa61f00164ff</td>
+    <td class="num debit">16 356,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">582 000,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a57f9f189fa61f00164ff 269116100">
+    <td class="num idx">80</td>
+    <td class="date">06/07/2026 13:00</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269116100</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a57f9f189fa61f00164ff">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a57f9f189fa61f00164ff</td>
+    <td class="num debit">84 743,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">497 257,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3a57f9f189fa61f00164ff 269116100">
+    <td class="num idx">81</td>
+    <td class="date">06/07/2026 13:00</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269116100</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3a57f9f189fa61f00164ff">Paiement désignation &quot;Camion&quot; — Transit 6a3a57f9f189fa61f00164ff</td>
+    <td class="num debit">22 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">474 757,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a462376ddc669c262dfc7fc tjn0917734">
+    <td class="num idx">82</td>
+    <td class="date">06/07/2026 13:00</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">TJN0917734</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a462376ddc669c262dfc7fc">Paiement désignation &quot;Camion&quot; — Transit 6a462376ddc669c262dfc7fc</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">468 357,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a462343ddc669c262dfc7ef mcb0338892">
+    <td class="num idx">83</td>
+    <td class="date">06/07/2026 13:00</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">MCB0338892</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a462343ddc669c262dfc7ef">Paiement désignation &quot;Camion&quot; — Transit 6a462343ddc669c262dfc7ef</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">461 957,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3a6eceaed8ff16536072bb 267421949">
+    <td class="num idx">84</td>
+    <td class="date">06/07/2026 13:00</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">267421949</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3a6eceaed8ff16536072bb">Paiement désignation &quot;Facture Port&quot; — Transit 6a3a6eceaed8ff16536072bb</td>
+    <td class="num debit">13 340,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">448 617,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a4ba4a15cad2ab699676fef 269085133">
+    <td class="num idx">85</td>
+    <td class="date">06/07/2026 13:01</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269085133</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a4ba4a15cad2ab699676fef">Paiement désignation &quot;Bon de livret&quot; — Transit 6a4ba4a15cad2ab699676fef</td>
+    <td class="num debit">22 850,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">425 767,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a46232c7da8135b37517d04 meduy9173145">
+    <td class="num idx">86</td>
+    <td class="date">06/07/2026 15:17</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">MEDUY9173145</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a46232c7da8135b37517d04">Paiement désignation &quot;Camion&quot; — Transit 6a46232c7da8135b37517d04</td>
+    <td class="num debit">6 670,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">419 097,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a46232c7da8135b37517d04 meduy9173145">
+    <td class="num idx">87</td>
+    <td class="date">06/07/2026 15:17</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">MEDUY9173145</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a46232c7da8135b37517d04">Paiement désignation &quot;Bon de livret&quot; — Transit 6a46232c7da8135b37517d04</td>
+    <td class="num debit">21 518,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">397 579,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a4ba4a15cad2ab699676fef 269085133">
+    <td class="num idx">88</td>
+    <td class="date">06/07/2026 15:17</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269085133</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a4ba4a15cad2ab699676fef">Paiement désignation &quot;Camion&quot; — Transit 6a4ba4a15cad2ab699676fef</td>
+    <td class="num debit">6 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">391 079,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a4ba4a15cad2ab699676fef 269085133">
+    <td class="num idx">89</td>
+    <td class="date">06/07/2026 15:17</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269085133</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a4ba4a15cad2ab699676fef">Paiement désignation &quot;Facture Port&quot; — Transit 6a4ba4a15cad2ab699676fef</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">385 627,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a3d693f4b57cd3208b1a844 wnz0105946">
+    <td class="num idx">90</td>
+    <td class="date">06/07/2026 16:21</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">WNZ0105946</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a3d693f4b57cd3208b1a844">Paiement désignation &quot;Camion&quot; — Transit 6a3d693f4b57cd3208b1a844</td>
+    <td class="num debit">6 400,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">379 227,04</td>
+  </tr><tr data-cat="alim" data-search="alimentation caisse — rabah brahim ">
+    <td class="num idx">91</td>
+    <td class="date">08/07/2026 11:38</td>
+    <td><span class="chip chip-alim">Alimentation</span></td>
+    <td class="bl">—</td>
+    <td class="desc" title="Alimentation caisse — Rabah Brahim">Alimentation caisse — Rabah Brahim</td>
+    <td class="num debit"></td>
+    <td class="num credit">40 600,00</td>
+    <td class="num solde">419 827,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a3a6eb3aed8ff16536072a3 ngp3492600">
+    <td class="num idx">92</td>
+    <td class="date">09/07/2026 13:49</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492600</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a6eb3aed8ff16536072a3">Paiement désignation &quot;Bon de livret&quot; — Transit 6a3a6eb3aed8ff16536072a3</td>
+    <td class="num debit">16 547,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">403 280,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a4e6a7ec0463752161c1143 269806336">
+    <td class="num idx">93</td>
+    <td class="date">09/07/2026 16:41</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269806336</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a4e6a7ec0463752161c1143">Paiement désignation &quot;Camion&quot; — Transit 6a4e6a7ec0463752161c1143</td>
+    <td class="num debit">6 500,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">396 780,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a4e6a7ec0463752161c1143 269806336">
+    <td class="num idx">94</td>
+    <td class="date">09/07/2026 16:41</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269806336</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a4e6a7ec0463752161c1143">Paiement désignation &quot;Facture Port&quot; — Transit 6a4e6a7ec0463752161c1143</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">391 328,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;bon de livret&quot; — transit 6a4e6a7ec0463752161c1143 269806336">
+    <td class="num idx">95</td>
+    <td class="date">09/07/2026 16:41</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">269806336</td>
+    <td class="desc" title="Paiement désignation &quot;Bon de livret&quot; — Transit 6a4e6a7ec0463752161c1143">Paiement désignation &quot;Bon de livret&quot; — Transit 6a4e6a7ec0463752161c1143</td>
+    <td class="num debit">28 652,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">362 676,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a26911b80b81437669b06c7 267675383">
+    <td class="num idx">96</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">267675383</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a26911b80b81437669b06c7">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a26911b80b81437669b06c7</td>
+    <td class="num debit"></td>
+    <td class="num credit">13 340,00</td>
+    <td class="num solde">376 016,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a2691e280b81437669b06dd wnz0105853">
+    <td class="num idx">97</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">WNZ0105853</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a2691e280b81437669b06dd">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a2691e280b81437669b06dd</td>
+    <td class="num debit"></td>
+    <td class="num credit">297,00</td>
+    <td class="num solde">376 313,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a3433745cfbaec545c39638 zzh0102706">
+    <td class="num idx">98</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">ZZH0102706</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3433745cfbaec545c39638">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3433745cfbaec545c39638</td>
+    <td class="num debit">85 078,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">291 235,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a3a57d0f189fa61f00164f3 268704096">
+    <td class="num idx">99</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">268704096</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3a57d0f189fa61f00164f3">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3a57d0f189fa61f00164f3</td>
+    <td class="num debit">8 555,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">282 680,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a3a57bd48e896a0f0d3e928 268704097">
+    <td class="num idx">100</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">268704097</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3a57bd48e896a0f0d3e928">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3a57bd48e896a0f0d3e928</td>
+    <td class="num debit">8 555,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">274 125,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a3a579ef189fa61f00164e7 269370711">
+    <td class="num idx">101</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">269370711</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3a579ef189fa61f00164e7">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3a579ef189fa61f00164e7</td>
+    <td class="num debit">10 796,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">263 329,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a3fbe74a1869373ddf2b579 271216074">
+    <td class="num idx">102</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">271216074</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3fbe74a1869373ddf2b579">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3fbe74a1869373ddf2b579</td>
+    <td class="num debit">6 456,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">256 873,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a3fbe6ea1869373ddf2b54a 267421766">
+    <td class="num idx">103</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">267421766</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3fbe6ea1869373ddf2b54a">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3fbe6ea1869373ddf2b54a</td>
+    <td class="num debit">63 541,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">193 332,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a3fbe66a1869373ddf2b51b 267421617">
+    <td class="num idx">104</td>
+    <td class="date">09/07/2026 18:40</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">267421617</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3fbe66a1869373ddf2b51b">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3fbe66a1869373ddf2b51b</td>
+    <td class="num debit">18 346,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">174 986,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a26927c200315f63fc03538 266438122">
+    <td class="num idx">105</td>
+    <td class="date">09/07/2026 18:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">266438122</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a26927c200315f63fc03538">Paiement désignation &quot;Facture Port&quot; — Transit 6a26927c200315f63fc03538</td>
+    <td class="num debit">5 452,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">169 534,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;camion&quot; — transit 6a26952180b81437669b0705 medupu519203">
+    <td class="num idx">106</td>
+    <td class="date">09/07/2026 18:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">MEDUPU519203</td>
+    <td class="desc" title="Paiement désignation &quot;Camion&quot; — Transit 6a26952180b81437669b0705">Paiement désignation &quot;Camion&quot; — Transit 6a26952180b81437669b0705</td>
+    <td class="num debit">30 000,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">139 534,04</td>
+  </tr><tr data-cat="desig" data-search="paiement désignation &quot;facture port&quot; — transit 6a3a6eb3aed8ff16536072a3 ngp3492600">
+    <td class="num idx">107</td>
+    <td class="date">09/07/2026 18:51</td>
+    <td><span class="chip chip-desig">Paiement désignation</span></td>
+    <td class="bl">NGP3492600</td>
+    <td class="desc" title="Paiement désignation &quot;Facture Port&quot; — Transit 6a3a6eb3aed8ff16536072a3">Paiement désignation &quot;Facture Port&quot; — Transit 6a3a6eb3aed8ff16536072a3</td>
+    <td class="num debit">64 000,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">75 534,04</td>
+  </tr><tr data-cat="adj" data-search="ajustement désignation &quot;bon de livret&quot; (montant corrigé) — transit 6a3433945cfbaec545c3965d zzh0102646">
+    <td class="num idx">108</td>
+    <td class="date">09/07/2026 19:09</td>
+    <td><span class="chip chip-adj">Ajustement</span></td>
+    <td class="bl">ZZH0102646</td>
+    <td class="desc" title="Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3433945cfbaec545c3965d">Ajustement désignation &quot;Bon de livret&quot; (montant corrigé) — Transit 6a3433945cfbaec545c3965d</td>
+    <td class="num debit">43 483,00</td>
+    <td class="num credit"></td>
+    <td class="num solde">32 051,04</td>
+  </tr></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5">Totaux (108 opérations)</td>
+            <td class="num debit">2 735 436,00</td>
+            <td class="num credit">2 767 487,00</td>
+            <td class="num solde">32 051,04</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="empty" id="empty">Aucune opération ne correspond au filtre.</div>
+  </div>
+
+  <footer>Généré depuis la base · Caisse Caisse — Rabah Brahim · période du 15/06/2026 14:23 à aujourd'hui · montants en MRU.</footer>
+</div>
+
+<script>
+  const rows=[...document.querySelectorAll('#tb tr')];
+  const empty=document.getElementById('empty');
+  let cat='all', q='';
+  function apply(){
+    let vis=0;
+    rows.forEach(r=>{
+      const okc = cat==='all' || r.dataset.cat===cat;
+      const okq = !q || r.dataset.search.includes(q);
+      const show = okc && okq; r.style.display = show?'':'none'; if(show)vis++;
+    });
+    empty.style.display = vis?'none':'block';
+  }
+  document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.fbtn').forEach(x=>x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true'); cat=b.dataset.f; apply();
+  }));
+  document.getElementById('q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();apply();});
+</script>
