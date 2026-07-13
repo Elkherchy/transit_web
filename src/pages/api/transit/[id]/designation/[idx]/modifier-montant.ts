@@ -5,6 +5,7 @@ import { OperationValidation, Transit } from '@/models';
 import { OperationType, OperationValidationStatus } from '@/models/OperationValidation';
 import { ApiResponse, DesignationStatus, UserRole } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
+import { ensurePayeurUserCaisse, getSoldeMapForCaisseIds } from '@/lib/caisse';
 
 /**
  * PATCH /api/transit/[id]/designation/[idx]/modifier-montant
@@ -83,6 +84,19 @@ async function handler(
     const montant = parseFloat(String(rawMontant ?? '').replace(',', '.'));
     if (!Number.isFinite(montant) || montant <= 0) {
       return res.status(400).json({ success: false, error: 'Montant invalide' });
+    }
+
+    // Le montant corrigé ne peut pas dépasser le solde de la caisse du payeur.
+    const payeurCaisseId = await ensurePayeurUserCaisse(uid);
+    const soldeMap = await getSoldeMapForCaisseIds([payeurCaisseId]);
+    const soldeDispo = soldeMap.get(String(payeurCaisseId)) ?? 0;
+    if (montant > soldeDispo) {
+      return res.status(400).json({
+        success: false,
+        error: `Solde insuffisant : le montant (${montant.toFixed(
+          2
+        )} MRU) dépasse le solde de votre caisse (${soldeDispo.toFixed(2)} MRU).`,
+      });
     }
 
     designation.montant = montant;

@@ -16,7 +16,7 @@ import {
 } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 import { storeRecuDocument } from '@/lib/transitDocumentStorage';
-import { ensurePayeurUserCaisse } from '@/lib/caisse';
+import { ensurePayeurUserCaisse, getSoldeMapForCaisseIds } from '@/lib/caisse';
 import { syncFactureManutentionStatusFromTransit } from '@/lib/manutention/syncFactureManutentionStatus';
 
 const upload = multer({
@@ -199,12 +199,23 @@ async function handler(
       return res.status(400).json({ success: false, error: 'Montant invalide' });
     }
 
-    // S'assure que la caisse payeur existe (créée si besoin), mais on ne
-    // VÉRIFIE PAS le solde ni on DEBITE à ce stade. La sortie effective de
-    // la caisse payeur est différée jusqu'à la validation par le caissier
-    // (cf. POST /api/operations-validation), qui re-vérifie le solde et
-    // crée la transaction DEBIT à ce moment-là.
-    await ensurePayeurUserCaisse(uid);
+    // S'assure que la caisse payeur existe (créée si besoin). Le DÉBIT effectif
+    // reste différé jusqu'à la validation par le caissier (cf. POST
+    // /api/operations-validation), mais on REFUSE dès la saisie tout montant qui
+    // dépasse le solde disponible : un payeur ne peut pas enregistrer un
+    // paiement supérieur au solde de sa caisse. Solde recalculé depuis les
+    // transactions (identique à celui affiché au payeur).
+    const payeurCaisseId = await ensurePayeurUserCaisse(uid);
+    const soldeMap = await getSoldeMapForCaisseIds([payeurCaisseId]);
+    const soldeDispo = soldeMap.get(String(payeurCaisseId)) ?? 0;
+    if (montant > soldeDispo) {
+      return res.status(400).json({
+        success: false,
+        error: `Solde insuffisant : le montant (${montant.toFixed(
+          2
+        )} MRU) dépasse le solde de votre caisse (${soldeDispo.toFixed(2)} MRU).`,
+      });
+    }
 
     // Stocker le reçu (multipart legacy) OU récupérer les clés présignées.
     type RecuRecord = {
