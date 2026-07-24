@@ -181,33 +181,47 @@ async function submit(
         const payeurCaisseId = await ensurePayeurUserCaisse(
           String(desig.payeurId)
         );
-        const payeurCaisse = await Caisse.findById(payeurCaisseId).lean();
-        const solde = Number(payeurCaisse?.solde) || 0;
-        if (solde < montant) {
-          skipped += 1;
-          errors.push(
-            `Solde insuffisant sur la caisse de ${
-              it.snapshot?.contrepartie || 'ce payeur'
-            } (${solde.toFixed(2)} MRU) pour « ${desig.nom} »`
-          );
-          continue;
-        }
 
-        // Idempotence : si la transaction DEBIT existe déjà pour cette
-        // désignation, on ne la duplique pas (cas de re-soumission).
+        // Le net déjà débité pour cette désignation SUR CETTE caisse (débit
+        // initial − remboursements/ajustements éventuels). Une désignation
+        // libérée puis rembourrée (retour au payeur) revient à net = 0 même
+        // si un ancien débit existe déjà sous cette référence — sans ce calcul,
+        // une re-soumission après libération/remboursement est silencieusement
+        // ignorée (la transaction "existe déjà") et la caisse payeur n'est
+        // jamais re-débitée. Cf. src/lib/reconcileDesignationPaiement.ts pour
+        // la même logique appliquée aux corrections de montant a posteriori.
         const reference = `transit-${String(transit._id)}-des-${String(
           desig._id
         )}`;
-        const existing = await Transaction.findOne({
-          sourcePaiementId: reference,
+        const previousTx = await Transaction.find({
+          reference,
+          caisseId: payeurCaisseId,
         })
-          .select('_id')
+          .select('type montant')
           .lean();
-        if (!existing) {
+        let net = 0;
+        for (const tx of previousTx) {
+          const m = Number((tx as { montant?: number }).montant) || 0;
+          net += (tx as { type?: string }).type === TransactionType.DEBIT ? m : -m;
+        }
+        const delta = montant - net;
+        if (delta > 0.005) {
+          const payeurCaisse = await Caisse.findById(payeurCaisseId).lean();
+          const solde = Number(payeurCaisse?.solde) || 0;
+          if (solde < delta) {
+            skipped += 1;
+            errors.push(
+              `Solde insuffisant sur la caisse de ${
+                it.snapshot?.contrepartie || 'ce payeur'
+              } (${solde.toFixed(2)} MRU) pour « ${desig.nom} »`
+            );
+            continue;
+          }
+
           await Transaction.create({
             caisseId: payeurCaisseId,
             type: TransactionType.DEBIT,
-            montant,
+            montant: delta,
             description: `Paiement désignation "${desig.nom}" — Transit ${String(
               transit._id
             )}`,
@@ -217,7 +231,7 @@ async function submit(
             sourcePaiementId: reference,
           });
           await Caisse.findByIdAndUpdate(payeurCaisseId, {
-            $inc: { solde: -montant },
+            $inc: { solde: -delta },
           });
         }
       }
