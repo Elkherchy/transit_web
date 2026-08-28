@@ -524,10 +524,9 @@ export const DESIGNATIONS_PUBLIC_DEFAULT = [
 ];
 
 /** Désignations à frais fixes (montant plafonné côté serveur).
- *  Pour l'instant, seule « Bonne de Sortie Douanes » a un plafond. */
-export const DESIGNATION_FIXED_FEES: Record<string, number> = {
-  'Bonne de Sortie Douanes': 200,
-};
+ *  Aucun plafond n'est appliqué actuellement : « Bonne de Sortie Douanes »
+ *  accepte désormais n'importe quel montant. */
+export const DESIGNATION_FIXED_FEES: Record<string, number> = {};
 
 /** Désignations pour lesquelles le payeur n'a PAS besoin de joindre un reçu.
  *  Toutes les désignations exigent désormais un reçu obligatoire. */
