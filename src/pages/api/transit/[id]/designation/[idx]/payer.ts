@@ -10,8 +10,6 @@ import {
   UserRole,
   TransactionType,
   isDesignationAdminOnly,
-  isDesignationFixedFee,
-  getDesignationMaxAmount,
   isDesignationRecuOptional,
 } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
@@ -131,9 +129,6 @@ async function handler(
       return res.status(404).json({ success: false, error: 'Désignation introuvable' });
     }
 
-    // Plafonnement éventuel du montant (ex : Bonne de Sortie Douanes = 200 MRU).
-    const isFixedFee = isDesignationFixedFee(designation.nom);
-    const fixedMax = getDesignationMaxAmount(designation.nom);
     // Reçu optionnel pour TS, Bonne de Sortie Douanes, Camion, Sogetrap.
     const recuOptional = isDesignationRecuOptional(designation.nom);
 
@@ -184,17 +179,10 @@ async function handler(
     }
 
     const montantSaisi = bodyMontant ? parseFloat(String(bodyMontant).replace(',', '.')) : NaN;
-    let montant = Number.isFinite(montantSaisi) && montantSaisi > 0
+    const montant = Number.isFinite(montantSaisi) && montantSaisi > 0
       ? montantSaisi
       : Number(designation.montant) || 0;
-    // Désignations à frais fixes : le payeur peut entrer n'importe quel
-    // montant ≤ plafond. On refuse uniquement si supérieur.
-    if (isFixedFee && fixedMax !== null && montant > fixedMax) {
-      return res.status(400).json({
-        success: false,
-        error: `Le montant doit être ≤ ${fixedMax} MRU pour « ${designation.nom} »`,
-      });
-    }
+    // Aucun plafond de montant n'est appliqué : le payeur saisit librement.
     if (montant <= 0) {
       return res.status(400).json({ success: false, error: 'Montant invalide' });
     }

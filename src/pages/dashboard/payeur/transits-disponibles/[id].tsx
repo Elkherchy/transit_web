@@ -29,8 +29,6 @@ import {
   type ITransit,
   type IDesignation,
   DesignationStatus,
-  isDesignationFixedFee,
-  getDesignationMaxAmount,
   isDesignationRecuOptional,
 } from '@/types';
 import {
@@ -317,8 +315,7 @@ export default function PayeurTransitDetail() {
 
   const openPay = (designation: IDesignation) => {
     setPayDialog({ designation });
-    // Pas de pré-remplissage pour les frais fixes — le payeur saisit librement
-    // (avec la contrainte ≤ plafond validée au submit).
+    // Le payeur saisit librement le montant (aucun plafond).
     const initial = Number(designation.montant) || 0;
     setMontant(initial > 0 ? String(initial) : '');
     setRecuFiles([]);
@@ -367,8 +364,6 @@ export default function PayeurTransitDetail() {
     if (!payDialog || !transit) return;
     setPayError(null);
     const designation = payDialog.designation;
-    const fixedFee = isDesignationFixedFee(designation.nom);
-    const maxAmount = getDesignationMaxAmount(designation.nom);
     const recuOptional = isDesignationRecuOptional(designation.nom);
     // Reçu non obligatoire pour TS, Bonne de Sortie Douanes, Camion, Sogetrap.
     if (!recuOptional && recuFiles.length === 0)
@@ -376,11 +371,6 @@ export default function PayeurTransitDetail() {
     const m = parseMontant(montant);
     if (!Number.isFinite(m) || m <= 0) {
       return setPayError(t('dashboard.payeur.errMontantPositif'));
-    }
-    if (fixedFee && maxAmount !== null && m > maxAmount) {
-      return setPayError(
-        `Le montant doit être ≤ ${maxAmount} MRU pour « ${designation.nom} »`
-      );
     }
     if (soldeCaisse !== null && m > soldeCaisse) {
       return setPayError(
@@ -567,39 +557,21 @@ export default function PayeurTransitDetail() {
                   <AlertDescription>{payError}</AlertDescription>
                 </Alert>
               )}
-              {(() => {
-                const desig = payDialog?.designation;
-                const fixedMax = desig
-                  ? getDesignationMaxAmount(desig.nom)
-                  : null;
-                const isFixed = fixedMax !== null;
-                return (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="m">
-                        {t('dashboard.payeur.montantPaye')}
-                        {isFixed && (
-                          <span className="ml-2 text-xs font-normal text-amber-700">
-                            (doit être ≤ {fixedMax} MRU)
-                          </span>
-                        )}
-                      </Label>
-                      <Input
-                        id="m"
-                        type="text"
-                        inputMode="decimal"
-                        dir="ltr"
-                        value={montant}
-                        onChange={(e) => setMontant(e.target.value)}
-                        placeholder={t(
-                          'dashboard.payeur.saisissezMontant'
-                        )}
-                        required
-                      />
-                    </div>
-                  </>
-                );
-              })()}
+              <div className="space-y-2">
+                <Label htmlFor="m">
+                  {t('dashboard.payeur.montantPaye')}
+                </Label>
+                <Input
+                  id="m"
+                  type="text"
+                  inputMode="decimal"
+                  dir="ltr"
+                  value={montant}
+                  onChange={(e) => setMontant(e.target.value)}
+                  placeholder={t('dashboard.payeur.saisissezMontant')}
+                  required
+                />
+              </div>
               {payDialog?.designation &&
               isDesignationRecuOptional(payDialog.designation.nom) ? null : (
               <div className="space-y-2">
