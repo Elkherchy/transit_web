@@ -88,7 +88,7 @@ async function getClients(
       }
     }
 
-    const rows = await Client.find(filter).sort({ nom: 1 }).limit(200).lean();
+    const rows = await Client.find(filter).sort({ nom: 1 }).lean();
     return res.status(200).json({
       success: true,
       data: rows.map((r) => serialize(r as unknown as Parameters<typeof serialize>[0])),

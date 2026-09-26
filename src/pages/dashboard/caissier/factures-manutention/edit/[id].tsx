@@ -125,7 +125,7 @@ export default function EditFactureManutention() {
       setSelectedRecu(null);
       try {
         const res = await fetch(
-          `/api/manutention/paiements?factureManutentionId=${encodeURIComponent(String(id))}&limit=20`,
+          `/api/manutention/paiements?factureManutentionId=${encodeURIComponent(String(id))}&limit=0`,
           { credentials: 'include' }
         );
         const data = await res.json();

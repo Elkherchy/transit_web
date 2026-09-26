@@ -23,6 +23,7 @@ import {
 } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 import { getOrCreateOpenJournee } from '@/lib/journee/journeeHelpers';
+import { parseLimit } from '@/lib/pagination';
 
 /**
  * GET /api/depenses?from=YYYY-MM-DD&to=YYYY-MM-DD&journeeId=...
@@ -36,7 +37,7 @@ async function listDepenses(
 ) {
   try {
     await connectDB();
-    const { from, to, journeeId, limit = '200' } = req.query;
+    const { from, to, journeeId, limit } = req.query;
     const filter: Record<string, unknown> = {};
     if (typeof journeeId === 'string' && mongoose.isValidObjectId(journeeId)) {
       filter.journeeId = journeeId;
@@ -56,7 +57,7 @@ async function listDepenses(
     if (Object.keys(dateFilter).length > 0) {
       filter.date = dateFilter;
     }
-    const lim = Math.min(500, Math.max(1, parseInt(String(limit), 10) || 200));
+    const lim = parseLimit(limit);
     const rows = await Depense.find(filter)
       .sort({ date: -1, createdAt: -1 })
       .limit(lim)

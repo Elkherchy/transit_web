@@ -111,8 +111,8 @@ export default function AgentTransitDashboardPage() {
     setDataLoading(true);
     try {
       const [tRes, fRes] = await Promise.all([
-        fetch('/api/transit?limit=500', { credentials: 'include' }).then((r) => r.json()),
-        fetch('/api/transit/factures?limit=500', { credentials: 'include' }).then((r) => r.json()),
+        fetch('/api/transit?limit=0', { credentials: 'include' }).then((r) => r.json()),
+        fetch('/api/transit/factures?limit=0', { credentials: 'include' }).then((r) => r.json()),
       ]);
       if (tRes.success) setTransits((tRes.data?.data ?? tRes.data ?? []) as ITransit[]);
       if (fRes.success) setFactures((fRes.data?.data ?? fRes.data ?? []) as IFacture[]);

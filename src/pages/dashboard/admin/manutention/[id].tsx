@@ -383,7 +383,7 @@ export default function AdminFactureManutentionDetail() {
 
     void (async () => {
       try {
-        const r = await fetch('/api/transit/clients?limit=500', {
+        const r = await fetch('/api/transit/clients', {
           credentials: 'include',
         }).then((x) => x.json());
         if (r?.success) {

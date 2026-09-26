@@ -67,7 +67,7 @@ export default function CaissierPayeurHistoriquePage() {
         fetch('/api/caisse/caisses?kind=USER', { credentials: 'include' }).then(
           (r) => r.json()
         ),
-        fetch(`/api/caisse/transactions?caisseId=${id}&limit=200`, {
+        fetch(`/api/caisse/transactions?caisseId=${id}&limit=0`, {
           credentials: 'include',
         }).then((r) => r.json()),
       ]);

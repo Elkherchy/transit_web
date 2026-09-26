@@ -10,6 +10,7 @@ import {
   UserRole,
 } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
+import { parseLimit, countPages } from '@/lib/pagination';
 
 /**
  * Étend `IFactureManutention` avec :
@@ -56,14 +57,14 @@ async function handler(
 
     const {
       page = '1',
-      limit = '25',
+      limit,
       search,
       statut,
       validated,
       adminValidated,
     } = req.query;
     const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
-    const limitNum = Math.min(200, Math.max(1, parseInt(limit as string, 10) || 25));
+    const limitNum = parseLimit(limit, 25);
     const skip = (pageNum - 1) * limitNum;
 
     const query: Record<string, unknown> = {};
@@ -209,7 +210,7 @@ async function handler(
         total,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum) || 1,
+        totalPages: countPages(total, limitNum) || 1,
       },
     });
   } catch (err) {

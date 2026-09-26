@@ -4,16 +4,13 @@ import { Client } from '@/models';
 import { ClientStatus } from '@/models/Client';
 import { ApiResponse, ITransitClient } from '@/types';
 import { AuthenticatedRequest, withAgentTransit, withTransitAccess } from '@/middleware/auth';
-
-const DEFAULT_LIMIT = 30;
-const MAX_LIMIT = 500;
+import { parseLimit } from '@/lib/pagination';
 
 async function listClients(req: AuthenticatedRequest, res: NextApiResponse<ApiResponse<ITransitClient[]>>) {
   try {
     await connectDB();
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
-    const limitParam = parseInt(String(req.query.limit || '')) || DEFAULT_LIMIT;
-    const limit = Math.min(limitParam, MAX_LIMIT);
+    const limit = parseLimit(req.query.limit);
 
     // N'affiche que les clients VALIDÉS — exclut les EN_ATTENTE pour qu'ils
     // n'apparaissent pas dans le sélecteur de création de manutention ni

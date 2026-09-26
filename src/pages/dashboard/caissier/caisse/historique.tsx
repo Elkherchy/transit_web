@@ -72,7 +72,7 @@ export default function CaissierHistoriquePage() {
         setCaisse(me || null);
         if (me) {
           const txRes = await fetch(
-            `/api/caisse/transactions?caisseId=${me._id}&limit=200`,
+            `/api/caisse/transactions?caisseId=${me._id}&limit=0`,
             { credentials: 'include' }
           ).then((r) => r.json());
           if (txRes.success) {

@@ -13,6 +13,7 @@ import {
 } from '@/types';
 import { withAuth, AuthenticatedRequest } from '@/middleware/auth';
 import { ensureDefaultGeneralCaisse, mirrorDescriptionForGeneral } from '@/lib/caisse';
+import { parseLimit, countPages } from '@/lib/pagination';
 function serializeTx(
   doc: Record<string, unknown>,
   extra: { caisseNom?: string; caisseKind?: string } = {}
@@ -83,7 +84,7 @@ async function getTransactions(
 
     const {
       page = '1',
-      limit = '10',
+      limit,
       caisseId,
       type,
       dateDebut,
@@ -107,7 +108,7 @@ async function getTransactions(
     }
 
     const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const limitNum = parseLimit(limit, 10);
     const skip = (pageNum - 1) * limitNum;
 
     // Si la caisse demandée est la caisse GÉNÉRALE du domaine, on inclut
@@ -246,7 +247,7 @@ async function getTransactions(
         totalMontant,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        totalPages: countPages(total, limitNum),
       },
     });
   } catch (error) {

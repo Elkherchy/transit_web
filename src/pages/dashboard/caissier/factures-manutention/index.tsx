@@ -40,7 +40,7 @@ export default function CaissierFacturesManutentionList() {
     setLoading(true);
     setError(null);
     try {
-      const r = await fetch('/api/manutention?limit=100', {
+      const r = await fetch('/api/manutention?limit=0', {
         credentials: 'include',
       });
       const d = await r.json();

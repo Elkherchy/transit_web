@@ -127,7 +127,7 @@ export default function MouvementGeneralView({
 
   useEffect(() => {
     if (!exportEndpoint || !isAllowed) return;
-    fetch('/api/users?limit=500', { credentials: 'include' })
+    fetch('/api/users?limit=0', { credentials: 'include' })
       .then((r) => r.json())
       .then((j) => {
         if (!j.success) return;

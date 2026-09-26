@@ -15,6 +15,7 @@ import { withAuth, AuthenticatedRequest, withAgentTransit, withComptable, withTr
 import { UserRole } from '@/types';
 import { serializeFacture } from '@/lib/serializeFacture';
 import mongoose from 'mongoose';
+import { parseLimit, countPages } from '@/lib/pagination';
 
 // Generate facture number
 function generateFactureNumero(): string {
@@ -32,14 +33,14 @@ async function getFactures(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
 
     const { 
       page = '1', 
-      limit = '10', 
+      limit, 
       statut,
       clientId,
       search 
     } = req.query;
 
     const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const limitNum = parseLimit(limit, 10);
     const skip = (pageNum - 1) * limitNum;
 
     const query: Record<string, unknown> = {};
@@ -139,7 +140,7 @@ async function getFactures(req: AuthenticatedRequest, res: NextApiResponse<ApiRe
         total,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        totalPages: countPages(total, limitNum),
       },
     });
   } catch (error) {

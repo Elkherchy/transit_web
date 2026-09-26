@@ -93,13 +93,13 @@ export default function FacturesClientList() {
     setError(null);
     try {
       const [facturesRes, banquesRes, creditRes] = await Promise.all([
-        fetch('/api/transit/factures?limit=1000', { credentials: 'include' }).then((r) =>
+        fetch('/api/transit/factures?limit=0', { credentials: 'include' }).then((r) =>
           r.json()
         ),
         fetch('/api/caisse/caisses', {
           credentials: 'include',
         }).then((r) => r.json()),
-        fetch('/api/credit-compte?limit=500', { credentials: 'include' }).then((r) =>
+        fetch('/api/credit-compte', { credentials: 'include' }).then((r) =>
           r.json()
         ),
       ]);
@@ -170,7 +170,7 @@ export default function FacturesClientList() {
 
   useEffect(() => {
     if (!canCreateFacture) return;
-    fetch('/api/transit/clients?limit=500', { credentials: 'include' })
+    fetch('/api/transit/clients', { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => { if (d.success) setAllClients(d.data as ITransitClient[]); })
       .catch(() => {/* ignore */});

@@ -140,7 +140,7 @@ export default function AdminClientsList() {
     setTransferError(null);
     setTransferSuccess(null);
     // Charge la liste filtrée strictement à VALIDE + actif depuis /api/transit/clients.
-    void fetch('/api/transit/clients?limit=500', { credentials: 'include' })
+    void fetch('/api/transit/clients', { credentials: 'include' })
       .then((x) => x.json())
       .then((r) => {
         if (r?.success) {
@@ -257,8 +257,8 @@ export default function AdminClientsList() {
   useEffect(() => {
     if (!canAccess) return;
     Promise.all([
-      fetch('/api/transit/factures?limit=1000', { credentials: 'include' }).then((r) => r.json()),
-      fetch('/api/credit-compte?limit=500', { credentials: 'include' }).then((r) => r.json()),
+      fetch('/api/transit/factures?limit=0', { credentials: 'include' }).then((r) => r.json()),
+      fetch('/api/credit-compte', { credentials: 'include' }).then((r) => r.json()),
     ]).then(([facturesRes, creditRes]) => {
       const map = new Map<string, { debit: number; credit: number }>();
       if (facturesRes.success) {

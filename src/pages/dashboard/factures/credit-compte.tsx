@@ -95,7 +95,7 @@ export default function CreditComptePage() {
 
   const fetchClients = useCallback(async () => {
     try {
-      const res  = await fetch('/api/transit/clients?limit=500', { credentials: 'include' });
+      const res  = await fetch('/api/transit/clients', { credentials: 'include' });
       const data = await res.json();
       if (data.success) setClients(data.data as ITransitClient[]);
     } catch { /* ignore */ }

@@ -8,6 +8,7 @@ import {
   UserRole,
 } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
+import { parseLimit } from '@/lib/pagination';
 
 /**
  * GET /api/journee?statut=CLOTUREE|OUVERTE|VALIDEE_TRANSIT|VALIDEE_ADMIN
@@ -23,12 +24,12 @@ async function handler(
 
   try {
     await connectDB();
-    const { statut, limit = '200' } = req.query;
+    const { statut, limit } = req.query;
     const query: Record<string, unknown> = {};
     if (statut && Object.values(JourneeCaisseStatus).includes(statut as JourneeCaisseStatus)) {
       query.statut = statut;
     }
-    const lim = Math.min(200, Math.max(1, parseInt(limit as string, 10) || 200));
+    const lim = parseLimit(limit);
     const list = await JourneeCaisse.find(query)
       .sort({ date: -1, createdAt: -1 })
       .limit(lim)

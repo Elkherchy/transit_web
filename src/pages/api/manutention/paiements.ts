@@ -11,6 +11,7 @@ import {
 } from '@/types';
 import { AuthenticatedRequest, withCaissier, withAuth } from '@/middleware/auth';
 import { recordManutentionPaiementValidatedToCaisse } from '@/lib/caisse';
+import { parseLimit, countPages } from '@/lib/pagination';
 
 // GET /api/manutention/paiements - List all paiements manutention
 async function getPaiementsManutention(
@@ -22,14 +23,14 @@ async function getPaiementsManutention(
 
     const {
       page = '1',
-      limit = '10',
+      limit,
       statut,
       factureManutentionId,
       mine,
     } = req.query;
 
     const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const limitNum = parseLimit(limit, 10);
     const skip = (pageNum - 1) * limitNum;
 
     const query: Record<string, unknown> = {};
@@ -160,7 +161,7 @@ async function getPaiementsManutention(
         total,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        totalPages: countPages(total, limitNum),
       },
     });
   } catch (error) {

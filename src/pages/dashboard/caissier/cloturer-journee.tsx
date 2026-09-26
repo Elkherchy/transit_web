@@ -362,13 +362,13 @@ export default function CaissierCloturerJournee() {
           x.json()
         ),
         fetch(
-          '/api/manutention/paiements?statut=EN_VALIDATION&limit=200',
+          '/api/manutention/paiements?statut=EN_VALIDATION&limit=0',
           { credentials: 'include' }
         ).then((x) => x.json()),
         fetch('/api/journee/payeur-paiements', {
           credentials: 'include',
         }).then((x) => x.json()),
-        fetch(`/api/depenses?from=${today}&to=${today}&limit=200`, {
+        fetch(`/api/depenses?from=${today}&to=${today}`, {
           credentials: 'include',
         }).then((x) => x.json()),
       ]);

@@ -11,6 +11,7 @@ import {
   PaginatedResponse,
 } from '@/types';
 import { AuthenticatedRequest, withAdmin } from '@/middleware/auth';
+import { parseLimit, countPages } from '@/lib/pagination';
 
 /**
  * Liste des rôles que l'utilisateur courant peut créer.
@@ -36,9 +37,9 @@ async function listUsers(
   try {
     await connectDB();
 
-    const { page = '1', limit = '20', search, role } = req.query;
+    const { page = '1', limit, search, role } = req.query;
     const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 20));
+    const limitNum = parseLimit(limit, 20);
     const skip = (pageNum - 1) * limitNum;
 
     const query: Record<string, unknown> = {};
@@ -95,7 +96,7 @@ async function listUsers(
         total,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum) || 1,
+        totalPages: countPages(total, limitNum) || 1,
       },
     });
   } catch (error) {

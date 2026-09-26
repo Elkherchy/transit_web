@@ -13,6 +13,7 @@ import {
 import { AuthenticatedRequest, withAgentTransit, withTransitAccess } from '@/middleware/auth';
 import { autoValidateAdminOnlyDesignations } from '@/lib/transit/autoValidateAdminOnly';
 import mongoose from 'mongoose';
+import { parseLimit, countPages } from '@/lib/pagination';
 
 type TransitListRow = ITransit & {
   payeurFacture?: {
@@ -32,7 +33,7 @@ async function getTransits(
 
     const {
       page = '1',
-      limit = '10',
+      limit,
       statut,
       client,
       bl,
@@ -40,7 +41,7 @@ async function getTransits(
     } = req.query;
 
     const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const limitNum = parseLimit(limit, 10);
     const skip = (pageNum - 1) * limitNum;
 
     const query: Record<string, unknown> = {};
@@ -140,7 +141,7 @@ async function getTransits(
         total,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        totalPages: countPages(total, limitNum),
       },
     });
   } catch (error) {

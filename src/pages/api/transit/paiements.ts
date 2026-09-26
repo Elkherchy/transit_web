@@ -10,6 +10,7 @@ import {
   UserRole,
 } from '@/types';
 import { withAuth, AuthenticatedRequest } from '@/middleware/auth';
+import { parseLimit, countPages } from '@/lib/pagination';
 
 // GET /api/transit/paiements - List all paiements
 async function getPaiements(req: AuthenticatedRequest, res: NextApiResponse<ApiResponse<PaginatedResponse<IPaiement>>>) {
@@ -18,13 +19,13 @@ async function getPaiements(req: AuthenticatedRequest, res: NextApiResponse<ApiR
 
     const { 
       page = '1', 
-      limit = '10', 
+      limit, 
       statut,
       factureId 
     } = req.query;
 
     const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const limitNum = parseLimit(limit, 10);
     const skip = (pageNum - 1) * limitNum;
 
     // Build query
@@ -72,7 +73,7 @@ async function getPaiements(req: AuthenticatedRequest, res: NextApiResponse<ApiR
         total,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        totalPages: countPages(total, limitNum),
       },
     });
   } catch (error) {

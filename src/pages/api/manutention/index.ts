@@ -11,6 +11,7 @@ import {
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 import { createTransitFromManutention } from '@/lib/manutention/createTransitFromManutention';
 import { syncFactureManutentionStatusFromTransit } from '@/lib/manutention/syncFactureManutentionStatus';
+import { parseLimit, countPages } from '@/lib/pagination';
 
 // GET /api/manutention - List all factures manutention
 async function getFacturesManutention(
@@ -22,7 +23,7 @@ async function getFacturesManutention(
 
     const {
       page = '1',
-      limit = '10',
+      limit,
       statut,
       bl,
       search,
@@ -31,7 +32,7 @@ async function getFacturesManutention(
     } = req.query;
 
     const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const limitNum = parseLimit(limit, 10);
     const skip = (pageNum - 1) * limitNum;
 
     const query: Record<string, unknown> = {};
@@ -97,7 +98,7 @@ async function getFacturesManutention(
           total,
           page: pageNum,
           limit: limitNum,
-          totalPages: Math.ceil(total / limitNum),
+          totalPages: countPages(total, limitNum),
         },
       });
     }
@@ -109,7 +110,7 @@ async function getFacturesManutention(
         total,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        totalPages: countPages(total, limitNum),
       },
     });
   } catch (error) {

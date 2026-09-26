@@ -15,6 +15,7 @@ import {
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
 import { transitDocumentUpload } from '@/lib/transitDocumentMulter';
 import { storeTransitDocument } from '@/lib/transitDocumentStorage';
+import { parseLimit } from '@/lib/pagination';
 
 function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: unknown) {
   return new Promise<void>((resolve, reject) => {
@@ -44,7 +45,7 @@ async function listPending(
 ) {
   try {
     await connectDB();
-    const { statut, caisseType, limit = '100' } = req.query;
+    const { statut, caisseType, limit } = req.query;
     const filter: Record<string, unknown> = {};
     if (
       statut &&
@@ -81,7 +82,7 @@ async function listPending(
     if (role === UserRole.AGENT_TRANSIT) {
       filter.createdBy = req.user!.userId;
     }
-    const lim = Math.min(500, Math.max(1, parseInt(String(limit), 10) || 100));
+    const lim = parseLimit(limit);
     const rows = await MouvementPending.find(filter)
       .sort({ createdAt: -1 })
       .limit(lim)

@@ -224,7 +224,7 @@ export default function AdminScopedCaisseView({
     setClientSearch('');
     // Charge en arrière-plan la liste des clients validés (utilisée si
     // l'utilisateur choisit destination « Client »).
-    void fetch('/api/transit/clients?limit=500', { credentials: 'include' })
+    void fetch('/api/transit/clients', { credentials: 'include' })
       .then((x) => x.json())
       .then((r) => {
         if (r?.success) {
@@ -456,7 +456,7 @@ export default function AdminScopedCaisseView({
     if (!isAllowed) return;
     try {
       const r = await fetch(
-        `/api/caisse/mouvement-pending?statut=EN_ATTENTE&caisseType=${caisseType}&limit=200`,
+        `/api/caisse/mouvement-pending?statut=EN_ATTENTE&caisseType=${caisseType}`,
         { credentials: 'include' }
       );
       const data = await r.json();

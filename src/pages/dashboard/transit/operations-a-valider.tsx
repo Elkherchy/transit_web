@@ -167,7 +167,7 @@ export default function OperationsAValiderPage() {
     setError(null);
     try {
       const r = await fetch(
-        `/api/operations-validation?statut=${targetStatut}&limit=500`,
+        `/api/operations-validation?statut=${targetStatut}`,
         { credentials: 'include' }
       ).then((x) => x.json());
       if (r.success) setRows((r.data || []) as OperationValidationRow[]);

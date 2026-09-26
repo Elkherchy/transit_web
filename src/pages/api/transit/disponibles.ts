@@ -52,7 +52,6 @@ async function handler(
       ],
     })
       .sort({ createdAt: -1 })
-      .limit(50)
       .lean();
 
     // Les désignations admin-only ne sont jamais exposées au payeur — ni

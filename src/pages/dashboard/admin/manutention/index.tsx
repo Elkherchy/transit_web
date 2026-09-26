@@ -45,7 +45,7 @@ export default function AdminManutentionList() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.set('limit', '50');
+      params.set('limit', '0');
       if (validatedFilter === 'VALIDATED') params.set('validated', 'true');
       else if (validatedFilter === 'NOT_VALIDATED') params.set('validated', 'false');
       const r = await fetch(`/api/manutention?${params.toString()}`, {

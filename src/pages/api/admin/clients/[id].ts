@@ -80,7 +80,6 @@ async function getClient(
 
     const facturesRaw = await Facture.find({ clientId: id })
       .sort({ createdAt: -1 })
-      .limit(100)
       .lean();
 
     // Auto-réparation : resynchronise les créances (DÉBIT caisse client) dont le
@@ -100,7 +99,6 @@ async function getClient(
           : { $in: caisseObjectIds },
     })
       .sort({ date: -1 })
-      .limit(100)
       .lean();
 
     // Populate transitObjet + bl (fallback) from Transit for each facture

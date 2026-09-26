@@ -105,7 +105,7 @@ export default function CaissierDepensesPage() {
     try {
       const day = todayISO();
       const [depRes, catRes, caisseRes, clientsRes] = await Promise.all([
-        fetch(`/api/depenses?from=${day}&to=${day}&limit=200`, {
+        fetch(`/api/depenses?from=${day}&to=${day}`, {
           credentials: 'include',
         }).then((x) => x.json()),
         fetch('/api/depenses/categories?onlyValide=1', {

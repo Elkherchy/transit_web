@@ -82,7 +82,7 @@ export default function CaissierAlimentations() {
     setLoading(true);
     try {
       const [journeesRes, payeursRes] = await Promise.all([
-        fetch('/api/journee?limit=100', { credentials: 'include' }).then((r) => r.json()),
+        fetch('/api/journee', { credentials: 'include' }).then((r) => r.json()),
         fetch('/api/users/payeurs', { credentials: 'include' }).then((r) => r.json()),
       ]);
 

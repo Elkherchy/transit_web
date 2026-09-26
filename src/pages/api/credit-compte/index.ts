@@ -4,6 +4,7 @@ import { CreditCompte, Client } from '@/models';
 import { ensureClientCaisse } from '@/lib/caisse';
 import { ApiResponse, ICreditCompte, UserRole } from '@/types';
 import { withAuth, AuthenticatedRequest } from '@/middleware/auth';
+import { parseLimit } from '@/lib/pagination';
 
 function generateNumero(): string {
   const d = new Date();
@@ -42,15 +43,16 @@ async function handler(
   // ─── GET list ─────────────────────────────────────────────────────────────
   if (req.method === 'GET') {
     try {
-      const { clientId, page = '1', limit = '50' } = req.query;
+      const { clientId, page = '1', limit } = req.query;
       const filter: Record<string, unknown> = {};
       if (clientId && typeof clientId === 'string') filter.clientId = clientId;
 
-      const skip = (parseInt(String(page)) - 1) * parseInt(String(limit));
+      const limitNum = parseLimit(limit);
+      const skip = (parseInt(String(page)) - 1) * limitNum;
       const docs = await CreditCompte.find(filter)
         .sort({ date: -1, createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(String(limit)))
+        .limit(limitNum)
         .lean();
 
       return res.status(200).json({ success: true, data: docs as unknown as ICreditCompte[] });
