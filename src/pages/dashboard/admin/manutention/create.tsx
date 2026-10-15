@@ -43,6 +43,7 @@ export default function AdminCreateManutention() {
 
   const [bl, setBl] = useState('');
   const [numeroConteneur, setNumeroConteneur] = useState('');
+  const [nombreConteneurs, setNombreConteneurs] = useState('');
   const [clientId, setClientId] = useState('');
   const [selectedClient, setSelectedClient] = useState<ClientOption | null>(
     null
@@ -88,6 +89,7 @@ export default function AdminCreateManutention() {
           clientId,
           objet: objet.trim(),
           numeroConteneur: numeroConteneur.trim() || undefined,
+          nombreConteneurs: nombreConteneurs.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -324,6 +326,17 @@ export default function AdminCreateManutention() {
                     value={numeroConteneur}
                     onChange={(e) => setNumeroConteneur(e.target.value.toUpperCase())}
                     placeholder="ex: MSCU1234567"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nombreConteneurs">
+                    Nombre de Conteneurs <span className="text-xs text-muted-foreground">(optionnel)</span>
+                  </Label>
+                  <Input
+                    id="nombreConteneurs"
+                    value={nombreConteneurs}
+                    onChange={(e) => setNombreConteneurs(e.target.value)}
+                    placeholder="ex: 2"
                   />
                 </div>
                 <div className="space-y-2">

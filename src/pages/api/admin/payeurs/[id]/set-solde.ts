@@ -4,7 +4,7 @@ import connectDB from '@/lib/db';
 import { Caisse, Transaction, User } from '@/models';
 import { ApiResponse, TransactionType, UserRole } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
-import { ensurePayeurUserCaisse } from '@/lib/caisse';
+import { ensurePayeurUserCaisse, getSoldeMapForCaisseIds } from '@/lib/caisse';
 
 /**
  * POST /api/admin/payeurs/[id]/set-solde
@@ -59,7 +59,12 @@ async function handler(
       return res.status(404).json({ success: false, error: 'Caisse payeur introuvable' });
     }
 
-    const currentSolde = Number(caisse.solde) || 0;
+    // Le solde affiché partout dans l'app est calculé depuis le registre des
+    // transactions (CREDIT − DEBIT), pas depuis le champ `caisse.solde` (qui
+    // n'est qu'un cache pouvant dériver). Baser l'écart sur le cache créerait
+    // une transaction du mauvais montant et aggraverait la dérive.
+    const soldeMap = await getSoldeMapForCaisseIds([caisse._id as mongoose.Types.ObjectId]);
+    const currentSolde = soldeMap.get(String(caisse._id)) ?? Number(caisse.solde) ?? 0;
     const diff = newSolde - currentSolde;
     let transactionId: string | null = null;
 

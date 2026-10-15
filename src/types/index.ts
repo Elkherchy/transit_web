@@ -359,6 +359,8 @@ export interface IFactureManutention {
   /** Objet du dossier — propagé au transit */
   objet?: string;
   numeroConteneur?: string;
+  /** Nombre de conteneurs du BL — texte libre (ex: "2", "2x40'"). */
+  nombreConteneurs?: string;
   lignesEntreprise: ILigneEntreprise[];
   bonLivret: number;
   documents?: IDocument[];
@@ -375,6 +377,7 @@ export interface IFactureManutentionCreate {
   client?: string;
   clientId?: string;
   objet?: string;
+  nombreConteneurs?: string;
   lignesEntreprise: ILigneEntreprise[];
 }
 

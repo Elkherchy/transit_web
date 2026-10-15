@@ -130,6 +130,7 @@ export default function AdminFactureManutentionDetail() {
   const [editClient, setEditClient] = useState<string>('');
   const [editClientId, setEditClientId] = useState<string>('');
   const [editObjet, setEditObjet] = useState<string>('');
+  const [editNombreConteneurs, setEditNombreConteneurs] = useState<string>('');
   // Clés des docs marquées pour suppression (effacée à la sauvegarde).
   const [pendingRemovedDocKeys, setPendingRemovedDocKeys] = useState<string[]>(
     []
@@ -378,6 +379,9 @@ export default function AdminFactureManutentionDetail() {
         : ''
     );
     setEditObjet(facture.objet || '');
+    setEditNombreConteneurs(
+      (facture as unknown as { nombreConteneurs?: string }).nombreConteneurs || ''
+    );
     setPendingRemovedDocKeys([]);
     setNewDocFile(null);
 
@@ -454,6 +458,9 @@ export default function AdminFactureManutentionDetail() {
               )
             : '') ||
         editObjet.trim() !== (facture.objet || '') ||
+        editNombreConteneurs.trim() !==
+          ((facture as unknown as { nombreConteneurs?: string })
+            .nombreConteneurs || '') ||
         pendingRemovedDocKeys.length > 0;
       if (manuChanged) {
         const r2 = await fetch(`/api/manutention/${facture._id}`, {
@@ -464,6 +471,7 @@ export default function AdminFactureManutentionDetail() {
             client: editClient.trim(),
             clientId: editClientId || null,
             objet: editObjet.trim(),
+            nombreConteneurs: editNombreConteneurs.trim(),
             removeDocKeys: pendingRemovedDocKeys,
           }),
         });
@@ -492,6 +500,7 @@ export default function AdminFactureManutentionDetail() {
     editClient,
     editClientId,
     editObjet,
+    editNombreConteneurs,
     pendingRemovedDocKeys,
     reload,
     t,
@@ -899,6 +908,27 @@ export default function AdminFactureManutentionDetail() {
               />
             )}
             <Field label={t('dashboard.manutention.detail.fieldBl')} value={facture.bl} mono />
+            {editMode ? (
+              <div className="space-y-1.5">
+                <div className="text-xs text-muted-foreground">
+                  Nombre de Conteneurs
+                </div>
+                <Input
+                  value={editNombreConteneurs}
+                  onChange={(e) => setEditNombreConteneurs(e.target.value)}
+                  className="h-8"
+                  placeholder="ex: 2"
+                />
+              </div>
+            ) : (
+              <Field
+                label="Nombre de Conteneurs"
+                value={
+                  (facture as unknown as { nombreConteneurs?: string })
+                    .nombreConteneurs || '—'
+                }
+              />
+            )}
             <Field
               label={t('dashboard.manutention.detail.fieldBonLivret')}
               value={`${fmt(facture.bonLivret)} MRU`}

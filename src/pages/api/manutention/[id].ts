@@ -87,6 +87,7 @@ async function updateFactureManutention(
       client,
       clientId,
       objet,
+      nombreConteneurs,
       removeDocKeys,
     } = req.body as {
       bl?: string;
@@ -95,6 +96,7 @@ async function updateFactureManutention(
       client?: string;
       clientId?: string | null;
       objet?: string;
+      nombreConteneurs?: string;
       removeDocKeys?: string[];
     };
 
@@ -157,6 +159,9 @@ async function updateFactureManutention(
     }
     if (objet !== undefined) {
       facture.objet = String(objet).trim();
+    }
+    if (nombreConteneurs !== undefined) {
+      facture.nombreConteneurs = String(nombreConteneurs).trim();
     }
 
     // Suppression de documents : supprime aussi les objets S3 + propage au

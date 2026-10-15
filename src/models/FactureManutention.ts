@@ -68,6 +68,11 @@ const FactureManutentionSchema = new Schema<IFactureManutention>(
       trim: true,
       default: '',
     },
+    nombreConteneurs: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     // Champ legacy : conservé pour les anciens dossiers, plus utilisé dans le
     // nouveau workflow (admin saisit directement le `bonLivret`).
     lignesEntreprise: {

@@ -132,7 +132,7 @@ async function createFactureManutention(
   try {
     await connectDB();
 
-    const { bl, client, clientId, objet, numeroConteneur } = req.body;
+    const { bl, client, clientId, objet, numeroConteneur, nombreConteneurs } = req.body;
 
     if (!bl || typeof bl !== 'string' || !bl.trim()) {
       return res.status(400).json({ success: false, error: 'BL requis' });
@@ -178,6 +178,7 @@ async function createFactureManutention(
       clientId: clientId || null,
       objet: objet.trim(),
       numeroConteneur: typeof numeroConteneur === 'string' ? numeroConteneur.trim().toUpperCase() : '',
+      nombreConteneurs: typeof nombreConteneurs === 'string' ? nombreConteneurs.trim() : '',
       lignesEntreprise: [],
       bonLivret: 0,
       statut: isDraft

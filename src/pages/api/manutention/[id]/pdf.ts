@@ -63,6 +63,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const payload = buildFicheTransitPdfPayload({
       ...transit,
       facture: factureClient,
+      nombreConteneurs: (facture as { nombreConteneurs?: string }).nombreConteneurs,
     } as TransitDetailsForPrint);
 
     if (req.user!.role === UserRole.AGENT_TRANSIT) {

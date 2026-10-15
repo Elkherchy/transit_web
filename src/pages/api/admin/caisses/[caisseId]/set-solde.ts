@@ -4,6 +4,7 @@ import connectDB from '@/lib/db';
 import { Caisse, Transaction } from '@/models';
 import { ApiResponse, TransactionType, UserRole } from '@/types';
 import { AuthenticatedRequest, withAuth } from '@/middleware/auth';
+import { getSoldeMapForCaisseIds } from '@/lib/caisse';
 
 /**
  * POST /api/admin/caisses/[caisseId]/set-solde
@@ -47,7 +48,12 @@ async function handler(
 
     const desc = String(description || '').trim() || 'Correction manuelle de solde';
 
-    const currentSolde = Number(caisse.solde) || 0;
+    // Le solde affiché partout dans l'app est calculé depuis le registre des
+    // transactions (CREDIT − DEBIT), pas depuis le champ `caisse.solde` (qui
+    // n'est qu'un cache pouvant dériver). Baser l'écart sur le cache créerait
+    // une transaction du mauvais montant et aggraverait la dérive.
+    const soldeMap = await getSoldeMapForCaisseIds([caisse._id as mongoose.Types.ObjectId]);
+    const currentSolde = soldeMap.get(String(caisse._id)) ?? Number(caisse.solde) ?? 0;
     const diff = newSolde - currentSolde;
     let transactionId: string | null = null;
 

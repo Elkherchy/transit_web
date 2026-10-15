@@ -25,6 +25,7 @@ export interface PrintableTransitModel {
   /** Date affichée en en-tête (ex. date dossier / émission) */
   issueDate?: string;
   clientName: string;
+  nombreConteneurs?: string;
   lines: Array<{
     designationNom: string;
     montant: number;
@@ -124,17 +125,23 @@ export const PrintableTransitDoc = React.forwardRef<HTMLDivElement, PrintableTra
                   </td>
                 </tr>
                 <tr>
-                  <td className="border-t border-r border-black p-1.5" colSpan={2}>
+                  <td className="border-t border-r border-black p-1.5 align-top">
                     <span className="font-semibold underline" style={{ color: NAVY }}>
                       Facture N° :
                     </span>{' '}
                     {model.factureNum || ''}
                   </td>
-                  <td className="border-t border-black p-1.5">
+                  <td className="border-t border-r border-black p-1.5 align-top">
                     <span className="font-semibold underline" style={{ color: NAVY }}>
                       Fiche N° :
                     </span>{' '}
                     {model.ficheNumber || model.declarNumber || ''}
+                  </td>
+                  <td className="border-t border-black p-1.5 align-top">
+                    <span className="font-semibold underline" style={{ color: NAVY }}>
+                      Nbre Conteneurs :
+                    </span>{' '}
+                    {model.nombreConteneurs || ''}
                   </td>
                 </tr>
               </tbody>
@@ -283,6 +290,8 @@ export interface TransitDetailsForPrint extends ITransit {
     totalOperations?: number;
     interet?: number;
   } | null;
+  /** Nombre de conteneurs du BL (saisi sur la facture manutention liée). */
+  nombreConteneurs?: string;
 }
 
 /** Données pour `generateTransitPdfBuffer` (même logique métier que l’impression navigateur). */
@@ -295,6 +304,7 @@ export function buildFicheTransitPdfPayload(data: TransitDetailsForPrint): Fiche
     objet: m.objet ?? '',
     blNumber: m.blNumber ?? '',
     client: m.clientName ?? '',
+    nombreConteneurs: m.nombreConteneurs ?? '',
     date: m.issueDate ?? '',
     lines: m.lines.map((l) => ({
       designation: l.designationNom,
@@ -332,6 +342,7 @@ export function buildPrintableTransitModel(data: TransitDetailsForPrint): Printa
     objet: data.objet || '',
     issueDate: data.date ? formatDate(data.date) : '',
     clientName: typeof data.client === 'string' ? data.client : String(data.client || ''),
+    nombreConteneurs: data.nombreConteneurs || '',
     lines: designations.map((d) => ({
       designationNom: d.nom || '',
       montant: d.montant || 0,

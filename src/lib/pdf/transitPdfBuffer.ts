@@ -78,6 +78,7 @@ function normalizeTransitData(data: FicheTransitData | undefined | null): FicheT
     objet: data.objet ?? '',
     blNumber: data.blNumber ?? '',
     client: data.client ?? '',
+    nombreConteneurs: data.nombreConteneurs ?? '',
     date: data.date ?? '',
     lines: lines.map((l) => {
       const des = l?.designation as unknown;
